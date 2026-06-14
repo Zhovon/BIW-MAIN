@@ -1,0 +1,1237 @@
+"use client";
+
+import { useEffect, useState, useRef, ChangeEvent, FormEvent } from "react";
+import { getApiBaseUrl } from "@/lib/api";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { InteractiveChart } from "@/components/interactive-chart";
+
+type Employee = {
+  id: string;
+  branch_id: string | null;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+};
+
+type Service = {
+  id: string;
+  branch_id: string | null;
+  name: string;
+  price: number;
+  cost: number;
+};
+
+type CustomerResult = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+};
+
+type Customer = {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+type Sale = {
+  id: string;
+  branch_id: string | null;
+  service_id: string | null;
+  employee_id: string | null;
+  customer_id: string | null;
+  employee_ids: string[];
+  sale_amount: number;
+  discount_amount: number;
+  created_at: string;
+};
+
+type CostEntry = {
+  id: string;
+  branch_id: string | null;
+  cost_type: string;
+  amount: number;
+  note: string | null;
+  created_at: string;
+};
+
+type ManagerProfile = {
+  employee_id: string;
+  full_name: string;
+  role: string;
+  branch_id: string | null;
+};
+
+export default function ManagerDashboardPage() {
+  const [profile, setProfile] = useState<ManagerProfile | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [costs, setCosts] = useState<CostEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sale Logger Form State
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+  const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+  const [saleServiceId, setSaleServiceId] = useState("");
+  const [saleAmount, setSaleAmount] = useState("");
+  const [discountAmount, setDiscountAmount] = useState("0");
+  const [saleSubmitting, setSaleSubmitting] = useState(false);
+  const [saleError, setSaleError] = useState<string | null>(null);
+  const [saleSuccess, setSaleSuccess] = useState(false);
+
+  // Chart Data State
+  const [dailyChartData, setDailyChartData] = useState<{
+    daily_trend: { date: string; sales: number; costs: number; profit: number }[];
+    average_daily_sales: number;
+    total_sales: number;
+    total_costs: number;
+    profit_margin: number;
+  } | null>(null);
+
+  // Customer State
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerResults, setCustomerResults] = useState<CustomerResult[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerResult | null>(null);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [newCustName, setNewCustName] = useState("");
+  const [newCustPhone, setNewCustPhone] = useState("");
+  const [newCustEmail, setNewCustEmail] = useState("");
+  const [custCreating, setCustCreating] = useState(false);
+  const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // CRM Tab States
+  const [activeTab, setActiveTab] = useState<"operations" | "crm">("operations");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCrmCustomer, setSelectedCrmCustomer] = useState<Customer | null>(null);
+  const [crmSearchQuery, setCrmSearchQuery] = useState("");
+  const [showCrmAddForm, setShowCrmAddForm] = useState(false);
+  const [newCrmName, setNewCrmName] = useState("");
+  const [newCrmPhone, setNewCrmPhone] = useState("");
+  const [newCrmEmail, setNewCrmEmail] = useState("");
+  const [newCrmNotes, setNewCrmNotes] = useState("");
+  const [crmCustCreating, setCrmCustCreating] = useState(false);
+
+  // Cost Logger Form State
+  const [costType, setCostType] = useState("Medical Supplies");
+  const [costAmount, setCostAmount] = useState("");
+  const [costNote, setCostNote] = useState("");
+  const [costSubmitting, setCostSubmitting] = useState(false);
+  const [costError, setCostError] = useState<string | null>(null);
+  const [costSuccess, setCostSuccess] = useState(false);
+
+  // Refs for click-outside
+  const empDropdownRef = useRef<HTMLDivElement>(null);
+  const custDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (empDropdownRef.current && !empDropdownRef.current.contains(e.target as Node)) {
+        setShowEmpDropdown(false);
+      }
+      if (custDropdownRef.current && !custDropdownRef.current.contains(e.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const loadManagerData = async () => {
+      try {
+        setLoading(true);
+        const supabase = getSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          throw new Error("No active Supabase session found. Please log in.");
+        }
+
+        const base = getApiBaseUrl();
+        const currentMonth = new Date().toISOString().substring(0, 7);
+
+        const profileRes = await fetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${currentMonth}`);
+        if (!profileRes.ok) {
+          throw new Error("Could not find manager profile in the database. Ensure you are registered as an employee with 'manager' metadata.");
+        }
+        const profileData = await profileRes.json();
+
+        const empDetailRes = await fetch(`${base}/api/v1/employees`);
+        const allEmps: Employee[] = await empDetailRes.json();
+        const matchedEmp = allEmps.find(e => e.id === profileData.employee_id);
+        const managerBranchId = matchedEmp?.branch_id ?? null;
+
+        setProfile({
+          employee_id: profileData.employee_id,
+          full_name: profileData.full_name,
+          role: profileData.role,
+          branch_id: managerBranchId
+        });
+
+        const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes] = await Promise.all([
+          fetch(`${base}/api/v1/services`),
+          fetch(`${base}/api/v1/sales`),
+          fetch(`${base}/api/v1/costs`),
+          fetch(`${base}/api/v1/overview/daily-chart?branch_id=${managerBranchId || ""}`),
+          fetch(`${base}/api/v1/customers`)
+        ]);
+
+        if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok) {
+          throw new Error("Failed to load operations catalogs.");
+        }
+
+        const servicesData: Service[] = await servicesRes.json();
+        const salesData: Sale[] = await salesRes.json();
+        const costsData: CostEntry[] = await costsRes.json();
+        const dailyChartDataVal = await dailyChartRes.json();
+        const customersData: Customer[] = await customersRes.json();
+
+        const activeTherapists = allEmps.filter(e => e.is_active && e.id !== profileData.employee_id);
+        setEmployees(activeTherapists);
+
+        const branchServices = servicesData;
+        setServices(branchServices);
+        if (branchServices.length > 0) {
+          setSaleServiceId(branchServices[0].id);
+          setSaleAmount(branchServices[0].price.toString());
+        }
+
+        const branchSales = managerBranchId ? salesData.filter(s => s.branch_id === managerBranchId) : salesData;
+        const branchCosts = managerBranchId ? costsData.filter(c => c.branch_id === managerBranchId) : costsData;
+        setSales(branchSales);
+        setCosts(branchCosts);
+        setDailyChartData(dailyChartDataVal);
+        setCustomers(customersData);
+
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setError(errMsg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadManagerData();
+  }, []);
+
+  // ── Employee multi-select helpers ──
+  const toggleEmployee = (empId: string) => {
+    setSelectedEmployeeIds(prev =>
+      prev.includes(empId) ? prev.filter(id => id !== empId) : [...prev, empId]
+    );
+  };
+
+  const removeEmployee = (empId: string) => {
+    setSelectedEmployeeIds(prev => prev.filter(id => id !== empId));
+  };
+
+  // ── Customer search with debounce ──
+  const handleCustomerSearch = (value: string) => {
+    setCustomerSearch(value);
+    setSelectedCustomer(null);
+    setShowNewCustomer(false);
+
+    if (customerSearchTimer.current) clearTimeout(customerSearchTimer.current);
+
+    if (value.trim().length < 2) {
+      setCustomerResults([]);
+      setShowCustomerDropdown(false);
+      return;
+    }
+
+    customerSearchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/customers/search?q=${encodeURIComponent(value.trim())}`);
+        if (res.ok) {
+          const results = await res.json();
+          setCustomerResults(results);
+          setShowCustomerDropdown(true);
+        }
+      } catch {
+        /* silent */
+      }
+    }, 300);
+  };
+
+  const selectCustomer = (c: CustomerResult) => {
+    setSelectedCustomer(c);
+    setCustomerSearch(c.full_name);
+    setShowCustomerDropdown(false);
+    setShowNewCustomer(false);
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!newCustName || !newCustPhone) return;
+    setCustCreating(true);
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name: newCustName, phone: newCustPhone, email: newCustEmail || null }),
+      });
+      if (!res.ok) throw new Error("Failed to create customer.");
+      const newCust = await res.json();
+      
+      // Append to the list of loaded customers
+      setCustomers(prev => [newCust as Customer, ...prev]);
+      
+      selectCustomer(newCust);
+      setShowNewCustomer(false);
+      setNewCustName(""); setNewCustPhone(""); setNewCustEmail("");
+    } catch {
+      alert("Failed to create customer.");
+    } finally {
+      setCustCreating(false);
+    }
+  };
+
+  const handleCreateCrmCustomer = async () => {
+    if (!newCrmName || !newCrmPhone) return;
+    setCrmCustCreating(true);
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: newCrmName,
+          phone: newCrmPhone,
+          email: newCrmEmail || null,
+          notes: newCrmNotes || null
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create customer.");
+      const newCust = await res.json();
+      
+      setCustomers(prev => [newCust as Customer, ...prev]);
+      setSelectedCrmCustomer(newCust as Customer);
+      setShowCrmAddForm(false);
+      setNewCrmName(""); setNewCrmPhone(""); setNewCrmEmail(""); setNewCrmNotes("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create CRM customer.");
+    } finally {
+      setCrmCustCreating(false);
+    }
+  };
+
+  const handleServiceChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const serviceId = e.target.value;
+    setSaleServiceId(serviceId);
+    const service = services.find(s => s.id === serviceId);
+    if (service) setSaleAmount(service.price.toString());
+  };
+
+  const handleRecordTreatment = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaleSubmitting(true);
+    setSaleError(null);
+    setSaleSuccess(false);
+
+    if (selectedEmployeeIds.length === 0) {
+      setSaleError("Please select at least one therapist.");
+      setSaleSubmitting(false);
+      return;
+    }
+    if (!saleServiceId || !saleAmount) {
+      setSaleError("Please fill out all required fields.");
+      setSaleSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      branch_id: profile?.branch_id || null,
+      service_id: saleServiceId,
+      employee_ids: selectedEmployeeIds,
+      customer_id: selectedCustomer?.id || null,
+      sale_amount: parseFloat(saleAmount) || 0,
+      discount_amount: parseFloat(discountAmount) || 0,
+    };
+
+    try {
+      const base = getApiBaseUrl();
+      const res = await fetch(`${base}/api/v1/sales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Failed to log treatment sale.");
+      }
+
+      const loggedSale = await res.json();
+      setSales(prev => [loggedSale, ...prev]);
+
+      setDiscountAmount("0");
+      setSelectedEmployeeIds([]);
+      setSelectedCustomer(null);
+      setCustomerSearch("");
+      setSaleSuccess(true);
+      setTimeout(() => setSaleSuccess(false), 3000);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setSaleError(errMsg);
+    } finally {
+      setSaleSubmitting(false);
+    }
+  };
+
+  const handleLogExpense = async (e: FormEvent) => {
+    e.preventDefault();
+    setCostSubmitting(true);
+    setCostError(null);
+    setCostSuccess(false);
+
+    if (!costAmount) {
+      setCostError("Please specify the expense amount.");
+      setCostSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      branch_id: profile?.branch_id || null,
+      cost_type: costType,
+      amount: parseFloat(costAmount) || 0,
+      note: costNote || null
+    };
+
+    try {
+      const base = getApiBaseUrl();
+      const res = await fetch(`${base}/api/v1/costs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Failed to record expense.");
+      }
+
+      const loggedCost = await res.json();
+      setCosts(prev => [loggedCost, ...prev]);
+
+      setCostAmount("");
+      setCostNote("");
+      setCostSuccess(true);
+      setTimeout(() => setCostSuccess(false), 3000);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setCostError(errMsg);
+    } finally {
+      setCostSubmitting(false);
+    }
+  };
+
+  const getTherapistName = (id: string | null) => {
+    if (!id) return "Unknown Staff";
+    const emp = employees.find(e => e.id === id);
+    return emp ? emp.full_name : id;
+  };
+
+  const getTherapistNames = (sale: Sale) => {
+    const ids = sale.employee_ids && sale.employee_ids.length > 0
+      ? sale.employee_ids
+      : (sale.employee_id ? [sale.employee_id] : []);
+    if (ids.length === 0) return "Unknown Staff";
+    return ids.map(id => getTherapistName(id)).join(", ");
+  };
+
+  const getServiceName = (id: string | null) => {
+    if (!id) return "Treatment";
+    const s = services.find(item => item.id === id);
+    return s ? s.name : "Treatment";
+  };
+
+  // Shared inline styles
+  const inputStyle: React.CSSProperties = {
+    width: "100%", borderRadius: "8px", border: "1px solid var(--border)",
+    background: "var(--surface-2)", padding: "0.75rem 0.95rem",
+    color: "var(--text)", outline: "none",
+  };
+  const selectInputStyle: React.CSSProperties = {
+    ...inputStyle, background: "var(--surface-2)",
+  };
+
+  if (loading) {
+    return (
+      <main className="page-shell">
+        <section className="content-grid">
+          <div>
+            <p className="section-label">Manager Workspace</p>
+            <h1>Initializing branch dashboard...</h1>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="page-shell">
+        <section className="content-grid">
+          <div className="glass-card auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
+            <p className="section-label" style={{ color: "#ff6464" }}>Error Loading Profile</p>
+            <h1>Access Denied</h1>
+            <p className="dashboard-lead">{error}</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-shell">
+      <section className="content-grid">
+
+        {/* Header */}
+        <div style={{ marginBottom: "28px" }}>
+          <p className="section-label">Branch Workspace</p>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
+            Welcome back, {profile?.full_name || "Manager"}
+          </h1>
+          <p className="dashboard-lead" style={{ marginTop: "8px" }}>
+            Record client treatments, track branch operations, and manage customer records.
+          </p>
+        </div>
+
+        {/* Tabs Bar */}
+        <div style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
+          <button
+            onClick={() => setActiveTab("operations")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "operations" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "operations" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Operations & Recording
+          </button>
+          <button
+            onClick={() => setActiveTab("crm")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "crm" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "crm" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Customer CRM Portal
+          </button>
+        </div>
+
+        {activeTab === "operations" && (
+          <>
+            {/* Daily Operations Trend Chart (Branch Specific) */}
+            <article className="glass-card" style={{ padding: "28px", marginBottom: "32px", display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                <div>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Operations Trend</h2>
+                  <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>
+                    Day-by-day sales vs. daily costs for your branch over the last 30 days.
+                  </p>
+                </div>
+                {dailyChartData && (
+                  <div style={{ display: "flex", gap: "24px", textAlign: "right" }}>
+                    <div>
+                      <span style={{ fontSize: "0.72rem", color: "var(--accent)" }}>Monthly Sales</span>
+                      <strong style={{ display: "block", fontSize: "1.15rem", color: "var(--accent-3)", fontFamily: "monospace" }}>
+                        ৳{dailyChartData.total_sales.toLocaleString()}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Net Margin</span>
+                      <strong style={{ display: "block", fontSize: "1.15rem", color: "#fff", fontFamily: "monospace" }}>
+                        {dailyChartData.profit_margin.toFixed(1)}%
+                      </strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                {dailyChartData ? (
+                  <InteractiveChart
+                    data={dailyChartData.daily_trend}
+                    xAxisKey="date"
+                    series={[
+                      { key: "sales", label: "Daily Sales", strokeColor: "#C9A84C", fillGradientStart: "#C9A84C", fillGradientEnd: "rgba(201,168,76,0)" },
+                      { key: "costs", label: "Daily Costs", strokeColor: "#ff7c7c", fillGradientStart: "#ff7c7c", fillGradientEnd: "rgba(255,124,124,0)" },
+                    ]}
+                    valueFormatter={(v) => `৳${v.toLocaleString()}`}
+                  />
+                ) : (
+                  <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Loading operations trend...</p>
+                )}
+              </div>
+            </article>
+
+            {/* Two Column Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+
+              {/* Left Column: Recording Actions */}
+              <div style={{ display: "grid", gap: "24px", alignContent: "start" }}>
+
+                {/* Form 1: Sales / Treatment Logger */}
+                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(110, 231, 255, 0.15)" }}>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent)" }}>Record Service Treatment</h2>
+
+                  {saleError && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      {saleError}
+                    </div>
+                  )}
+                  {saleSuccess && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      Treatment recorded and revenue updated!
+                    </div>
+                  )}
+
+                  <form onSubmit={handleRecordTreatment} style={{ display: "grid", gap: "14px" }}>
+
+                    {/* Multi-Employee Selector */}
+                    <div style={{ display: "grid", gap: "6px" }} ref={empDropdownRef}>
+                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Assigned Therapists * <span style={{ fontSize: "0.76rem", opacity: 0.6 }}>(select multiple for combo packs)</span></span>
+
+                      {/* Selected chips */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", minHeight: "32px" }}>
+                        {selectedEmployeeIds.map(empId => {
+                          const emp = employees.find(e => e.id === empId);
+                          return (
+                            <span key={empId} style={{
+                              display: "inline-flex", alignItems: "center", gap: "6px",
+                              padding: "5px 12px", borderRadius: "20px", fontSize: "0.84rem",
+                              background: "rgba(110, 231, 255, 0.12)", color: "var(--accent)",
+                              border: "1px solid rgba(110, 231, 255, 0.25)",
+                            }}>
+                              {emp?.full_name || empId}
+                              <button
+                                type="button"
+                                onClick={() => removeEmployee(empId)}
+                                style={{
+                                  background: "none", border: "none", color: "var(--accent)",
+                                  cursor: "pointer", padding: "0", fontSize: "1rem", lineHeight: 1,
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      {/* Dropdown trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setShowEmpDropdown(!showEmpDropdown)}
+                        style={{
+                          ...selectInputStyle,
+                          cursor: "pointer", textAlign: "left",
+                          color: selectedEmployeeIds.length > 0 ? "var(--muted)" : "rgba(244,248,255,0.38)",
+                        }}
+                      >
+                        {selectedEmployeeIds.length > 0
+                          ? `${selectedEmployeeIds.length} therapist(s) selected — click to add more`
+                          : "Click to select therapists..."}
+                      </button>
+
+                      {/* Dropdown list */}
+                      {showEmpDropdown && (
+                        <div style={{
+                          borderRadius: "14px", border: "1px solid var(--line)",
+                          background: "var(--surface-2)", maxHeight: "200px", overflowY: "auto",
+                          boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+                        }}>
+                          {employees.length === 0 ? (
+                            <div style={{ padding: "12px 16px", color: "var(--muted)", fontSize: "0.86rem" }}>No therapists available</div>
+                          ) : (
+                            employees.map(emp => {
+                              const isSelected = selectedEmployeeIds.includes(emp.id);
+                              return (
+                                <div
+                                  key={emp.id}
+                                  onClick={() => toggleEmployee(emp.id)}
+                                  style={{
+                                    padding: "10px 16px", cursor: "pointer",
+                                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                                    background: isSelected ? "rgba(110, 231, 255, 0.08)" : "transparent",
+                                    borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                    transition: "background 0.15s ease",
+                                  }}
+                                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = isSelected ? "rgba(110, 231, 255, 0.08)" : "transparent"; }}
+                                >
+                                  <span style={{ color: "#fff", fontSize: "0.9rem" }}>
+                                    {emp.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>({emp.role})</span>
+                                  </span>
+                                  {isSelected && <span style={{ color: "var(--accent)", fontSize: "1.1rem" }}>✓</span>}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Service Treatment */}
+                    <label style={{ display: "grid", gap: "6px" }}>
+                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Service Treatment *</span>
+                      <select
+                        value={saleServiceId}
+                        onChange={handleServiceChange}
+                        style={selectInputStyle}
+                      >
+                        {services.map((s: Service) => (
+                          <option key={s.id} value={s.id}>{s.name} (৳{s.price})</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {/* Customer Search */}
+                    <div style={{ display: "grid", gap: "6px", position: "relative" }} ref={custDropdownRef}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>
+                          Customer
+                          {selectedCustomer && (
+                            <span style={{ marginLeft: "8px", fontSize: "0.76rem", color: "var(--accent-3)" }}>
+                              ✓ {selectedCustomer.full_name} ({selectedCustomer.phone})
+                            </span>
+                          )}
+                        </span>
+                        {!selectedCustomer && !showNewCustomer && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNewCustomer(true);
+                              setNewCustName(customerSearch);
+                            }}
+                            style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", padding: 0 }}
+                          >
+                            ＋ New Client
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={customerSearch}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleCustomerSearch(e.target.value)}
+                        onFocus={() => { if (customerResults.length > 0) setShowCustomerDropdown(true); }}
+                        placeholder="Search by name or phone..."
+                        style={inputStyle}
+                      />
+
+                      {/* Customer search results dropdown */}
+                      {showCustomerDropdown && customerResults.length > 0 && (
+                        <div style={{
+                          position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
+                          borderRadius: "14px", border: "1px solid var(--line)",
+                          background: "var(--surface-2)", maxHeight: "180px", overflowY: "auto",
+                          boxShadow: "0 12px 40px rgba(0,0,0,0.4)", marginTop: "4px",
+                        }}>
+                          {customerResults.map(c => (
+                            <div
+                              key={c.id}
+                              onClick={() => selectCustomer(c)}
+                              style={{
+                                padding: "10px 16px", cursor: "pointer",
+                                borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                transition: "background 0.15s ease",
+                              }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+                            >
+                              <span style={{ color: "#fff", fontSize: "0.9rem" }}>{c.full_name}</span>
+                              <span style={{ color: "var(--muted)", fontSize: "0.8rem", marginLeft: "8px" }}>{c.phone}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* No results — create new */}
+                      {showCustomerDropdown && customerResults.length === 0 && customerSearch.trim().length >= 2 && !selectedCustomer && (
+                        <div style={{
+                          position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
+                          borderRadius: "14px", border: "1px solid var(--line)",
+                          background: "var(--surface-2)", padding: "12px 16px", marginTop: "4px",
+                          boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+                        }}>
+                          <p style={{ color: "var(--muted)", fontSize: "0.86rem", margin: "0 0 8px" }}>No matching customers found.</p>
+                          <button type="button" onClick={() => { setShowNewCustomer(true); setShowCustomerDropdown(false); setNewCustName(customerSearch); }}
+                            style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.88rem", padding: 0 }}>
+                            ＋ Create new customer
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* New Customer Inline Form */}
+                    {showNewCustomer && !selectedCustomer && (
+                      <div style={{ padding: "16px", borderRadius: "14px", background: "rgba(142,240,178,0.04)", border: "1px solid rgba(142,240,178,0.15)", display: "grid", gap: "10px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--accent-3)", fontWeight: 600 }}>Create New Customer</span>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                          <input placeholder="Full Name *" value={newCustName} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustName(e.target.value)} style={inputStyle} />
+                          <input placeholder="Phone *" value={newCustPhone} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustPhone(e.target.value)} style={inputStyle} />
+                        </div>
+                        <input placeholder="Email (optional)" value={newCustEmail} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustEmail(e.target.value)} style={inputStyle} />
+                        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                          <button type="button" onClick={() => setShowNewCustomer(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: "0.85rem" }}>Cancel</button>
+                          <button type="button" onClick={handleCreateCustomer} disabled={custCreating || !newCustName || !newCustPhone}
+                            className="button button--primary" style={{ padding: "6px 14px", fontSize: "0.84rem" }}>
+                            {custCreating ? "Creating..." : "Save Customer"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Price & Discount */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Sale Price (৳) *</span>
+                        <input
+                          type="number" required
+                          value={saleAmount}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setSaleAmount(e.target.value)}
+                          style={inputStyle}
+                        />
+                      </label>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Discount applied (৳)</span>
+                        <input
+                          type="number"
+                          value={discountAmount}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setDiscountAmount(e.target.value)}
+                          style={inputStyle}
+                        />
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={saleSubmitting}
+                      className="button button--primary"
+                      style={{ width: "100%", marginTop: "8px", padding: "0.8rem" }}
+                    >
+                      {saleSubmitting ? "Saving..." : "Record Treatment"}
+                    </button>
+                  </form>
+                </article>
+
+                {/* Form 2: Expense Logger */}
+                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Branch Expense</h2>
+
+                  {costError && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      {costError}
+                    </div>
+                  )}
+                  {costSuccess && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      Branch expense logged successfully!
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLogExpense} style={{ display: "grid", gap: "14px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "14px" }}>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Expense Category *</span>
+                        <select
+                          value={costType}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => setCostType(e.target.value)}
+                          style={selectInputStyle}
+                        >
+                          <option value="Medical Supplies">Medical Supplies</option>
+                          <option value="Rent & Utilities">Rent & Utilities</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Maintenance">Maintenance</option>
+                          <option value="Miscellaneous">Miscellaneous</option>
+                        </select>
+                      </label>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Amount (৳) *</span>
+                        <input
+                          type="number" required
+                          value={costAmount}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setCostAmount(e.target.value)}
+                          placeholder="e.g. 15000"
+                          style={inputStyle}
+                        />
+                      </label>
+                    </div>
+                    <label style={{ display: "grid", gap: "6px" }}>
+                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Note / Description</span>
+                      <textarea
+                        value={costNote}
+                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCostNote(e.target.value)}
+                        placeholder="Provide details about supplier or invoice..."
+                        rows={2}
+                        style={{ ...inputStyle, resize: "none", font: "inherit" }}
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={costSubmitting}
+                      className="button button--secondary"
+                      style={{ width: "100%", marginTop: "8px", padding: "0.8rem" }}
+                    >
+                      {costSubmitting ? "Logging..." : "Log Expense"}
+                    </button>
+                  </form>
+                </article>
+              </div>
+
+              {/* Right Column: Live Activity Feed */}
+              <div style={{ display: "grid", alignContent: "start", gap: "20px" }}>
+                <article className="glass-card" style={{ padding: "28px", minHeight: "650px", display: "flex", flexDirection: "column" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operations Log</h2>
+                    <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
+                      Live Feed
+                    </span>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {sales.length === 0 && costs.length === 0 ? (
+                      <p style={{ textAlign: "center", color: "var(--muted)", marginTop: "40px", fontSize: "0.95rem" }}>
+                        No operations entries logged yet. Record a treatment to get started.
+                      </p>
+                    ) : (
+                      <>
+                        {[
+                          ...sales.map(s => ({ ...s, feedType: "sale" as const })),
+                          ...costs.map(c => ({ ...c, feedType: "cost" as const }))
+                        ]
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((item) => {
+                            const isSale = item.feedType === "sale";
+                            const dateStr = new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " - " + new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+                            return (
+                              <div
+                                key={item.id}
+                                style={{
+                                  padding: "16px", borderRadius: "16px",
+                                  background: isSale ? "rgba(110, 231, 255, 0.02)" : "rgba(255, 100, 100, 0.02)",
+                                  border: `1px solid ${isSale ? "rgba(110, 231, 255, 0.08)" : "rgba(255, 100, 100, 0.08)"}`,
+                                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px"
+                                }}
+                              >
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                  <span style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.05em", color: isSale ? "var(--accent)" : "#ff7c7c" }}>
+                                    {isSale ? "Treatment Completed" : "Branch Expense"}
+                                  </span>
+                                  <strong style={{ fontSize: "1rem", color: "#fff" }}>
+                                    {isSale ? getServiceName((item as Sale).service_id) : (item as CostEntry).cost_type}
+                                  </strong>
+                                  <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
+                                    {isSale
+                                      ? `By: ${getTherapistNames(item as Sale)}`
+                                      : (item as CostEntry).note || "No note specified"
+                                    }
+                                  </span>
+                                  <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
+                                    {dateStr}
+                                  </span>
+                                </div>
+
+                                <div style={{ textAlign: "right" }}>
+                                  <strong style={{ fontSize: "1.2rem", color: isSale ? "var(--accent-3)" : "#ff7c7c" }}>
+                                    {isSale ? `+৳${(item as Sale).sale_amount.toLocaleString()}` : `-৳${(item as CostEntry).amount.toLocaleString()}`}
+                                  </strong>
+                                  {isSale && (item as Sale).discount_amount > 0 && (
+                                    <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
+                                      ৳{(item as Sale).discount_amount.toLocaleString()} disc
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        }
+                      </>
+                    )}
+                  </div>
+                </article>
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {activeTab === "crm" && (
+          <section style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            {/* CRM Search & Action Bar */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+              <div style={{ flex: "1 1 300px" }}>
+                <input
+                  type="text"
+                  placeholder="Search customer directory by name or phone..."
+                  value={crmSearchQuery}
+                  onChange={(e) => setCrmSearchQuery(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <button
+                onClick={() => setShowCrmAddForm(!showCrmAddForm)}
+                className="button button--primary"
+                style={{ padding: "0.75rem 1.5rem" }}
+              >
+                {showCrmAddForm ? "Close Form" : "＋ Register Customer"}
+              </button>
+            </div>
+
+            {/* Inline Customer Add Form */}
+            {showCrmAddForm && (
+              <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(142, 240, 178, 0.2)" }}>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", margin: "0 0 16px", color: "var(--accent-3)" }}>
+                  Register New Client Record
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Full Name *</span>
+                    <input
+                      type="text" required
+                      value={newCrmName}
+                      onChange={(e) => setNewCrmName(e.target.value)}
+                      placeholder="e.g. Asif Mahmud"
+                      style={inputStyle}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Phone Number *</span>
+                    <input
+                      type="text" required
+                      value={newCrmPhone}
+                      onChange={(e) => setNewCrmPhone(e.target.value)}
+                      placeholder="e.g. 01712345678"
+                      style={inputStyle}
+                    />
+                  </label>
+                </div>
+                <div style={{ display: "grid", gap: "16px", marginBottom: "20px" }}>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Email Address</span>
+                    <input
+                      type="email"
+                      value={newCrmEmail}
+                      onChange={(e) => setNewCrmEmail(e.target.value)}
+                      placeholder="e.g. client@domain.com"
+                      style={inputStyle}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Consultation / Profile Notes</span>
+                    <textarea
+                      value={newCrmNotes}
+                      onChange={(e) => setNewCrmNotes(e.target.value)}
+                      placeholder="Describe skin condition, treatment goals, allergies, or past treatments..."
+                      rows={3}
+                      style={{ ...inputStyle, resize: "none", font: "inherit" }}
+                    />
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                  <button type="button" onClick={() => setShowCrmAddForm(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateCrmCustomer}
+                    disabled={crmCustCreating || !newCrmName || !newCrmPhone}
+                    className="button button--primary"
+                    style={{ padding: "0.75rem 1.6rem" }}
+                  >
+                    {crmCustCreating ? "Saving..." : "Save Customer"}
+                  </button>
+                </div>
+              </article>
+            )}
+
+            {/* CRM Two Column Directory */}
+            <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
+              
+              {/* Left Column: Customer Directory List */}
+              <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", maxHeight: "650px" }}>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.35rem", margin: "0 0 16px" }}>Client Directory</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", flex: 1, paddingRight: "4px" }}>
+                  {customers
+                    .filter(c => {
+                      const query = crmSearchQuery.toLowerCase();
+                      return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
+                    })
+                    .map(c => {
+                      const clientSales = sales.filter(s => s.customer_id === c.id);
+                      const totalSpent = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
+                      const isSelected = selectedCrmCustomer?.id === c.id;
+
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedCrmCustomer(c)}
+                          style={{
+                            padding: "16px",
+                            borderRadius: "16px",
+                            background: isSelected ? "rgba(110, 231, 255, 0.06)" : "rgba(255, 255, 255, 0.01)",
+                            border: `1px solid ${isSelected ? "rgba(110, 231, 255, 0.25)" : "var(--line)"}`,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <strong style={{ display: "block", fontSize: "1.05rem", color: isSelected ? "var(--accent)" : "#fff" }}>
+                            {c.full_name}
+                          </strong>
+                          <span style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                            {c.phone} {c.email ? `• ${c.email}` : ""}
+                          </span>
+                          <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
+                            <span style={{ fontSize: "0.72rem", background: "var(--surface-2)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px", color: "var(--muted)" }}>
+                              {clientSales.length} Treatments
+                            </span>
+                            <span style={{ fontSize: "0.72rem", background: "rgba(110, 231, 255, 0.08)", padding: "2px 8px", borderRadius: "6px", color: "var(--accent)" }}>
+                              ৳{totalSpent.toLocaleString()} Spent
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {customers.filter(c => {
+                    const query = crmSearchQuery.toLowerCase();
+                    return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
+                  }).length === 0 && (
+                    <p style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0", fontSize: "0.95rem" }}>
+                      No clients found in directory.
+                    </p>
+                  )}
+                </div>
+              </article>
+
+              {/* Right Column: Customer Details & Treatment History */}
+              <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", minHeight: "500px" }}>
+                {selectedCrmCustomer ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
+                    
+                    <div>
+                      <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 8px", borderRadius: "6px", background: "rgba(110,231,255,0.06)", border: "1px solid rgba(110,231,255,0.15)", color: "var(--accent)" }}>
+                        Client Profile
+                      </span>
+                      <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", margin: "10px 0 4px", color: "#fff" }}>
+                        {selectedCrmCustomer.full_name}
+                      </h3>
+                      <span style={{ fontSize: "0.88rem", color: "var(--muted)" }}>
+                        Contact: {selectedCrmCustomer.phone} {selectedCrmCustomer.email ? `• ${selectedCrmCustomer.email}` : ""}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Lifetime Spent</span>
+                        <strong style={{ fontSize: "1.2rem", color: "var(--accent-3)" }}>
+                          ৳{sales.filter(s => s.customer_id === selectedCrmCustomer.id).reduce((acc, curr) => acc + curr.sale_amount, 0).toLocaleString()}
+                        </strong>
+                      </div>
+                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Total Visits</span>
+                        <strong style={{ fontSize: "1.2rem", color: "#fff" }}>
+                          {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length}
+                        </strong>
+                      </div>
+                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Avg. Treatment Ticket</span>
+                        <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
+                          ৳{(() => {
+                            const clientSales = sales.filter(s => s.customer_id === selectedCrmCustomer.id);
+                            if (clientSales.length === 0) return 0;
+                            const total = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
+                            return Math.round(total / clientSales.length);
+                          })().toLocaleString()}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div>
+                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "8px" }}>
+                        Consultation & Profile Notes
+                      </strong>
+                      <div style={{
+                        padding: "16px",
+                        borderRadius: "14px",
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--line)",
+                        fontSize: "0.9rem",
+                        lineHeight: 1.5,
+                        color: "var(--muted)",
+                        minHeight: "80px",
+                        whiteSpace: "pre-wrap"
+                      }}>
+                        {selectedCrmCustomer.notes || "No notes registered for this client."}
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "220px" }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "12px" }}>
+                        Treatment & Purchase History
+                      </strong>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", flex: 1, maxHeight: "300px" }}>
+                        {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length === 0 ? (
+                          <p style={{ color: "var(--muted)", padding: "30px 0", fontSize: "0.88rem", textAlign: "center" }}>
+                            No treatments recorded for this client yet.
+                          </p>
+                        ) : (
+                          sales
+                            .filter(s => s.customer_id === selectedCrmCustomer.id)
+                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                            .map(sale => (
+                              <div
+                                key={sale.id}
+                                style={{
+                                  padding: "14px",
+                                  borderRadius: "14px",
+                                  background: "rgba(255, 255, 255, 0.01)",
+                                  border: "1px solid var(--line)",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center"
+                                }}
+                              >
+                                <div>
+                                  <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{getServiceName(sale.service_id)}</strong>
+                                  <span style={{ fontSize: "0.8rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                                    Staff: {getTherapistNames(sale)} • {new Date(sale.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </span>
+                                </div>
+                                <strong style={{ color: "var(--accent-3)", fontSize: "1.05rem" }}>
+                                  +৳{sale.sale_amount.toLocaleString()}
+                                </strong>
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: "var(--muted)" }}>
+                    <p style={{ fontSize: "0.95rem" }}>Select a client from the directory to track details.</p>
+                  </div>
+                )}
+              </article>
+
+            </div>
+          </section>
+        )}
+
+      </section>
+    </main>
+  );
+}

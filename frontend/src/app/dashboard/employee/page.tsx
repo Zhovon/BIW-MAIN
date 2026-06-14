@@ -1,0 +1,321 @@
+"use client";
+
+import { useEffect, useState, ChangeEvent } from "react";
+import { getApiBaseUrl } from "@/lib/api";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+type TreatmentDetail = {
+  id: string;
+  service_name: string;
+  sale_amount: number;
+  discount_amount: number;
+  earned_amount: number;
+  earning_type: "bonus" | "commission";
+  created_at: string | null;
+};
+
+type EarningsProfile = {
+  employee_id: string;
+  full_name: string;
+  role: string;
+  month: string;
+  base_salary: number;
+  bonus_earned: number;
+  commission_earned: number;
+  total_earned: number;
+  treatment_count: number;
+  treatments: TreatmentDetail[];
+};
+
+type ServiceAssignment = {
+  id: string;
+  service_id: string;
+  employee_id: string;
+  bonus_amount: number;
+};
+
+type Service = {
+  id: string;
+  name: string;
+  price: number;
+};
+
+export default function EmployeeDashboardPage() {
+  const [earnings, setEarnings] = useState<EarningsProfile | null>(null);
+  const [assignments, setAssignments] = useState<ServiceAssignment[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load current month by default
+  useEffect(() => {
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+    setSelectedMonth(currentMonth);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedMonth) return;
+
+    const loadEmployeeEarnings = async () => {
+      try {
+        setLoading(true);
+        const supabase = getSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          throw new Error("No active session found. Please log in.");
+        }
+
+        const base = getApiBaseUrl();
+
+        // 1. Fetch personal earnings profile by Supabase user.id
+        const earningsRes = await fetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${selectedMonth}`);
+        if (!earningsRes.ok) {
+          throw new Error("Could not load earnings profile. Ensure your account is linked to an active employee record.");
+        }
+        const earningsData: EarningsProfile = await earningsRes.json();
+        setEarnings(earningsData);
+
+        // 2. Fetch service assignments and services to show their linked bonuses
+        const [assignmentsRes, servicesRes] = await Promise.all([
+          fetch(`${base}/api/v1/service-assignments`),
+          fetch(`${base}/api/v1/services`)
+        ]);
+
+        if (assignmentsRes.ok && servicesRes.ok) {
+          const allAssignments: ServiceAssignment[] = await assignmentsRes.json();
+          const allServices: Service[] = await servicesRes.json();
+          
+          // Filter assignments specific to this therapist
+          const therapistAssignments = allAssignments.filter(a => a.employee_id === earningsData.employee_id);
+          setAssignments(therapistAssignments);
+          setServices(allServices);
+        }
+
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setError(errMsg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEmployeeEarnings();
+  }, [selectedMonth]);
+
+  const handleMonthChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSelectedMonth(e.target.value);
+  };
+
+  const getServiceName = (serviceId: string) => {
+    const s = services.find(item => item.id === serviceId);
+    return s ? s.name : "Treatment Service";
+  };
+
+  const getServicePrice = (serviceId: string) => {
+    const s = services.find(item => item.id === serviceId);
+    return s ? s.price : 0;
+  };
+
+  if (loading && !earnings) {
+    return (
+      <main className="page-shell">
+        <section className="content-grid">
+          <div>
+            <p className="section-label">Therapist Portal</p>
+            <h1>Loading performance dashboard...</h1>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="page-shell">
+        <section className="content-grid">
+          <div className="glass-card auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
+            <p className="section-label" style={{ color: "#ff6464" }}>Access Error</p>
+            <h1>Portal Unavailable</h1>
+            <p className="dashboard-lead">{error}</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-shell">
+      <section className="content-grid">
+        
+        {/* Top bar with Month Selector */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", marginBottom: "28px" }}>
+          <div>
+            <p className="section-label">Therapist Performance Workspace</p>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
+              {earnings?.full_name}
+            </h1>
+            <p style={{ color: "var(--accent)", margin: "4px 0 0", fontWeight: "600", fontSize: "1.05rem" }}>
+              {earnings?.role}
+            </p>
+          </div>
+
+          <div>
+            <label style={{ display: "grid", gap: "6px" }}>
+              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Select Operations Month</span>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                style={{ borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.65rem 1rem", color: "#fff", outline: "none", font: "inherit" }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Live Monthly Stats cards */}
+        <div className="stat-grid" style={{ margin: "0 0 32px" }}>
+          <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
+            <span className="stat-card__label">Guaranteed Base Salary</span>
+            <strong className="stat-card__value">৳{earnings?.base_salary.toLocaleString()}</strong>
+            <p className="stat-card__detail">Paid monthly regardless of service sales.</p>
+          </article>
+
+          <article className="stat-card" style={{ "--accent": "#E8C96A" } as React.CSSProperties}>
+            <span className="stat-card__label">Accumulated Treatment Bonuses</span>
+            <strong className="stat-card__value">৳{earnings?.bonus_earned.toLocaleString()}</strong>
+            <p className="stat-card__detail">From {earnings?.treatments.filter(t => t.earning_type === "bonus").length} customized therapist bonuses.</p>
+          </article>
+
+          <article className="stat-card" style={{ "--accent": "#A07830" } as React.CSSProperties}>
+            <span className="stat-card__label">Accumulated Sales Commissions</span>
+            <strong className="stat-card__value">৳{earnings?.commission_earned.toLocaleString()}</strong>
+            <p className="stat-card__detail">From {earnings?.treatments.filter(t => t.earning_type === "commission").length} standard revenue shares.</p>
+          </article>
+
+          <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
+            <span className="stat-card__label">Total Estimated Monthly Payroll</span>
+            <strong className="stat-card__value" style={{ color: "var(--gold-light)" }}>
+              ৳{earnings?.total_earned.toLocaleString()}
+            </strong>
+            <p className="stat-card__detail">Subject to owner verification run.</p>
+          </article>
+        </div>
+
+        {/* Main Content split */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+          
+          {/* Left Panel: Completed Treatments Log */}
+          <article className="glass-card" style={{ padding: "28px" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 20px" }}>Completed Treatments Log</h2>
+
+            {earnings?.treatments.length === 0 ? (
+              <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>
+                No services or treatments logged for this month.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {earnings?.treatments.map((t) => {
+                  const dateStr = t.created_at 
+                    ? new Date(t.created_at).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) 
+                    : "";
+
+                  return (
+                    <div
+                      key={t.id}
+                      style={{
+                        padding: "16px",
+                        borderRadius: "16px",
+                        background: "rgba(255, 255, 255, 0.02)",
+                        border: "1px solid var(--line)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: "1.05rem", color: "#fff" }}>{t.service_name}</strong>
+                        <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "4px" }}>
+                          Treatment Price: ৳{t.sale_amount.toLocaleString()} 
+                          {t.discount_amount > 0 && ` (৳${t.discount_amount.toLocaleString()} discount applied)`}
+                        </div>
+                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)" }}>{dateStr}</span>
+                      </div>
+
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{
+                          fontSize: "0.7rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          background: t.earning_type === "bonus" ? "rgba(110,231,255,0.1)" : "rgba(156,123,255,0.1)",
+                          color: t.earning_type === "bonus" ? "var(--accent)" : "var(--accent-2)",
+                          border: `1px solid ${t.earning_type === "bonus" ? "rgba(110,231,255,0.15)" : "rgba(156,123,255,0.15)"}`,
+                          display: "inline-block",
+                          marginBottom: "4px"
+                        }}>
+                          {t.earning_type === "bonus" ? "Flat Bonus" : "Commission"}
+                        </span>
+                        <strong style={{ display: "block", fontSize: "1.15rem", color: "var(--accent-3)" }}>
+                          +৳{t.earned_amount.toLocaleString()}
+                        </strong>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </article>
+
+          {/* Right Panel: Configured Bonus Linkages */}
+          <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 10px", color: "var(--accent)" }}>My Bonus Linkages</h2>
+            <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 20px" }}>
+              Treatments matching these assignments pay a flat bonus instead of standard commissions.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto" }}>
+              {assignments.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: "0.9rem", textAlign: "center", padding: "30px 0" }}>
+                  No customized service bonuses linked to your profile. All treatments pay standard commission rate.
+                </p>
+              ) : (
+                assignments.map((asg) => (
+                  <div
+                    key={asg.id}
+                    style={{
+                      padding: "14px 16px",
+                      borderRadius: "14px",
+                      background: "rgba(255, 255, 255, 0.02)",
+                      border: "1px solid var(--line)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <div>
+                      <strong style={{ display: "block", fontSize: "0.95rem", color: "#fff" }}>
+                        {getServiceName(asg.service_id)}
+                      </strong>
+                      <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
+                        Standard price: ৳{getServicePrice(asg.service_id).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <strong style={{ fontSize: "1.1rem", color: "var(--accent)" }}>
+                      ৳{asg.bonus_amount.toLocaleString()} bonus
+                    </strong>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+
+        </div>
+
+      </section>
+    </main>
+  );
+}

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+backend/.env
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+frontend/.env
+frontend/.env.local
+.env.local
+
+# Secrets / local config
+.claude/
+today_summary_report.md
+
+# OS
+.DS_Store
