@@ -4,20 +4,6 @@ import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl } from "@/lib/api";
 import { CalendarPicker } from "@/components/calendar-picker";
 
-type BranchFinancial = {
-  branch: string;
-  revenue: number;
-  cost: number;
-  profit: number;
-};
-
-type OverviewData = {
-  revenue_total: number;
-  cost_total: number;
-  profit_total: number;
-  branches: BranchFinancial[];
-};
-
 type Branch = {
   id: string;
   name: string;
