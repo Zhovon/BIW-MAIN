@@ -102,8 +102,7 @@ type Customer = {
 };
 
 export default function OwnerDashboardPage() {
-  // Financial Overview State
-  const [overview, setOverview] = useState<OverviewData | null>(null);
+  // Core State
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,9 +158,8 @@ export default function OwnerDashboardPage() {
         const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
         setPayrollMonth(currentMonth);
 
-        // Fetch Overview stats, Branches, Payroll runs, Sales, Costs, Services, Employees, Customers
+        // Fetch Branches, Payroll runs, Sales, Costs, Services, Employees, Customers
         const [
-          overviewRes,
           branchesRes,
           historyRes,
           salesRes,
@@ -170,7 +168,6 @@ export default function OwnerDashboardPage() {
           employeesRes,
           customersRes
         ] = await Promise.all([
-          fetch(`${base}/api/v1/overview`),
           fetch(`${base}/api/v1/branches`),
           fetch(`${base}/api/v1/payroll`),
           fetch(`${base}/api/v1/sales`),
@@ -181,7 +178,6 @@ export default function OwnerDashboardPage() {
         ]);
 
         if (
-          !overviewRes.ok ||
           !branchesRes.ok ||
           !historyRes.ok ||
           !salesRes.ok ||
@@ -193,7 +189,6 @@ export default function OwnerDashboardPage() {
           throw new Error("Failed to load operations metrics.");
         }
 
-        const overviewData = await overviewRes.json();
         const branchesData = await branchesRes.json();
         const historyData = await historyRes.json();
         const salesData = await salesRes.json();
@@ -202,7 +197,6 @@ export default function OwnerDashboardPage() {
         const employeesData = await employeesRes.json();
         const customersData = await customersRes.json();
 
-        setOverview(overviewData);
         setBranches(branchesData);
         setPayrollHistory(historyData);
         setSales(salesData);
