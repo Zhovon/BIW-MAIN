@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ChangeEvent } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type TreatmentDetail = {
@@ -70,7 +70,7 @@ export default function EmployeeDashboardPage() {
         const base = getApiBaseUrl();
 
         // 1. Fetch personal earnings profile by Supabase user.id
-        const earningsRes = await fetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${selectedMonth}`);
+        const earningsRes = await authFetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${selectedMonth}`);
         if (!earningsRes.ok) {
           throw new Error("Could not load earnings profile. Ensure your account is linked to an active employee record.");
         }
@@ -79,8 +79,8 @@ export default function EmployeeDashboardPage() {
 
         // 2. Fetch service assignments and services to show their linked bonuses
         const [assignmentsRes, servicesRes] = await Promise.all([
-          fetch(`${base}/api/v1/service-assignments`),
-          fetch(`${base}/api/v1/services`)
+          authFetch(`${base}/api/v1/service-assignments`),
+          authFetch(`${base}/api/v1/services`)
         ]);
 
         if (assignmentsRes.ok && servicesRes.ok) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, ChangeEvent, FormEvent } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { InteractiveChart } from "@/components/interactive-chart";
 import { CalendarPicker } from "@/components/calendar-picker";
@@ -168,13 +168,13 @@ export default function ManagerDashboardPage() {
         const base = getApiBaseUrl();
         const currentMonth = new Date().toISOString().substring(0, 7);
 
-        const profileRes = await fetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${currentMonth}`);
+        const profileRes = await authFetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${currentMonth}`);
         if (!profileRes.ok) {
           throw new Error("Could not find manager profile in the database. Ensure you are registered as an employee with 'manager' metadata.");
         }
         const profileData = await profileRes.json();
 
-        const empDetailRes = await fetch(`${base}/api/v1/employees`);
+        const empDetailRes = await authFetch(`${base}/api/v1/employees`);
         const allEmps: Employee[] = await empDetailRes.json();
         const matchedEmp = allEmps.find(e => e.id === profileData.employee_id);
         const managerBranchId = matchedEmp?.branch_id ?? null;
@@ -187,11 +187,11 @@ export default function ManagerDashboardPage() {
         });
 
         const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes] = await Promise.all([
-          fetch(`${base}/api/v1/services`),
-          fetch(`${base}/api/v1/sales`),
-          fetch(`${base}/api/v1/costs`),
-          fetch(`${base}/api/v1/overview/daily-chart?branch_id=${managerBranchId || ""}`),
-          fetch(`${base}/api/v1/customers`)
+          authFetch(`${base}/api/v1/services`),
+          authFetch(`${base}/api/v1/sales`),
+          authFetch(`${base}/api/v1/costs`),
+          authFetch(`${base}/api/v1/overview/daily-chart?branch_id=${managerBranchId || ""}`),
+          authFetch(`${base}/api/v1/customers`)
         ]);
 
         if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok) {
@@ -259,7 +259,7 @@ export default function ManagerDashboardPage() {
 
     customerSearchTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/v1/customers/search?q=${encodeURIComponent(value.trim())}`);
+        const res = await authFetch(`${getApiBaseUrl()}/api/v1/customers/search?q=${encodeURIComponent(value.trim())}`);
         if (res.ok) {
           const results = await res.json();
           setCustomerResults(results);
@@ -282,7 +282,7 @@ export default function ManagerDashboardPage() {
     if (!newCustName || !newCustPhone) return;
     setCustCreating(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/customers`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ full_name: newCustName, phone: newCustPhone, email: newCustEmail || null }),
@@ -307,7 +307,7 @@ export default function ManagerDashboardPage() {
     if (!newCrmName || !newCrmPhone) return;
     setCrmCustCreating(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/customers`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -366,7 +366,7 @@ export default function ManagerDashboardPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/sales`, {
+      const res = await authFetch(`${base}/api/v1/sales`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -415,7 +415,7 @@ export default function ManagerDashboardPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/costs`, {
+      const res = await authFetch(`${base}/api/v1/costs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

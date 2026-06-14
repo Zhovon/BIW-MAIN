@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { CalendarPicker } from "@/components/calendar-picker";
 
 type Branch = {
@@ -154,13 +154,13 @@ export default function OwnerDashboardPage() {
           employeesRes,
           customersRes
         ] = await Promise.all([
-          fetch(`${base}/api/v1/branches`),
-          fetch(`${base}/api/v1/payroll`),
-          fetch(`${base}/api/v1/sales`),
-          fetch(`${base}/api/v1/costs`),
-          fetch(`${base}/api/v1/services`),
-          fetch(`${base}/api/v1/employees`),
-          fetch(`${base}/api/v1/customers`)
+          authFetch(`${base}/api/v1/branches`),
+          authFetch(`${base}/api/v1/payroll`),
+          authFetch(`${base}/api/v1/sales`),
+          authFetch(`${base}/api/v1/costs`),
+          authFetch(`${base}/api/v1/services`),
+          authFetch(`${base}/api/v1/employees`),
+          authFetch(`${base}/api/v1/customers`)
         ]);
 
         if (
@@ -215,7 +215,7 @@ export default function OwnerDashboardPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/payroll/calculate?branch_id=${payrollBranchId}&month=${payrollMonth}`);
+      const res = await authFetch(`${base}/api/v1/payroll/calculate?branch_id=${payrollBranchId}&month=${payrollMonth}`);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Failed to calculate payroll.");
@@ -245,7 +245,7 @@ export default function OwnerDashboardPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/payroll`, {
+      const res = await authFetch(`${base}/api/v1/payroll`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -271,7 +271,7 @@ export default function OwnerDashboardPage() {
     if (!newCrmName || !newCrmPhone) return;
     setCrmCustCreating(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/customers`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
