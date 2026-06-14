@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { getSupabaseBrowserClient, getRoleFromUserMetadata } from "@/lib/supabase/client";
 import type { AuthRole } from "@/lib/supabase/roles";
 
@@ -52,8 +52,8 @@ export default function ServicesPage() {
         }
         const base = getApiBaseUrl();
         const [servRes, branchRes] = await Promise.all([
-          fetch(`${base}/api/v1/services`),
-          fetch(`${base}/api/v1/branches`),
+          authFetch(`${base}/api/v1/services`),
+          authFetch(`${base}/api/v1/branches`),
         ]);
         if (servRes.ok) setServices(await servRes.json());
         if (branchRes.ok) {
@@ -81,7 +81,7 @@ export default function ServicesPage() {
     setAddSubmitting(true);
     setAddError(null);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/services`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/services`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export default function ServicesPage() {
     if (!editId) return;
     setEditSubmitting(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/services/${editId}`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/services/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -143,7 +143,7 @@ export default function ServicesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this service?")) return;
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/services/${id}`, { method: "DELETE" });
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/services/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete service.");
       setServices(prev => prev.filter(s => s.id !== id));
     } catch {

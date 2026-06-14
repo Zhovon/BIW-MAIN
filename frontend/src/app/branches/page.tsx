@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { getSupabaseBrowserClient, getRoleFromUserMetadata } from "@/lib/supabase/client";
 import type { AuthRole } from "@/lib/supabase/roles";
 
@@ -47,7 +47,7 @@ export default function BranchesPage() {
         if (user) {
           setUserRole(getRoleFromUserMetadata(user.user_metadata, user.app_metadata));
         }
-        const res = await fetch(`${getApiBaseUrl()}/api/v1/branches`);
+        const res = await authFetch(`${getApiBaseUrl()}/api/v1/branches`);
         if (res.ok) setBranches(await res.json());
       } finally {
         setLoading(false);
@@ -63,7 +63,7 @@ export default function BranchesPage() {
     setAddSubmitting(true);
     setAddError(null);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/branches`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/branches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,7 +103,7 @@ export default function BranchesPage() {
     if (!editId) return;
     setEditSubmitting(true);
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/branches/${editId}`, {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/branches/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

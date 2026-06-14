@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { InteractiveChart } from "@/components/interactive-chart";
 import { HeroVisual } from "@/components/hero-visual";
 import { StatCard } from "@/components/stat-card";
@@ -96,9 +96,9 @@ export default function Home() {
       try {
         const base = getApiBaseUrl();
         const [overviewRes, financialChartRes, dailyChartRes] = await Promise.all([
-          fetch(`${base}/api/v1/overview`),
-          fetch(`${base}/api/v1/overview/financial-chart`),
-          fetch(`${base}/api/v1/overview/daily-chart`),
+          authFetch(`${base}/api/v1/overview`),
+          authFetch(`${base}/api/v1/overview/financial-chart`),
+          authFetch(`${base}/api/v1/overview/daily-chart`),
         ]);
 
         if (overviewRes.ok && financialChartRes.ok && dailyChartRes.ok) {

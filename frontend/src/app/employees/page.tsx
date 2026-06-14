@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { getSupabaseBrowserClient, getRoleFromUserMetadata } from "@/lib/supabase/client";
 import type { AuthRole } from "@/lib/supabase/roles";
 
@@ -61,8 +61,8 @@ export default function EmployeesPage() {
         // 2. Fetch employees and branches
         const base = getApiBaseUrl();
         const [empRes, branchRes] = await Promise.all([
-          fetch(`${base}/api/v1/employees`),
-          fetch(`${base}/api/v1/branches`),
+          authFetch(`${base}/api/v1/employees`),
+          authFetch(`${base}/api/v1/branches`),
         ]);
 
         if (!empRes.ok || !branchRes.ok) {
@@ -120,7 +120,7 @@ export default function EmployeesPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/employees`, {
+      const res = await authFetch(`${base}/api/v1/employees`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -155,7 +155,7 @@ export default function EmployeesPage() {
 
     try {
       const base = getApiBaseUrl();
-      const res = await fetch(`${base}/api/v1/employees/${id}`, {
+      const res = await authFetch(`${base}/api/v1/employees/${id}`, {
         method: "DELETE",
       });
 
