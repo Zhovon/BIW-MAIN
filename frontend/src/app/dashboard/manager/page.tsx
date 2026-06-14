@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, useRef, useMemo, ChangeEvent, FormEvent } from "react";
 import { getApiBaseUrl } from "@/lib/api";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { InteractiveChart } from "@/components/interactive-chart";
+import { CalendarPicker } from "@/components/calendar-picker";
 
 type Employee = {
   id: string;
@@ -108,6 +109,16 @@ export default function ManagerDashboardPage() {
   // CRM Tab States
   const [activeTab, setActiveTab] = useState<"operations" | "crm">("operations");
   const [logDate, setLogDate] = useState<string>(new Date().toLocaleDateString("en-CA")); // YYYY-MM-DD in local time
+
+  // Compute active dates for calendar dot indicators
+  const activeDates = useMemo(() => {
+    const s = new Set<string>();
+    [...sales, ...costs].forEach(item =>
+      s.add(new Date(item.created_at).toLocaleDateString("en-CA"))
+    );
+    return s;
+  }, [sales, costs]);
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCrmCustomer, setSelectedCrmCustomer] = useState<Customer | null>(null);
   const [crmSearchQuery, setCrmSearchQuery] = useState("");
@@ -904,29 +915,12 @@ export default function ManagerDashboardPage() {
                       </span>
                     </div>
 
-                    {/* Date Picker */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <input
-                        type="date"
-                        value={logDate}
-                        onChange={(e) => setLogDate(e.target.value)}
-                        style={{
-                          background: "var(--surface-2)", border: "1px solid var(--border)",
-                          borderRadius: "8px", color: "var(--text)", padding: "6px 12px",
-                          fontSize: "0.85rem", outline: "none", cursor: "pointer",
-                        }}
-                      />
-                      <button
-                        onClick={() => setLogDate(new Date().toLocaleDateString("en-CA"))}
-                        style={{
-                          background: "none", border: "1px solid var(--line)", borderRadius: "8px",
-                          color: "var(--muted)", padding: "6px 12px", fontSize: "0.8rem",
-                          cursor: "pointer", whiteSpace: "nowrap",
-                        }}
-                      >
-                        Today
-                      </button>
-                    </div>
+                    {/* Modern Calendar Picker */}
+                    <CalendarPicker
+                      value={logDate}
+                      onChange={setLogDate}
+                      activeDates={activeDates}
+                    />
 
                     {/* Daily Summary Bar */}
                     {(() => {
