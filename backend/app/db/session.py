@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
@@ -8,8 +9,11 @@ SessionLocal = None
 
 if settings.database_url:
     database_url = settings.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
-    engine = create_engine(database_url, pool_pre_ping=True)
-    
+    engine = create_engine(
+        database_url,
+        poolclass=NullPool,  # Required for serverless — no persistent pool
+    )
+
     @event.listens_for(engine, "connect")
     def disable_prepared_statements(dbapi_connection, connection_record):
         if hasattr(dbapi_connection, "prepare_threshold"):

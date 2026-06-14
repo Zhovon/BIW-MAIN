@@ -12,3 +12,9 @@ def health_check() -> dict[str, str]:
         "service": settings.project_name,
         "environment": settings.environment,
     }
+
+
+@router.get("/ping")
+def ping() -> dict[str, str]:
+    """Lightweight keep-alive endpoint for UptimeRobot."""
+    return {"status": "pong"}
