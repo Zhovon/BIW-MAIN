@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl } from "@/lib/api";
+import { CalendarPicker } from "@/components/calendar-picker";
 
 type BranchFinancial = {
   branch: string;
@@ -142,6 +143,13 @@ export default function OwnerDashboardPage() {
   const [auditBranchId, setAuditBranchId] = useState("all");
   const [auditType, setAuditType] = useState("all");
   const [auditSearch, setAuditSearch] = useState("");
+  const [auditDate, setAuditDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
+
+  // Owner Analytics Period + Branch Filter State
+  const [ownerPeriod, setOwnerPeriod] = useState<"today" | "month" | "custom" | "all">("month");
+  const [ownerDate, setOwnerDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
+  const [ownerMonth, setOwnerMonth] = useState<string>(new Date().toISOString().substring(0, 7));
+  const [ownerBranch, setOwnerBranch] = useState<string>("all");
 
   useEffect(() => {
     const initOwnerDashboard = async () => {
@@ -345,21 +353,83 @@ export default function OwnerDashboardPage() {
     return s ? s.name : "Treatment";
   };
 
-  // Interleave Sales and Costs, apply filters
+  // ── Owner Analytics: Period + Branch Filtered Data ──────────────────────────
+  const ownerFilteredSales = useMemo(() => {
+    const today = new Date().toLocaleDateString("en-CA");
+    return sales.filter(s => {
+      const d = new Date(s.created_at).toLocaleDateString("en-CA");
+      if (ownerBranch !== "all" && s.branch_id !== ownerBranch) return false;
+      if (ownerPeriod === "today" && d !== today) return false;
+      if (ownerPeriod === "month" && d.substring(0, 7) !== ownerMonth) return false;
+      if (ownerPeriod === "custom" && d !== ownerDate) return false;
+      return true;
+    });
+  }, [sales, ownerBranch, ownerPeriod, ownerDate, ownerMonth]);
+
+  const ownerFilteredCosts = useMemo(() => {
+    const today = new Date().toLocaleDateString("en-CA");
+    return costs.filter(c => {
+      const d = new Date(c.created_at).toLocaleDateString("en-CA");
+      if (ownerBranch !== "all" && c.branch_id !== ownerBranch) return false;
+      if (ownerPeriod === "today" && d !== today) return false;
+      if (ownerPeriod === "month" && d.substring(0, 7) !== ownerMonth) return false;
+      if (ownerPeriod === "custom" && d !== ownerDate) return false;
+      return true;
+    });
+  }, [costs, ownerBranch, ownerPeriod, ownerDate, ownerMonth]);
+
+  const periodRevenue = useMemo(() => ownerFilteredSales.reduce((s, i) => s + i.sale_amount, 0), [ownerFilteredSales]);
+  const periodCost = useMemo(() => ownerFilteredCosts.reduce((s, i) => s + i.amount, 0), [ownerFilteredCosts]);
+  const periodProfit = periodRevenue - periodCost;
+  const periodMargin = periodRevenue > 0 ? (periodProfit / periodRevenue) * 100 : 0;
+
+  const branchStats = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; revenue: number; cost: number }>();
+    branches.forEach(b => map.set(b.id, { id: b.id, name: b.name, revenue: 0, cost: 0 }));
+    ownerFilteredSales.forEach(s => {
+      const key = s.branch_id ?? "__general__";
+      const e = map.get(key) ?? { id: key, name: "General", revenue: 0, cost: 0 };
+      map.set(key, { ...e, revenue: e.revenue + s.sale_amount });
+    });
+    ownerFilteredCosts.forEach(c => {
+      const key = c.branch_id ?? "__general__";
+      const e = map.get(key) ?? { id: key, name: "General", revenue: 0, cost: 0 };
+      map.set(key, { ...e, cost: e.cost + c.amount });
+    });
+    return Array.from(map.values())
+      .map(b => ({ ...b, profit: b.revenue - b.cost }))
+      .filter(b => b.revenue > 0 || b.cost > 0)
+      .sort((a, b) => b.profit - a.profit);
+  }, [ownerFilteredSales, ownerFilteredCosts, branches]);
+
+  const auditActiveDates = useMemo(() => {
+    const s = new Set<string>();
+    [...sales, ...costs].forEach(item => s.add(new Date(item.created_at).toLocaleDateString("en-CA")));
+    return s;
+  }, [sales, costs]);
+
+  const periodLabel = ownerPeriod === "today"
+    ? `Today, ${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}`
+    : ownerPeriod === "month"
+      ? new Date(ownerMonth + "-15").toLocaleDateString([], { month: "long", year: "numeric" })
+      : ownerPeriod === "custom"
+        ? new Date(ownerDate + "T12:00:00").toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+        : "All Time";
+
+  // Audit Log: interleave sales + costs, apply date + branch + type + search filters
   const filteredLogs = [
     ...sales.map(s => ({ ...s, logType: "sale" as const })),
     ...costs.map(c => ({ ...c, logType: "cost" as const }))
   ]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter(item => {
+      // 0. Date filter
+      if (new Date(item.created_at).toLocaleDateString("en-CA") !== auditDate) return false;
       // 1. Filter by branch
-      if (auditBranchId !== "all" && item.branch_id !== auditBranchId) {
-        return false;
-      }
+      if (auditBranchId !== "all" && item.branch_id !== auditBranchId) return false;
       // 2. Filter by type
       if (auditType === "sale" && item.logType !== "sale") return false;
       if (auditType === "cost" && item.logType !== "cost") return false;
-      
       // 3. Filter by search query
       if (auditSearch.trim()) {
         const query = auditSearch.toLowerCase();
@@ -458,128 +528,204 @@ export default function OwnerDashboardPage() {
         {activeTab === "dashboard" && (
           <>
 
+        {/* ── Period & Branch Filter Bar ── */}
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* Period Toggle */}
+            <div style={{ display: "flex", gap: "3px", background: "var(--surface-2)", padding: "4px", borderRadius: "10px", border: "1px solid var(--line)" }}>
+              {(["today", "month", "custom", "all"] as const).map(p => (
+                <button key={p} onClick={() => setOwnerPeriod(p)} style={{
+                  background: ownerPeriod === p ? "var(--accent)" : "none", border: "none",
+                  borderRadius: "7px", color: ownerPeriod === p ? "#000" : "var(--muted)",
+                  padding: "6px 14px", cursor: "pointer", fontSize: "0.83rem",
+                  fontWeight: ownerPeriod === p ? 700 : 400, transition: "all 0.15s", whiteSpace: "nowrap",
+                }}>
+                  {p === "today" ? "Today" : p === "month" ? "This Month" : p === "custom" ? "Pick Date" : "All Time"}
+                </button>
+              ))}
+            </div>
+
+            {/* Month input */}
+            {ownerPeriod === "month" && (
+              <input type="month" value={ownerMonth} onChange={e => setOwnerMonth(e.target.value)}
+                style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "#fff", outline: "none", fontSize: "0.85rem" }}
+              />
+            )}
+
+            {/* Branch Filter */}
+            <select value={ownerBranch} onChange={e => setOwnerBranch(e.target.value)}
+              style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "#fff", outline: "none", fontSize: "0.85rem", cursor: "pointer" }}
+            >
+              <option value="all">All Branches</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+
+            {/* Active period badge */}
+            <span style={{ fontSize: "0.78rem", color: "var(--accent)", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", padding: "4px 12px", whiteSpace: "nowrap" }}>
+              {periodLabel}
+            </span>
+          </div>
+
+          {/* Calendar for Pick Date mode */}
+          {ownerPeriod === "custom" && (
+            <div style={{ marginTop: "16px" }}>
+              <CalendarPicker value={ownerDate} onChange={setOwnerDate} activeDates={auditActiveDates} />
+            </div>
+          )}
+        </div>
+
         {/* Financial Stat Cards */}
         <div className="stat-grid" style={{ margin: "0 0 32px" }}>
           <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
-            <span className="stat-card__label">Consolidated Revenue</span>
-            <strong className="stat-card__value">{formatTaka(overview?.revenue_total || 0)}</strong>
-            <p className="stat-card__detail">Sum of all branch sales & retails.</p>
+            <span className="stat-card__label">Period Revenue</span>
+            <strong className="stat-card__value">{formatTaka(periodRevenue)}</strong>
+            <p className="stat-card__detail">{periodLabel} · treatment sales.</p>
           </article>
 
           <article className="stat-card" style={{ "--accent": "#A07830" } as React.CSSProperties}>
-            <span className="stat-card__label">Consolidated Cost</span>
-            <strong className="stat-card__value">{formatTaka(overview?.cost_total || 0)}</strong>
-            <p className="stat-card__detail">Supplier expenses, rents & supplies.</p>
+            <span className="stat-card__label">Period Cost</span>
+            <strong className="stat-card__value">{formatTaka(periodCost)}</strong>
+            <p className="stat-card__detail">{periodLabel} · operational expenses.</p>
           </article>
 
           <article className="stat-card" style={{ "--accent": "#E8C96A" } as React.CSSProperties}>
-            <span className="stat-card__label">Consolidated Profit</span>
-            <strong className="stat-card__value" style={{ color: "var(--gold-light)" }}>
-              {formatTaka(overview?.profit_total || 0)}
+            <span className="stat-card__label">Period Profit</span>
+            <strong className="stat-card__value" style={{ color: periodProfit >= 0 ? "var(--accent-3)" : "#ff7c7c" }}>
+              {formatTaka(periodProfit)}
             </strong>
-            <p className="stat-card__detail">Net margin after branch operations cost.</p>
+            <p className="stat-card__detail">Net margin: {periodMargin.toFixed(1)}%</p>
           </article>
 
           <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
             <span className="stat-card__label">Active Branches</span>
-            <strong className="stat-card__value">{overview?.branches.length}</strong>
-            <p className="stat-card__detail">Active operations locations.</p>
+            <strong className="stat-card__value">{branches.length}</strong>
+            <p className="stat-card__detail">{ownerBranch === "all" ? "All branches combined" : getBranchName(ownerBranch)}</p>
           </article>
         </div>
 
 
 
-        {/* Operations Breakdown Table */}
+        {/* Branch Operational Margins (period-filtered) */}
         <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 16px" }}>Branch Operational Margins</h2>
-          <div style={{ display: "grid", gap: "12px" }}>
-            {overview?.branches.map((b) => {
-              const profitPercent = b.revenue > 0 ? (b.profit / b.revenue) * 100 : 0;
-              
-              return (
-                <div
-                  key={b.branch}
-                  style={{
-                    padding: "16px",
-                    borderRadius: "16px",
-                    background: "rgba(255, 255, 255, 0.02)",
-                    border: "1px solid var(--line)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "16px"
-                  }}
-                >
-                  <div>
-                    <strong style={{ fontSize: "1.1rem", color: "#fff", display: "block" }}>{b.branch}</strong>
-                    <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
-                      Revenue: {formatTaka(b.revenue)} • Expenses: {formatTaka(b.cost)}
-                    </span>
-                  </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <strong style={{ display: "block", fontSize: "1.2rem", color: b.profit >= 0 ? "var(--accent-3)" : "#ff7c7c" }}>
-                      {formatTaka(b.profit)} profit
-                    </strong>
-                    <span style={{ fontSize: "0.78rem", color: "var(--accent)" }}>
-                      {profitPercent.toFixed(0)}% net margin
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operational Margins</h2>
+            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{periodLabel} · {ownerBranch === "all" ? "All Branches" : getBranchName(ownerBranch)}</span>
           </div>
+          {branchStats.length === 0 ? (
+            <p style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0", fontSize: "0.95rem" }}>
+              No data for the selected period and branch.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: "12px" }}>
+              {branchStats.map((b) => {
+                const profitPercent = b.revenue > 0 ? (b.profit / b.revenue) * 100 : 0;
+                const barWidth = periodRevenue > 0 ? (b.revenue / periodRevenue) * 100 : 0;
+                return (
+                  <div key={b.id} style={{ padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "10px" }}>
+                      <div>
+                        <strong style={{ fontSize: "1.1rem", color: "#fff", display: "block" }}>{b.name}</strong>
+                        <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
+                          Revenue: {formatTaka(b.revenue)} · Expenses: {formatTaka(b.cost)}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <strong style={{ display: "block", fontSize: "1.2rem", color: b.profit >= 0 ? "var(--accent-3)" : "#ff7c7c" }}>
+                          {formatTaka(b.profit)} profit
+                        </strong>
+                        <span style={{ fontSize: "0.78rem", color: "var(--accent)" }}>
+                          {profitPercent.toFixed(1)}% net margin
+                        </span>
+                      </div>
+                    </div>
+                    {/* Revenue share progress bar */}
+                    <div style={{ height: "4px", background: "var(--surface-2)", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${barWidth}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-3))", borderRadius: "4px", transition: "width 0.4s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </article>
 
-        {/* Daily Sales & Expenses Log (Audit Log) */}
+        {/* Daily Audit Log */}
         <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Sales & Expenses Audit Log</h2>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Audit Log</h2>
             <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
-              {filteredLogs.length} Entries found
+              {filteredLogs.length} Entries
             </span>
           </div>
 
-          {/* Filters Bar */}
-          <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", alignItems: "flex-end" }}>
-            <label style={{ display: "grid", gap: "6px", flex: "1 1 200px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Filter by Branch</span>
-              <select
-                value={auditBranchId}
-                onChange={(e) => setAuditBranchId(e.target.value)}
-                style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
-              >
-                <option value="all">All Branches</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </label>
+          {/* Two-column: Calendar + Filters + Summary */}
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "24px", marginBottom: "24px", alignItems: "start" }}>
 
-            <label style={{ display: "grid", gap: "6px", flex: "1 1 200px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Log Type</span>
-              <select
-                value={auditType}
-                onChange={(e) => setAuditType(e.target.value)}
-                style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
-              >
-                <option value="all">All Entries</option>
-                <option value="sale">Sales (Treatments Only)</option>
-                <option value="cost">Expenses Only</option>
-              </select>
-            </label>
+            {/* Left: Calendar */}
+            <CalendarPicker value={auditDate} onChange={setAuditDate} activeDates={auditActiveDates} />
 
-            <label style={{ display: "grid", gap: "6px", flex: "2 1 300px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Search logs</span>
-              <input
-                type="text"
-                placeholder="Search by therapist, service, category, or note..."
-                value={auditSearch}
-                onChange={(e) => setAuditSearch(e.target.value)}
-                style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
-              />
-            </label>
+            {/* Right: Summary + Filters */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+              {/* Date summary bar */}
+              <div style={{ padding: "10px 16px", borderRadius: "10px", background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.15)" }}>
+                <span style={{ fontSize: "0.82rem", color: "var(--accent)", fontWeight: 600 }}>
+                  {new Date(auditDate + "T12:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </span>
+              </div>
+
+              {/* Daily totals (only if entries exist) */}
+              {filteredLogs.length > 0 && (() => {
+                const dayRev = filteredLogs.filter(i => i.logType === "sale").reduce((s, i) => s + i.sale_amount, 0);
+                const dayCost = filteredLogs.filter(i => i.logType === "cost").reduce((s, i) => s + i.amount, 0);
+                const dayNet = dayRev - dayCost;
+                return (
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--accent)", display: "block" }}>Revenue</span>
+                      <strong style={{ color: "var(--accent-3)", fontSize: "0.92rem" }}>+৳{dayRev.toLocaleString()}</strong>
+                    </div>
+                    <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.06)", border: "1px solid rgba(255,100,100,0.15)" }}>
+                      <span style={{ fontSize: "0.7rem", color: "#ff7c7c", display: "block" }}>Expenses</span>
+                      <strong style={{ color: "#ff7c7c", fontSize: "0.92rem" }}>-৳{dayCost.toLocaleString()}</strong>
+                    </div>
+                    <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--muted)", display: "block" }}>Net</span>
+                      <strong style={{ color: dayNet >= 0 ? "var(--accent-3)" : "#ff7c7c", fontSize: "0.92rem" }}>৳{dayNet.toLocaleString()}</strong>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <label style={{ display: "grid", gap: "6px" }}>
+                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Filter by Branch</span>
+                <select value={auditBranchId} onChange={(e) => setAuditBranchId(e.target.value)}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                >
+                  <option value="all">All Branches</option>
+                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </label>
+
+              <label style={{ display: "grid", gap: "6px" }}>
+                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Log Type</span>
+                <select value={auditType} onChange={(e) => setAuditType(e.target.value)}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                >
+                  <option value="all">All Entries</option>
+                  <option value="sale">Sales (Treatments Only)</option>
+                  <option value="cost">Expenses Only</option>
+                </select>
+              </label>
+
+              <label style={{ display: "grid", gap: "6px" }}>
+                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Search logs</span>
+                <input type="text" placeholder="Search by therapist, service, category, or note..."
+                  value={auditSearch} onChange={(e) => setAuditSearch(e.target.value)}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                />
+              </label>
+            </div>
           </div>
 
           {/* Audit Logs list */}
