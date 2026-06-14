@@ -14,7 +14,7 @@ def health_check() -> dict[str, str]:
     }
 
 
-@router.get("/ping")
+@router.api_route("/ping", methods=["GET", "HEAD"])
 def ping() -> dict[str, str]:
-    """Lightweight keep-alive endpoint for UptimeRobot."""
+    """Lightweight keep-alive endpoint for UptimeRobot (supports GET and HEAD)."""
     return {"status": "pong"}
