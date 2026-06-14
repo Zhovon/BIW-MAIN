@@ -107,6 +107,7 @@ export default function ManagerDashboardPage() {
 
   // CRM Tab States
   const [activeTab, setActiveTab] = useState<"operations" | "crm">("operations");
+  const [logDate, setLogDate] = useState<string>(new Date().toLocaleDateString("en-CA")); // YYYY-MM-DD in local time
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCrmCustomer, setSelectedCrmCustomer] = useState<Customer | null>(null);
   const [crmSearchQuery, setCrmSearchQuery] = useState("");
@@ -893,73 +894,135 @@ export default function ManagerDashboardPage() {
               {/* Right Column: Live Activity Feed */}
               <div style={{ display: "grid", alignContent: "start", gap: "20px" }}>
                 <article className="glass-card" style={{ padding: "28px", minHeight: "650px", display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operations Log</h2>
-                    <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
-                      Live Feed
-                    </span>
+
+                  {/* Log Header + Date Picker */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operations Log</h2>
+                      <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
+                        Daily View
+                      </span>
+                    </div>
+
+                    {/* Date Picker */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="date"
+                        value={logDate}
+                        onChange={(e) => setLogDate(e.target.value)}
+                        style={{
+                          background: "var(--surface-2)", border: "1px solid var(--border)",
+                          borderRadius: "8px", color: "var(--text)", padding: "6px 12px",
+                          fontSize: "0.85rem", outline: "none", cursor: "pointer",
+                        }}
+                      />
+                      <button
+                        onClick={() => setLogDate(new Date().toLocaleDateString("en-CA"))}
+                        style={{
+                          background: "none", border: "1px solid var(--line)", borderRadius: "8px",
+                          color: "var(--muted)", padding: "6px 12px", fontSize: "0.8rem",
+                          cursor: "pointer", whiteSpace: "nowrap",
+                        }}
+                      >
+                        Today
+                      </button>
+                    </div>
+
+                    {/* Daily Summary Bar */}
+                    {(() => {
+                      const dayItems = [
+                        ...sales.map(s => ({ ...s, feedType: "sale" as const })),
+                        ...costs.map(c => ({ ...c, feedType: "cost" as const }))
+                      ].filter(item => new Date(item.created_at).toLocaleDateString("en-CA") === logDate);
+                      const dayRevenue = dayItems.filter(i => i.feedType === "sale").reduce((sum, i) => sum + (i as Sale).sale_amount, 0);
+                      const dayExpenses = dayItems.filter(i => i.feedType === "cost").reduce((sum, i) => sum + (i as CostEntry).amount, 0);
+                      const dayNet = dayRevenue - dayExpenses;
+                      if (dayItems.length === 0) return null;
+                      return (
+                        <div style={{ display: "flex", gap: "12px", marginTop: "12px", flexWrap: "wrap" }}>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                            <span style={{ fontSize: "0.72rem", color: "var(--accent)", display: "block" }}>Revenue</span>
+                            <strong style={{ color: "var(--accent-3)", fontSize: "0.95rem" }}>+৳{dayRevenue.toLocaleString()}</strong>
+                          </div>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.06)", border: "1px solid rgba(255,100,100,0.15)" }}>
+                            <span style={{ fontSize: "0.72rem", color: "#ff7c7c", display: "block" }}>Expenses</span>
+                            <strong style={{ color: "#ff7c7c", fontSize: "0.95rem" }}>-৳{dayExpenses.toLocaleString()}</strong>
+                          </div>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                            <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Net</span>
+                            <strong style={{ color: dayNet >= 0 ? "var(--accent-3)" : "#ff7c7c", fontSize: "0.95rem" }}>৳{dayNet.toLocaleString()}</strong>
+                          </div>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                            <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Entries</span>
+                            <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{dayItems.length}</strong>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
+                  {/* Log Entries */}
                   <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {sales.length === 0 && costs.length === 0 ? (
-                      <p style={{ textAlign: "center", color: "var(--muted)", marginTop: "40px", fontSize: "0.95rem" }}>
-                        No operations entries logged yet. Record a treatment to get started.
-                      </p>
-                    ) : (
-                      <>
-                        {[
-                          ...sales.map(s => ({ ...s, feedType: "sale" as const })),
-                          ...costs.map(c => ({ ...c, feedType: "cost" as const }))
-                        ]
-                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                          .map((item) => {
-                            const isSale = item.feedType === "sale";
-                            const dateStr = new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " - " + new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    {(() => {
+                      const dayItems = [
+                        ...sales.map(s => ({ ...s, feedType: "sale" as const })),
+                        ...costs.map(c => ({ ...c, feedType: "cost" as const }))
+                      ]
+                        .filter(item => new Date(item.created_at).toLocaleDateString("en-CA") === logDate)
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-                            return (
-                              <div
-                                key={item.id}
-                                style={{
-                                  padding: "16px", borderRadius: "16px",
-                                  background: isSale ? "rgba(110, 231, 255, 0.02)" : "rgba(255, 100, 100, 0.02)",
-                                  border: `1px solid ${isSale ? "rgba(110, 231, 255, 0.08)" : "rgba(255, 100, 100, 0.08)"}`,
-                                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px"
-                                }}
-                              >
-                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                  <span style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.05em", color: isSale ? "var(--accent)" : "#ff7c7c" }}>
-                                    {isSale ? "Treatment Completed" : "Branch Expense"}
-                                  </span>
-                                  <strong style={{ fontSize: "1rem", color: "#fff" }}>
-                                    {isSale ? getServiceName((item as Sale).service_id) : (item as CostEntry).cost_type}
-                                  </strong>
-                                  <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
-                                    {isSale
-                                      ? `By: ${getTherapistNames(item as Sale)}`
-                                      : (item as CostEntry).note || "No note specified"
-                                    }
-                                  </span>
-                                  <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
-                                    {dateStr}
-                                  </span>
-                                </div>
+                      if (dayItems.length === 0) {
+                        return (
+                          <p style={{ textAlign: "center", color: "var(--muted)", marginTop: "40px", fontSize: "0.95rem" }}>
+                            No entries for {new Date(logDate + "T12:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}.
+                          </p>
+                        );
+                      }
 
-                                <div style={{ textAlign: "right" }}>
-                                  <strong style={{ fontSize: "1.2rem", color: isSale ? "var(--accent-3)" : "#ff7c7c" }}>
-                                    {isSale ? `+৳${(item as Sale).sale_amount.toLocaleString()}` : `-৳${(item as CostEntry).amount.toLocaleString()}`}
-                                  </strong>
-                                  {isSale && (item as Sale).discount_amount > 0 && (
-                                    <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
-                                      ৳{(item as Sale).discount_amount.toLocaleString()} disc
-                                    </div>
-                                  )}
+                      return dayItems.map((item) => {
+                        const isSale = item.feedType === "sale";
+                        const timeStr = new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                        return (
+                          <div
+                            key={item.id}
+                            style={{
+                              padding: "16px", borderRadius: "16px",
+                              background: isSale ? "rgba(201,168,76,0.03)" : "rgba(255,100,100,0.02)",
+                              border: `1px solid ${isSale ? "rgba(201,168,76,0.12)" : "rgba(255,100,100,0.08)"}`,
+                              display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px"
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <span style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.05em", color: isSale ? "var(--accent)" : "#ff7c7c" }}>
+                                {isSale ? "Treatment Completed" : "Branch Expense"}
+                              </span>
+                              <strong style={{ fontSize: "1rem", color: "#fff" }}>
+                                {isSale ? getServiceName((item as Sale).service_id) : (item as CostEntry).cost_type}
+                              </strong>
+                              <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
+                                {isSale
+                                  ? `By: ${getTherapistNames(item as Sale)}`
+                                  : (item as CostEntry).note || "No note specified"
+                                }
+                              </span>
+                              <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
+                                {timeStr}
+                              </span>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <strong style={{ fontSize: "1.2rem", color: isSale ? "var(--accent-3)" : "#ff7c7c" }}>
+                                {isSale ? `+৳${(item as Sale).sale_amount.toLocaleString()}` : `-৳${(item as CostEntry).amount.toLocaleString()}`}
+                              </strong>
+                              {isSale && (item as Sale).discount_amount > 0 && (
+                                <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
+                                  ৳{(item as Sale).discount_amount.toLocaleString()} disc
                                 </div>
-                              </div>
-                            );
-                          })
-                        }
-                      </>
-                    )}
+                              )}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </article>
               </div>
