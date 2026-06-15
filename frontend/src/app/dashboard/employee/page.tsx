@@ -48,6 +48,11 @@ export default function EmployeeDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Time Punch State
+  const [isPunchedIn, setIsPunchedIn] = useState(false);
+  const [punchSubmitting, setPunchSubmitting] = useState(false);
+  const [todaysPunch, setTodaysPunch] = useState<any>(null);
+
   // Load current month by default
   useEffect(() => {
     const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
@@ -93,6 +98,16 @@ export default function EmployeeDashboardPage() {
           setServices(allServices);
         }
 
+        // 3. Fetch today's attendance for the punch clock
+        const todayStr = new Date().toLocaleDateString("en-CA");
+        const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${earningsData.employee_id}`);
+        if (attRes.ok) {
+          const attData = await attRes.json();
+          const todayAtt = attData.find((a: any) => a.date === todayStr && a.status === "Present");
+          setTodaysPunch(todayAtt || null);
+          setIsPunchedIn(!!(todayAtt && !todayAtt.clock_out_time));
+        }
+
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         setError(errMsg);
@@ -116,6 +131,27 @@ export default function EmployeeDashboardPage() {
   const getServicePrice = (serviceId: string) => {
     const s = services.find(item => item.id === serviceId);
     return s ? s.price : 0;
+  };
+
+  const handlePunch = async () => {
+    if (!earnings) return;
+    setPunchSubmitting(true);
+    try {
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/attendance/punch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employee_id: earnings.employee_id, date: todayStr })
+      });
+      if (!res.ok) throw new Error("Failed to punch time");
+      const data = await res.json();
+      setTodaysPunch(data);
+      setIsPunchedIn(!data.clock_out_time);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPunchSubmitting(false);
+    }
   };
 
   if (loading && !earnings) {
@@ -173,6 +209,27 @@ export default function EmployeeDashboardPage() {
             </label>
           </div>
         </div>
+
+        {/* Time Punch Card */}
+        <article className="glass-card" style={{ padding: "24px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)" }}>
+          <div>
+            <h2 style={{ fontSize: "1.2rem", margin: "0 0 4px", color: isPunchedIn ? "#92fb9c" : "var(--muted)" }}>
+              {isPunchedIn ? "🟢 You are Clocked In" : "⚪ You are Clocked Out"}
+            </h2>
+            <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: 0 }}>
+              {todaysPunch?.clock_in_time ? `Clocked in at ${new Date(todaysPunch.clock_in_time).toLocaleTimeString()}` : "Record your attendance for today."}
+              {todaysPunch?.clock_out_time && ` • Clocked out at ${new Date(todaysPunch.clock_out_time).toLocaleTimeString()}`}
+            </p>
+          </div>
+          <button
+            onClick={handlePunch}
+            disabled={punchSubmitting || todaysPunch?.clock_out_time}
+            className={isPunchedIn ? "button button--secondary" : "button button--primary"}
+            style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
+          >
+            {punchSubmitting ? "Wait..." : todaysPunch?.clock_out_time ? "Shift Ended" : isPunchedIn ? "Clock Out" : "Clock In"}
+          </button>
+        </article>
 
         {/* Live Monthly Stats cards */}
         <div className="stat-grid" style={{ margin: "0 0 32px" }}>

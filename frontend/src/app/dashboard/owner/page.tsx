@@ -147,6 +147,12 @@ export default function OwnerDashboardPage() {
   const [ownerMonth, setOwnerMonth] = useState<string>(new Date().toISOString().substring(0, 7));
   const [ownerBranch, setOwnerBranch] = useState<string>("all");
 
+  // Daily Roster State
+  const [rosterDate, setRosterDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
+  const [rosterBranch, setRosterBranch] = useState<string>("all");
+  const [roster, setRoster] = useState<any[]>([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+
   useEffect(() => {
     const initOwnerDashboard = async () => {
       try {
@@ -219,6 +225,26 @@ export default function OwnerDashboardPage() {
     initOwnerDashboard();
   }, []);
 
+  // Fetch Roster when date or branch changes
+  useEffect(() => {
+    const fetchRoster = async () => {
+      setRosterLoading(true);
+      try {
+        const res = await authFetch(`${getApiBaseUrl()}/api/v1/attendance/daily?date=${rosterDate}&branch_id=${rosterBranch}`);
+        if (res.ok) {
+          const data = await res.json();
+          setRoster(data);
+        }
+      } catch (err) {
+        console.error("Failed to load roster", err);
+      } finally {
+        setRosterLoading(false);
+      }
+    };
+    fetchRoster();
+  }, [rosterDate, rosterBranch]);
+
+  // Derived Values
   const handleCalculatePayroll = async () => {
     if (!payrollBranchId || !payrollMonth) return;
     setCalcLoading(true);
@@ -819,6 +845,56 @@ export default function OwnerDashboardPage() {
               })
             )}
           </div>
+        </article>
+
+        {/* Daily Roster Card */}
+        <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
+              <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>Monitor staff attendance, clock times, and overtime across branches.</p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <select
+                value={rosterBranch}
+                onChange={(e) => setRosterBranch(e.target.value)}
+                style={{ borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface-2)", padding: "0.5rem 0.8rem", color: "var(--text)", outline: "none" }}
+              >
+                <option value="all">All Branches</option>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+              <input
+                type="date"
+                value={rosterDate}
+                onChange={(e) => setRosterDate(e.target.value)}
+                style={{ borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface-2)", padding: "0.5rem 0.8rem", color: "var(--text)", outline: "none" }}
+              />
+            </div>
+          </div>
+
+          {rosterLoading ? (
+            <p style={{ color: "var(--muted)", textAlign: "center" }}>Loading roster...</p>
+          ) : (
+            <div style={{ display: "grid", gap: "12px", maxHeight: "400px", overflowY: "auto", paddingRight: "8px" }}>
+              {roster.map((r: any) => (
+                <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                  <div>
+                    <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
+                    <span style={{ fontSize: "0.8rem", color: r.status === "Present" ? "#92fb9c" : r.status === "Absent" ? "#ff7c7c" : "var(--accent)" }}>
+                      {r.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    {r.clock_in_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>In: {new Date(r.clock_in_time).toLocaleTimeString()}</div>}
+                    {r.clock_out_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Out: {new Date(r.clock_out_time).toLocaleTimeString()}</div>}
+                    {r.overtime_minutes > 0 && <div style={{ fontSize: "0.85rem", color: "var(--gold-light)" }}>Overtime: {(r.overtime_minutes / 60).toFixed(1)} hrs</div>}
+                    {r.status === "Leave" && <div style={{ fontSize: "0.85rem", color: "#ff7c7c" }}>Deduction: ৳{r.deduction_amount}</div>}
+                  </div>
+                </div>
+              ))}
+              {roster.length === 0 && <p style={{ color: "var(--muted)", textAlign: "center" }}>No employees found for this date.</p>}
+            </div>
+          )}
         </article>
 
         {/* Target Management and Payroll Consolidation Portal */}

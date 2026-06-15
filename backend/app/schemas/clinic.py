@@ -275,7 +275,10 @@ class AttendanceRecordCreate(BaseModel):
     employee_id: str
     date: str
     status: str
-    deduction_amount: float = 0
+    deduction_amount: float = 0.0
+    clock_in_time: Optional[datetime] = None
+    clock_out_time: Optional[datetime] = None
+    overtime_minutes: int = 0
 
 
 class CustomerReviewRead(BaseModel):

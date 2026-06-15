@@ -82,6 +82,16 @@ export default function ManagerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Time Punch State
+  const [isPunchedIn, setIsPunchedIn] = useState(false);
+  const [punchSubmitting, setPunchSubmitting] = useState(false);
+  const [todaysPunch, setTodaysPunch] = useState<any>(null);
+
+  // Daily Roster State
+  const [rosterDate, setRosterDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
+  const [roster, setRoster] = useState<any[]>([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+
   // Sale Logger Form State
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [showEmpDropdown, setShowEmpDropdown] = useState(false);
@@ -255,6 +265,16 @@ export default function ManagerDashboardPage() {
         setDailyChartData(dailyChartDataVal);
         setCustomers(customersData);
 
+        // Fetch Manager's Punch status for today
+        const todayStr = new Date().toLocaleDateString("en-CA");
+        const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${profileData.employee_id}`);
+        if (attRes.ok) {
+          const attData = await attRes.json();
+          const todayAtt = attData.find((a: any) => a.date === todayStr && a.status === "Present");
+          setTodaysPunch(todayAtt || null);
+          setIsPunchedIn(!!(todayAtt && !todayAtt.clock_out_time));
+        }
+
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         setError(errMsg);
@@ -265,6 +285,26 @@ export default function ManagerDashboardPage() {
 
     loadManagerData();
   }, []);
+
+  // Fetch Roster when rosterDate changes
+  useEffect(() => {
+    if (!profile?.branch_id) return;
+    const fetchRoster = async () => {
+      setRosterLoading(true);
+      try {
+        const res = await authFetch(`${getApiBaseUrl()}/api/v1/attendance/daily?date=${rosterDate}&branch_id=${profile.branch_id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setRoster(data);
+        }
+      } catch (err) {
+        console.error("Failed to load roster", err);
+      } finally {
+        setRosterLoading(false);
+      }
+    };
+    fetchRoster();
+  }, [rosterDate, profile?.branch_id]);
 
   // ── Employee multi-select helpers ──
   const toggleEmployee = (empId: string) => {
@@ -504,6 +544,27 @@ export default function ManagerDashboardPage() {
     }
   };
 
+  const handlePunch = async () => {
+    if (!profile) return;
+    setPunchSubmitting(true);
+    try {
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/attendance/punch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employee_id: profile.employee_id, date: todayStr })
+      });
+      if (!res.ok) throw new Error("Failed to punch time");
+      const data = await res.json();
+      setTodaysPunch(data);
+      setIsPunchedIn(!data.clock_out_time);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPunchSubmitting(false);
+    }
+  };
+
   const handleLogReview = async (e: FormEvent) => {
     e.preventDefault();
     setRevSubmitting(true);
@@ -686,6 +747,69 @@ export default function ManagerDashboardPage() {
                   <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Loading operations trend...</p>
                 )}
               </div>
+            </article>
+
+            {/* Time Punch Card */}
+            <article className="glass-card" style={{ padding: "24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)" }}>
+              <div>
+                <h2 style={{ fontSize: "1.2rem", margin: "0 0 4px", color: isPunchedIn ? "#92fb9c" : "var(--muted)" }}>
+                  {isPunchedIn ? "🟢 You are Clocked In" : "⚪ You are Clocked Out"}
+                </h2>
+                <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: 0 }}>
+                  {todaysPunch?.clock_in_time ? `Clocked in at ${new Date(todaysPunch.clock_in_time).toLocaleTimeString()}` : "Record your attendance for today."}
+                  {todaysPunch?.clock_out_time && ` • Clocked out at ${new Date(todaysPunch.clock_out_time).toLocaleTimeString()}`}
+                </p>
+              </div>
+              <button
+                onClick={handlePunch}
+                disabled={punchSubmitting || todaysPunch?.clock_out_time}
+                className={isPunchedIn ? "button button--secondary" : "button button--primary"}
+                style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
+              >
+                {punchSubmitting ? "Wait..." : todaysPunch?.clock_out_time ? "Shift Ended" : isPunchedIn ? "Clock Out" : "Clock In"}
+              </button>
+            </article>
+
+            {/* Daily Roster Card */}
+            <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+                <div>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
+                  <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>View who was present, absent, or on leave for any specific date.</p>
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    value={rosterDate}
+                    onChange={(e) => setRosterDate(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              {rosterLoading ? (
+                <p style={{ color: "var(--muted)", textAlign: "center" }}>Loading roster...</p>
+              ) : (
+                <div style={{ display: "grid", gap: "12px" }}>
+                  {roster.map((r: any) => (
+                    <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                      <div>
+                        <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
+                        <span style={{ fontSize: "0.8rem", color: r.status === "Present" ? "#92fb9c" : r.status === "Absent" ? "#ff7c7c" : "var(--accent)" }}>
+                          {r.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        {r.clock_in_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>In: {new Date(r.clock_in_time).toLocaleTimeString()}</div>}
+                        {r.clock_out_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Out: {new Date(r.clock_out_time).toLocaleTimeString()}</div>}
+                        {r.overtime_minutes > 0 && <div style={{ fontSize: "0.85rem", color: "var(--gold-light)" }}>Overtime: {(r.overtime_minutes / 60).toFixed(1)} hrs</div>}
+                        {r.status === "Leave" && <div style={{ fontSize: "0.85rem", color: "#ff7c7c" }}>Deduction: ৳{r.deduction_amount}</div>}
+                      </div>
+                    </div>
+                  ))}
+                  {roster.length === 0 && <p style={{ color: "var(--muted)", textAlign: "center" }}>No employees found for this branch.</p>}
+                </div>
+              )}
             </article>
 
             {/* Two Column Grid */}

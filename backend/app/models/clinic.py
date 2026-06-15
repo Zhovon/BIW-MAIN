@@ -162,8 +162,11 @@ class AttendanceRecord(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
     date: Mapped[str] = mapped_column(String, nullable=False)  # Format YYYY-MM-DD
-    status: Mapped[str] = mapped_column(String, nullable=False)  # 'Late', 'Leave'
+    status: Mapped[str] = mapped_column(String, nullable=False)  # 'Late', 'Leave', 'Present'
     deduction_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    clock_in_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    clock_out_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    overtime_minutes: Mapped[int] = mapped_column(default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     employee: Mapped["Employee"] = relationship()
