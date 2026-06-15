@@ -42,9 +42,13 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
                 bonus_earned += earned
                 earning_type = "bonus"
             else:
-                # Commission calculation: (sale_amount) * (commission_rate / 100)
-                rate = float(employee.commission_rate) / 100.0
-                earned = float(sale.sale_amount) * rate
+                # Commission calculation: Fixed amount per treatment, OR percentage if configured
+                treatment_fixed = float(employee.treatment_commission_amount)
+                if treatment_fixed > 0:
+                    earned = treatment_fixed
+                else:
+                    rate = float(employee.commission_rate) / 100.0
+                    earned = float(sale.sale_amount) * rate
                 commission_earned += earned
 
         treatments_details.append(

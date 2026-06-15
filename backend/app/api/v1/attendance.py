@@ -34,19 +34,45 @@ def create_attendance_record(payload: AttendanceRecordCreate, db: Session = Depe
 
 @router.post("/punch", response_model=AttendanceRecordRead)
 def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == payload.employee_id).first()
+    if not employee:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Employee not found")
+
     record = db.query(AttendanceRecord).filter(
         AttendanceRecord.employee_id == payload.employee_id,
-        AttendanceRecord.date == payload.date,
-        AttendanceRecord.status == "Present"
+        AttendanceRecord.date == payload.date
     ).first()
 
     now = datetime.now(timezone.utc)
+    local_now = datetime.now()
+
+    start_str = employee.shift_start_time or "10:00"
+    end_str = employee.shift_end_time or "19:00"
+    try:
+        sh, sm = map(int, start_str.split(":"))
+        eh, em = map(int, end_str.split(":"))
+        shift_duration_hours = (eh + em/60.0) - (sh + sm/60.0)
+        if shift_duration_hours < 0:
+            shift_duration_hours += 24
+    except:
+        shift_duration_hours = 9.0
+        sh, sm = 10, 0
 
     if not record:
+        status = "Present"
+        # Check Late (15 min grace period)
+        try:
+            expected_start = local_now.replace(hour=sh, minute=sm, second=0, microsecond=0)
+            if local_now.timestamp() > expected_start.timestamp() + (15 * 60):
+                status = "Late"
+        except Exception:
+            pass
+
         record = AttendanceRecord(
             employee_id=payload.employee_id,
             date=payload.date,
-            status="Present",
+            status=status,
             clock_in_time=now
         )
         db.add(record)
@@ -55,8 +81,8 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
             record.clock_out_time = now
             diff = now - record.clock_in_time.replace(tzinfo=timezone.utc)
             diff_hours = diff.total_seconds() / 3600
-            if diff_hours > 9:
-                record.overtime_minutes = int((diff_hours - 9) * 60)
+            if diff_hours > shift_duration_hours:
+                record.overtime_minutes = int((diff_hours - shift_duration_hours) * 60)
     
     db.commit()
     db.refresh(record)

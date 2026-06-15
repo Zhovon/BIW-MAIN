@@ -14,6 +14,10 @@ type Employee = {
   salary: number;
   bonus_rate: number;
   commission_rate: number;
+  treatment_commission_amount?: number;
+  shift_start_time?: string;
+  shift_end_time?: string;
+  off_days?: string;
   email?: string | null;
   user_id?: string | null;
 };
@@ -43,6 +47,10 @@ export default function EmployeesPage() {
   const [salary, setSalary] = useState("32000");
   const [bonusRate, setBonusRate] = useState("8");
   const [commissionRate, setCommissionRate] = useState("4");
+  const [treatmentCommissionAmount, setTreatmentCommissionAmount] = useState("0");
+  const [shiftStartTime, setShiftStartTime] = useState("10:00");
+  const [shiftEndTime, setShiftEndTime] = useState("19:00");
+  const [offDays, setOffDays] = useState("Sunday");
   
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -114,6 +122,10 @@ export default function EmployeesPage() {
       salary: parseFloat(salary) || 0,
       bonus_rate: parseFloat(bonusRate) || 0,
       commission_rate: parseFloat(commissionRate) || 0,
+      treatment_commission_amount: parseFloat(treatmentCommissionAmount) || 0,
+      shift_start_time: shiftStartTime,
+      shift_end_time: shiftEndTime,
+      off_days: offDays,
       email: email || null,
       password: password || null,
     };
@@ -139,6 +151,10 @@ export default function EmployeesPage() {
       setEmail("");
       setPassword("");
       setCustomClinicalRole("");
+      setTreatmentCommissionAmount("0");
+      setShiftStartTime("10:00");
+      setShiftEndTime("19:00");
+      setOffDays("Sunday");
       setShowAddForm(false);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
@@ -361,6 +377,53 @@ export default function EmployeesPage() {
                       style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
                     />
                   </label>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.86rem", color: "var(--muted)" }}>Fixed Comm. / Treatment (৳)</span>
+                    <input
+                      type="number"
+                      value={treatmentCommissionAmount}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setTreatmentCommissionAmount(e.target.value)}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    />
+                  </label>
+                </div>
+
+                {/* Schedule details */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginTop: "8px" }}>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.86rem", color: "var(--muted)" }}>Shift Start</span>
+                    <input
+                      type="time"
+                      value={shiftStartTime}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setShiftStartTime(e.target.value)}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.86rem", color: "var(--muted)" }}>Shift End</span>
+                    <input
+                      type="time"
+                      value={shiftEndTime}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setShiftEndTime(e.target.value)}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    />
+                  </label>
+                  <label style={{ display: "grid", gap: "6px" }}>
+                    <span style={{ fontSize: "0.86rem", color: "var(--muted)" }}>Weekend / Off Day</span>
+                    <select
+                      value={offDays}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setOffDays(e.target.value)}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    >
+                      <option value="Sunday">Sunday</option>
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                    </select>
+                  </label>
                 </div>
               </div>
 
@@ -466,6 +529,13 @@ export default function EmployeesPage() {
                       <dt>Salary & Structure</dt>
                       <dd style={{ fontSize: "0.95rem" }}>
                         ৳{employee.salary.toLocaleString()} / mo • {employee.bonus_rate}% bonus • {employee.commission_rate}% comm
+                        {employee.treatment_commission_amount ? ` • ৳${employee.treatment_commission_amount} / treatment` : ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Schedule</dt>
+                      <dd style={{ fontSize: "0.95rem" }}>
+                        {employee.shift_start_time || "10:00"} - {employee.shift_end_time || "19:00"} • Off: {employee.off_days || "Sunday"}
                       </dd>
                     </div>
                     {hasLogin && (

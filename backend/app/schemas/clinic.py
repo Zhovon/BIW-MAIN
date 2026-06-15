@@ -58,6 +58,10 @@ class EmployeeRead(BaseModel):
     salary: float
     bonus_rate: float = 0
     commission_rate: float = 0
+    treatment_commission_amount: float = 0.0
+    shift_start_time: str = "10:00"
+    shift_end_time: str = "19:00"
+    off_days: str = "Sunday"
     email: Optional[str] = None
     user_id: Optional[str] = None
     is_active: bool = True
@@ -72,6 +76,10 @@ class EmployeeCreate(BaseModel):
     salary: float
     bonus_rate: float = 0
     commission_rate: float = 0
+    treatment_commission_amount: float = 0.0
+    shift_start_time: str = "10:00"
+    shift_end_time: str = "19:00"
+    off_days: str = "Sunday"
     email: Optional[str] = None
     user_id: Optional[str] = None
     password: Optional[str] = None
