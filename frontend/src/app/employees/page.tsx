@@ -348,7 +348,7 @@ export default function EmployeesPage() {
                   )}
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
                   <label style={{ display: "grid", gap: "6px" }}>
                     <span style={{ fontSize: "0.86rem", color: "var(--muted)" }}>Salary (৳) *</span>
                     <input
