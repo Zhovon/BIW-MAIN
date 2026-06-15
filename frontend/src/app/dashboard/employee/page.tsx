@@ -40,6 +40,16 @@ type Service = {
   price: number;
 };
 
+type AttendanceRecordType = {
+  employee_id: string;
+  date: string;
+  status: string;
+  deduction_amount: number;
+  clock_in_time: string | null;
+  clock_out_time: string | null;
+  overtime_minutes: number;
+};
+
 export default function EmployeeDashboardPage() {
   const [earnings, setEarnings] = useState<EarningsProfile | null>(null);
   const [assignments, setAssignments] = useState<ServiceAssignment[]>([]);
@@ -51,7 +61,7 @@ export default function EmployeeDashboardPage() {
   // Time Punch State
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchSubmitting, setPunchSubmitting] = useState(false);
-  const [todaysPunch, setTodaysPunch] = useState<any>(null);
+  const [todaysPunch, setTodaysPunch] = useState<AttendanceRecordType | null>(null);
 
   // Load current month by default
   useEffect(() => {
@@ -103,7 +113,7 @@ export default function EmployeeDashboardPage() {
         const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${earningsData.employee_id}`);
         if (attRes.ok) {
           const attData = await attRes.json();
-          const todayAtt = attData.find((a: any) => a.date === todayStr && a.status === "Present");
+          const todayAtt = attData.find((a: AttendanceRecordType) => a.date === todayStr && a.status === "Present");
           setTodaysPunch(todayAtt || null);
           setIsPunchedIn(!!(todayAtt && !todayAtt.clock_out_time));
         }
@@ -223,7 +233,7 @@ export default function EmployeeDashboardPage() {
           </div>
           <button
             onClick={handlePunch}
-            disabled={punchSubmitting || todaysPunch?.clock_out_time}
+            disabled={punchSubmitting || !!todaysPunch?.clock_out_time}
             className={isPunchedIn ? "button button--secondary" : "button button--primary"}
             style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
           >

@@ -73,6 +73,18 @@ type ManagerProfile = {
   branch_id: string | null;
 };
 
+type AttendanceRecordType = {
+  employee_id: string;
+  full_name?: string;
+  role?: string;
+  date: string;
+  status: string;
+  deduction_amount: number;
+  clock_in_time: string | null;
+  clock_out_time: string | null;
+  overtime_minutes: number;
+};
+
 export default function ManagerDashboardPage() {
   const [profile, setProfile] = useState<ManagerProfile | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -85,11 +97,11 @@ export default function ManagerDashboardPage() {
   // Time Punch State
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchSubmitting, setPunchSubmitting] = useState(false);
-  const [todaysPunch, setTodaysPunch] = useState<any>(null);
+  const [todaysPunch, setTodaysPunch] = useState<AttendanceRecordType | null>(null);
 
   // Daily Roster State
   const [rosterDate, setRosterDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
-  const [roster, setRoster] = useState<any[]>([]);
+  const [roster, setRoster] = useState<AttendanceRecordType[]>([]);
   const [rosterLoading, setRosterLoading] = useState(false);
 
   // Sale Logger Form State
@@ -270,7 +282,7 @@ export default function ManagerDashboardPage() {
         const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${profileData.employee_id}`);
         if (attRes.ok) {
           const attData = await attRes.json();
-          const todayAtt = attData.find((a: any) => a.date === todayStr && a.status === "Present");
+          const todayAtt = attData.find((a: AttendanceRecordType) => a.date === todayStr && a.status === "Present");
           setTodaysPunch(todayAtt || null);
           setIsPunchedIn(!!(todayAtt && !todayAtt.clock_out_time));
         }
@@ -762,7 +774,7 @@ export default function ManagerDashboardPage() {
               </div>
               <button
                 onClick={handlePunch}
-                disabled={punchSubmitting || todaysPunch?.clock_out_time}
+                disabled={punchSubmitting || !!todaysPunch?.clock_out_time}
                 className={isPunchedIn ? "button button--secondary" : "button button--primary"}
                 style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
               >
@@ -791,7 +803,7 @@ export default function ManagerDashboardPage() {
                 <p style={{ color: "var(--muted)", textAlign: "center" }}>Loading roster...</p>
               ) : (
                 <div style={{ display: "grid", gap: "12px" }}>
-                  {roster.map((r: any) => (
+                  {roster.map((r: AttendanceRecordType) => (
                     <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
                       <div>
                         <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>

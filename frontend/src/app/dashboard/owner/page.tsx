@@ -90,6 +90,18 @@ type Customer = {
   created_at: string;
 };
 
+type AttendanceRecordType = {
+  employee_id: string;
+  full_name?: string;
+  role?: string;
+  date: string;
+  status: string;
+  deduction_amount: number;
+  clock_in_time: string | null;
+  clock_out_time: string | null;
+  overtime_minutes: number;
+};
+
 export default function OwnerDashboardPage() {
   // Core State
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -150,7 +162,7 @@ export default function OwnerDashboardPage() {
   // Daily Roster State
   const [rosterDate, setRosterDate] = useState<string>(new Date().toLocaleDateString("en-CA"));
   const [rosterBranch, setRosterBranch] = useState<string>("all");
-  const [roster, setRoster] = useState<any[]>([]);
+  const [roster, setRoster] = useState<AttendanceRecordType[]>([]);
   const [rosterLoading, setRosterLoading] = useState(false);
 
   useEffect(() => {
@@ -876,7 +888,7 @@ export default function OwnerDashboardPage() {
             <p style={{ color: "var(--muted)", textAlign: "center" }}>Loading roster...</p>
           ) : (
             <div style={{ display: "grid", gap: "12px", maxHeight: "400px", overflowY: "auto", paddingRight: "8px" }}>
-              {roster.map((r: any) => (
+              {roster.map((r: AttendanceRecordType) => (
                 <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
                   <div>
                     <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
