@@ -243,3 +243,55 @@ class DailyChartsRead(BaseModel):
     total_sales: float
     total_costs: float
     profit_margin: float
+
+
+# ── Target, Attendance & Review Schemas ───────────────────────
+
+class BranchTargetRead(BaseModel):
+    id: str
+    branch_id: str
+    month: str
+    target_amount: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+class BranchTargetCreate(BaseModel):
+    branch_id: str
+    month: str
+    target_amount: float
+
+
+class AttendanceRecordRead(BaseModel):
+    id: str
+    employee_id: str
+    date: str
+    status: str
+    deduction_amount: float
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class AttendanceRecordCreate(BaseModel):
+    employee_id: str
+    date: str
+    status: str
+    deduction_amount: float = 0
+
+
+class CustomerReviewRead(BaseModel):
+    id: str
+    branch_id: Optional[str] = None
+    customer_id: Optional[str] = None
+    employee_id: str
+    rating: int
+    review_text: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class CustomerReviewCreate(BaseModel):
+    branch_id: Optional[str] = None
+    customer_id: Optional[str] = None
+    employee_id: str
+    rating: int
+    review_text: Optional[str] = None

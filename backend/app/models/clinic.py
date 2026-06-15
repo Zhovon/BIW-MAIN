@@ -142,3 +142,44 @@ class PayrollRun(Base):
     bonus_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     commission_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class BranchTarget(Base):
+    __tablename__ = "branch_targets"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"))
+    month: Mapped[str] = mapped_column(String, nullable=False)  # Format YYYY-MM
+    target_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    branch: Mapped["Branch"] = relationship()
+
+
+class AttendanceRecord(Base):
+    __tablename__ = "attendance_records"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
+    date: Mapped[str] = mapped_column(String, nullable=False)  # Format YYYY-MM-DD
+    status: Mapped[str] = mapped_column(String, nullable=False)  # 'Late', 'Leave'
+    deduction_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    employee: Mapped["Employee"] = relationship()
+
+
+class CustomerReview(Base):
+    __tablename__ = "customer_reviews"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
+    customer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("customers.id", ondelete="SET NULL"))
+    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
+    rating: Mapped[int] = mapped_column(nullable=False)
+    review_text: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    employee: Mapped["Employee"] = relationship()
+    customer: Mapped[Optional["Customer"]] = relationship()
+    branch: Mapped[Optional["Branch"]] = relationship()

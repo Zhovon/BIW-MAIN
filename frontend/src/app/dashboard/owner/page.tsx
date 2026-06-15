@@ -17,6 +17,9 @@ type PayrollEmployee = {
   base_salary: number;
   bonus_earned: number;
   commission_earned: number;
+  late_deduction: number;
+  leave_deduction: number;
+  total_deductions: number;
   total_earned: number;
   treatment_count: number;
 };
@@ -118,6 +121,14 @@ export default function OwnerDashboardPage() {
   const [commitLoading, setCommitLoading] = useState(false);
   const [commitSuccess, setCommitSuccess] = useState(false);
 
+  // Target Management State
+  const [targetBranchId, setTargetBranchId] = useState("");
+  const [targetMonth, setTargetMonth] = useState("");
+  const [targetAmount, setTargetAmount] = useState("");
+  const [targetSubmitting, setTargetSubmitting] = useState(false);
+  const [targetSuccess, setTargetSuccess] = useState(false);
+  const [targetError, setTargetError] = useState<string | null>(null);
+
   // Detailed Audit Logs State
   const [sales, setSales] = useState<Sale[]>([]);
   const [costs, setCosts] = useState<CostEntry[]>([]);
@@ -143,6 +154,7 @@ export default function OwnerDashboardPage() {
         const base = getApiBaseUrl();
         const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
         setPayrollMonth(currentMonth);
+        setTargetMonth(currentMonth);
 
         // Fetch Branches, Payroll runs, Sales, Costs, Services, Employees, Customers
         const [
@@ -193,6 +205,7 @@ export default function OwnerDashboardPage() {
 
         if (branchesData.length > 0) {
           setPayrollBranchId(branchesData[0].id);
+          setTargetBranchId(branchesData[0].id);
         }
 
       } catch (err) {
@@ -264,6 +277,29 @@ export default function OwnerDashboardPage() {
       alert(err instanceof Error ? err.message : String(err));
     } finally {
       setCommitLoading(false);
+    }
+  };
+
+  const handleSetTarget = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetBranchId || !targetMonth || !targetAmount) return;
+    setTargetSubmitting(true);
+    setTargetError(null);
+    setTargetSuccess(false);
+    try {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/targets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ branch_id: targetBranchId, month: targetMonth, target_amount: parseFloat(targetAmount) })
+      });
+      if (!res.ok) throw new Error("Failed to set target");
+      setTargetSuccess(true);
+      setTimeout(() => setTargetSuccess(false), 3000);
+      setTargetAmount("");
+    } catch (err) {
+      setTargetError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setTargetSubmitting(false);
     }
   };
 
@@ -785,10 +821,64 @@ export default function OwnerDashboardPage() {
           </div>
         </article>
 
-        {/* Payroll Consolidation and Calculation Portal */}
+        {/* Target Management and Payroll Consolidation Portal */}
         <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
           
-          {/* Payroll Calc View */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Target Management View */}
+            <article className="glass-card" style={{ padding: "28px" }}>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 8px", color: "var(--accent)" }}>Branch Targets</h2>
+              <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 20px" }}>
+                Set monthly minimum revenue targets for branches. Managers only earn commission if this target is exceeded.
+              </p>
+              
+              {targetError && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>{targetError}</div>}
+              {targetSuccess && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>Monthly branch target saved successfully!</div>}
+
+              <form onSubmit={handleSetTarget} style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
+                <label style={{ display: "grid", gap: "6px", flex: 1 }}>
+                  <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Branch</span>
+                  <select
+                    value={targetBranchId}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setTargetBranchId(e.target.value)}
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                  >
+                    {branches.map((b: Branch) => (
+                      <option key={b.id} value={b.id}>{b.name} ({b.city})</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ display: "grid", gap: "6px", flex: 1 }}>
+                  <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Month</span>
+                  <input
+                    type="month"
+                    value={targetMonth}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setTargetMonth(e.target.value)}
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none", font: "inherit" }}
+                  />
+                </label>
+                <label style={{ display: "grid", gap: "6px", flex: 1 }}>
+                  <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Target (৳)</span>
+                  <input
+                    type="number" required
+                    value={targetAmount}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setTargetAmount(e.target.value)}
+                    placeholder="e.g. 500000"
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none", font: "inherit" }}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={targetSubmitting}
+                  className="button button--secondary"
+                  style={{ padding: "0.75rem 1.4rem", height: "48px" }}
+                >
+                  {targetSubmitting ? "Saving..." : "Set Target"}
+                </button>
+              </form>
+            </article>
+
+            {/* Payroll Calc View */}
           <article className="glass-card" style={{ padding: "28px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 8px", color: "var(--accent)" }}>Payroll Console</h2>
             <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 20px" }}>
@@ -885,6 +975,11 @@ export default function OwnerDashboardPage() {
                         <span style={{ fontSize: "0.76rem", color: "var(--muted)", display: "block" }}>
                           (৳{emp.base_salary.toLocaleString()} base + ৳{(emp.bonus_earned + emp.commission_earned).toLocaleString()} earn)
                         </span>
+                        {emp.total_deductions > 0 && (
+                          <span style={{ fontSize: "0.76rem", color: "#ff7c7c", display: "block", marginTop: "2px" }}>
+                            -৳{emp.total_deductions.toLocaleString()} (Late: ৳{emp.late_deduction.toLocaleString()}, Leave: ৳{emp.leave_deduction.toLocaleString()})
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -903,6 +998,7 @@ export default function OwnerDashboardPage() {
               </div>
             )}
           </article>
+          </div>
 
           {/* Payroll History */}
           <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column" }}>

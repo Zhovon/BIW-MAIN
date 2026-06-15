@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.clinic import list_payroll_runs
 from app.db.session import get_db
-from app.models.clinic import Branch, Employee, PayrollRun, Sale, Service, ServiceAssignment
+from app.models.clinic import Branch, Employee, PayrollRun, Sale, Service, ServiceAssignment, BranchTarget, AttendanceRecord
 from app.schemas.clinic import PayrollRunCreate, PayrollRunRead
 
 router = APIRouter(prefix="/payroll", tags=["payroll"])
@@ -35,15 +35,17 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
         earned = 0.0
         earning_type = "commission"
 
-        if assignment:
-            earned = float(assignment.bonus_amount)
-            bonus_earned += earned
-            earning_type = "bonus"
-        else:
-            # Commission calculation: (sale_amount) * (commission_rate / 100)
-            rate = float(employee.commission_rate) / 100.0
-            earned = float(sale.sale_amount) * rate
-            commission_earned += earned
+        # For non-managers, calculate commission from sales directly
+        if employee.role.lower() != "manager":
+            if assignment:
+                earned = float(assignment.bonus_amount)
+                bonus_earned += earned
+                earning_type = "bonus"
+            else:
+                # Commission calculation: (sale_amount) * (commission_rate / 100)
+                rate = float(employee.commission_rate) / 100.0
+                earned = float(sale.sale_amount) * rate
+                commission_earned += earned
 
         treatments_details.append(
             {
@@ -57,11 +59,51 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
             }
         )
 
+    # Manager-specific logic for commission based on branch target
+    if employee.role.lower() == "manager" and employee.branch_id:
+        target_record = db.query(BranchTarget).filter(
+            BranchTarget.branch_id == employee.branch_id,
+            BranchTarget.month == f"{year}-{month:02d}"
+        ).first()
+        
+        target_amount = float(target_record.target_amount) if target_record else 0.0
+
+        # Calculate total branch revenue
+        branch_sales = db.query(Sale).filter(
+            Sale.branch_id == employee.branch_id,
+            extract("year", Sale.created_at) == year,
+            extract("month", Sale.created_at) == month,
+        ).all()
+        branch_revenue = sum([float(s.sale_amount) for s in branch_sales])
+        
+        if branch_revenue > target_amount and target_amount > 0:
+            extra_revenue = branch_revenue - target_amount
+            rate = float(employee.commission_rate) / 100.0
+            commission_earned += extra_revenue * rate
+
+    # Calculate Deductions
+    month_str = f"{year}-{month:02d}"
+    attendances = db.query(AttendanceRecord).filter(
+        AttendanceRecord.employee_id == employee.id,
+        AttendanceRecord.date.startswith(month_str)
+    ).all()
+
+    late_count = sum([1 for a in attendances if a.status.lower() == "late"])
+    late_deduction = float(employee.salary) / 30.0 * (late_count // 3)
+
+    leave_deduction = sum([float(a.deduction_amount) for a in attendances if a.status.lower() == "leave"])
+    total_deductions = late_deduction + leave_deduction
+
+    total_earned = float(employee.salary) + bonus_earned + commission_earned - total_deductions
+
     return {
         "base_salary": float(employee.salary),
         "bonus_earned": bonus_earned,
         "commission_earned": commission_earned,
-        "total_earned": float(employee.salary) + bonus_earned + commission_earned,
+        "late_deduction": late_deduction,
+        "leave_deduction": leave_deduction,
+        "total_deductions": total_deductions,
+        "total_earned": total_earned if total_earned > 0 else 0.0,
         "treatment_count": len(sales),
         "treatments": treatments_details,
     }
@@ -128,6 +170,9 @@ def calculate_branch_payroll(branch_id: str, month: str, db: Session = Depends(g
                 "base_salary": earnings["base_salary"],
                 "bonus_earned": earnings["bonus_earned"],
                 "commission_earned": earnings["commission_earned"],
+                "late_deduction": earnings.get("late_deduction", 0),
+                "leave_deduction": earnings.get("leave_deduction", 0),
+                "total_deductions": earnings.get("total_deductions", 0),
                 "total_earned": earnings["total_earned"],
                 "treatment_count": earnings["treatment_count"],
             }
@@ -176,6 +221,9 @@ def get_employee_earnings_by_id(employee_id: str, month: str, db: Session = Depe
         "base_salary": earnings["base_salary"],
         "bonus_earned": earnings["bonus_earned"],
         "commission_earned": earnings["commission_earned"],
+        "late_deduction": earnings.get("late_deduction", 0),
+        "leave_deduction": earnings.get("leave_deduction", 0),
+        "total_deductions": earnings.get("total_deductions", 0),
         "total_earned": earnings["total_earned"],
         "treatment_count": earnings["treatment_count"],
         "treatments": earnings["treatments"],
@@ -210,6 +258,9 @@ def get_employee_earnings_by_user_id(user_id: str, month: str, db: Session = Dep
         "base_salary": earnings["base_salary"],
         "bonus_earned": earnings["bonus_earned"],
         "commission_earned": earnings["commission_earned"],
+        "late_deduction": earnings.get("late_deduction", 0),
+        "leave_deduction": earnings.get("leave_deduction", 0),
+        "total_deductions": earnings.get("total_deductions", 0),
         "total_earned": earnings["total_earned"],
         "treatment_count": earnings["treatment_count"],
         "treatments": earnings["treatments"],

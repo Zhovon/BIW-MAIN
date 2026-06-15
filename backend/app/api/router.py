@@ -12,6 +12,9 @@ from app.api.v1.revenue import router as revenue_router
 from app.api.v1.service_assignments import router as service_assignments_router
 from app.api.v1.services import router as services_router
 from app.api.v1.sales import router as sales_router
+from app.api.v1.targets import router as targets_router
+from app.api.v1.attendance import router as attendance_router
+from app.api.v1.reviews import router as reviews_router
 from app.core.config import settings
 from app.core.auth import get_current_user
 
@@ -31,3 +34,6 @@ api_router.include_router(costs_router,               dependencies=_auth)
 api_router.include_router(employees_router,           dependencies=_auth)
 api_router.include_router(payroll_router,             dependencies=_auth)
 api_router.include_router(customers_router,           dependencies=_auth)
+api_router.include_router(targets_router,             dependencies=_auth)
+api_router.include_router(attendance_router,          dependencies=_auth)
+api_router.include_router(reviews_router,             dependencies=_auth)

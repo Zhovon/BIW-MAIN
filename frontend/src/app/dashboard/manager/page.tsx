@@ -59,6 +59,13 @@ type CostEntry = {
   created_at: string;
 };
 
+type BranchTarget = {
+  id: string;
+  branch_id: string;
+  month: string;
+  target_amount: number;
+};
+
 type ManagerProfile = {
   employee_id: string;
   full_name: string;
@@ -137,6 +144,23 @@ export default function ManagerDashboardPage() {
   const [costError, setCostError] = useState<string | null>(null);
   const [costSuccess, setCostSuccess] = useState(false);
 
+  // New Features States
+  const [branchTarget, setBranchTarget] = useState<BranchTarget | null>(null);
+
+  const [attEmployeeId, setAttEmployeeId] = useState("");
+  const [attStatus, setAttStatus] = useState("Late");
+  const [attDeduction, setAttDeduction] = useState("0");
+  const [attSubmitting, setAttSubmitting] = useState(false);
+  const [attError, setAttError] = useState<string | null>(null);
+  const [attSuccess, setAttSuccess] = useState(false);
+
+  const [revEmployeeId, setRevEmployeeId] = useState("");
+  const [revRating, setRevRating] = useState("5");
+  const [revText, setRevText] = useState("");
+  const [revSubmitting, setRevSubmitting] = useState(false);
+  const [revError, setRevError] = useState<string | null>(null);
+  const [revSuccess, setRevSuccess] = useState(false);
+
   // Refs for click-outside
   const empDropdownRef = useRef<HTMLDivElement>(null);
   const custDropdownRef = useRef<HTMLDivElement>(null);
@@ -186,15 +210,16 @@ export default function ManagerDashboardPage() {
           branch_id: managerBranchId
         });
 
-        const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes] = await Promise.all([
+        const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes, targetsRes] = await Promise.all([
           authFetch(`${base}/api/v1/services`),
           authFetch(`${base}/api/v1/sales`),
           authFetch(`${base}/api/v1/costs`),
           authFetch(`${base}/api/v1/overview/daily-chart?branch_id=${managerBranchId || ""}`),
-          authFetch(`${base}/api/v1/customers`)
+          authFetch(`${base}/api/v1/customers`),
+          authFetch(`${base}/api/v1/targets${managerBranchId ? `?branch_id=${managerBranchId}` : ""}`)
         ]);
 
-        if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok) {
+        if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok || !targetsRes.ok) {
           throw new Error("Failed to load operations catalogs.");
         }
 
@@ -203,9 +228,18 @@ export default function ManagerDashboardPage() {
         const costsData: CostEntry[] = await costsRes.json();
         const dailyChartDataVal = await dailyChartRes.json();
         const customersData: Customer[] = await customersRes.json();
+        const targetsData: BranchTarget[] = await targetsRes.json();
+
+        // Set target for current month
+        const currentTarget = targetsData.find(t => t.month === currentMonth);
+        if (currentTarget) setBranchTarget(currentTarget);
 
         const activeTherapists = allEmps.filter(e => e.is_active && e.id !== profileData.employee_id);
         setEmployees(activeTherapists);
+        if (activeTherapists.length > 0) {
+          setAttEmployeeId(activeTherapists[0].id);
+          setRevEmployeeId(activeTherapists[0].id);
+        }
 
         const branchServices = servicesData;
         setServices(branchServices);
@@ -438,6 +472,72 @@ export default function ManagerDashboardPage() {
       setCostError(errMsg);
     } finally {
       setCostSubmitting(false);
+    }
+  };
+
+  const handleLogAttendance = async (e: FormEvent) => {
+    e.preventDefault();
+    setAttSubmitting(true);
+    setAttError(null);
+    setAttSuccess(false);
+
+    const payload = {
+      employee_id: attEmployeeId,
+      date: logDate,
+      status: attStatus,
+      deduction_amount: parseFloat(attDeduction) || 0
+    };
+
+    try {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to log attendance");
+      setAttSuccess(true);
+      setTimeout(() => setAttSuccess(false), 3000);
+    } catch (err) {
+      setAttError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAttSubmitting(false);
+    }
+  };
+
+  const handleLogReview = async (e: FormEvent) => {
+    e.preventDefault();
+    setRevSubmitting(true);
+    setRevError(null);
+    setRevSuccess(false);
+
+    if (!selectedCrmCustomer) {
+      setRevError("Please select a customer first.");
+      setRevSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      branch_id: profile?.branch_id || null,
+      customer_id: selectedCrmCustomer.id,
+      employee_id: revEmployeeId,
+      rating: parseInt(revRating),
+      review_text: revText
+    };
+
+    try {
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to log review");
+      setRevSuccess(true);
+      setRevText("");
+      setTimeout(() => setRevSuccess(false), 3000);
+    } catch (err) {
+      setRevError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRevSubmitting(false);
     }
   };
 
@@ -900,6 +1000,71 @@ export default function ManagerDashboardPage() {
                     </button>
                   </form>
                 </article>
+
+                {/* Form 3: Attendance Logger */}
+                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Attendance</h2>
+
+                  {attError && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      {attError}
+                    </div>
+                  )}
+                  {attSuccess && (
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                      Attendance logged successfully!
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLogAttendance} style={{ display: "grid", gap: "14px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "14px" }}>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Employee *</span>
+                        <select
+                          value={attEmployeeId}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => setAttEmployeeId(e.target.value)}
+                          style={selectInputStyle}
+                          required
+                        >
+                          {employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.role})</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Status *</span>
+                        <select
+                          value={attStatus}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => setAttStatus(e.target.value)}
+                          style={selectInputStyle}
+                        >
+                          <option value="Late">Late (3 = 1 Day Sal Deduction)</option>
+                          <option value="Leave">Leave (Manual Deduction)</option>
+                        </select>
+                      </label>
+                    </div>
+                    {attStatus === "Leave" && (
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Leave Deduction Amount (৳)</span>
+                        <input
+                          type="number"
+                          value={attDeduction}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setAttDeduction(e.target.value)}
+                          placeholder="e.g. 500"
+                          style={inputStyle}
+                        />
+                      </label>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={attSubmitting}
+                      className="button button--secondary"
+                      style={{ width: "100%", marginTop: "8px", padding: "0.8rem" }}
+                    >
+                      {attSubmitting ? "Logging..." : "Log Attendance"}
+                    </button>
+                  </form>
+                </article>
               </div>
 
               {/* Right Column: Live Activity Feed */}
@@ -914,6 +1079,31 @@ export default function ManagerDashboardPage() {
                         Daily View
                       </span>
                     </div>
+
+                    {/* Target Progress Bar */}
+                    {branchTarget && (
+                      <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(110, 231, 255, 0.05)", border: "1px solid rgba(110, 231, 255, 0.2)", marginBottom: "16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                          <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Monthly Target ({branchTarget.month})</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#fff" }}>
+                            ৳{sales.reduce((sum, s) => sum + s.sale_amount, 0).toLocaleString()} / ৳{branchTarget.target_amount.toLocaleString()}
+                          </strong>
+                        </div>
+                        <div style={{ height: "6px", background: "var(--surface-2)", borderRadius: "3px", overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%",
+                            background: "var(--accent)",
+                            width: `${Math.min(100, (sales.reduce((sum, s) => sum + s.sale_amount, 0) / branchTarget.target_amount) * 100)}%`,
+                            transition: "width 0.5s ease"
+                          }} />
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--accent-2)", marginTop: "8px", textAlign: "right" }}>
+                          {sales.reduce((sum, s) => sum + s.sale_amount, 0) >= branchTarget.target_amount 
+                            ? "Target Reached! Commission Unlocked 🎉" 
+                            : `৳${(branchTarget.target_amount - sales.reduce((sum, s) => sum + s.sale_amount, 0)).toLocaleString()} to unlock commission.`}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Modern Calendar Picker */}
                     <CalendarPicker
@@ -1274,6 +1464,51 @@ export default function ManagerDashboardPage() {
                             ))
                         )}
                       </div>
+                    </div>
+
+                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--line)" }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "12px" }}>
+                        Log Client Review
+                      </strong>
+                      
+                      {revError && <div style={{ padding: "8px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#ff7373", fontSize: "0.8rem", marginBottom: "12px" }}>{revError}</div>}
+                      {revSuccess && <div style={{ padding: "8px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.8rem", marginBottom: "12px" }}>Review logged successfully!</div>}
+
+                      <form onSubmit={handleLogReview} style={{ display: "grid", gap: "10px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                          <label style={{ display: "grid", gap: "4px" }}>
+                            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Review For (Therapist)</span>
+                            <select value={revEmployeeId} onChange={e => setRevEmployeeId(e.target.value)} style={{...selectInputStyle, padding: "8px"}} required>
+                              {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                              ))}
+                            </select>
+                          </label>
+                          <label style={{ display: "grid", gap: "4px" }}>
+                            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Rating (1-5)</span>
+                            <select value={revRating} onChange={e => setRevRating(e.target.value)} style={{...selectInputStyle, padding: "8px"}} required>
+                              <option value="5">⭐⭐⭐⭐⭐ (5) Excellent</option>
+                              <option value="4">⭐⭐⭐⭐ (4) Good</option>
+                              <option value="3">⭐⭐⭐ (3) Average</option>
+                              <option value="2">⭐⭐ (2) Poor</option>
+                              <option value="1">⭐ (1) Terrible</option>
+                            </select>
+                          </label>
+                        </div>
+                        <label style={{ display: "grid", gap: "4px" }}>
+                          <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Review Comments</span>
+                          <textarea 
+                            value={revText} 
+                            onChange={e => setRevText(e.target.value)} 
+                            placeholder="Client feedback..." 
+                            rows={2} 
+                            style={{ ...inputStyle, padding: "8px", resize: "none" }} 
+                          />
+                        </label>
+                        <button type="submit" disabled={revSubmitting} className="button button--secondary" style={{ padding: "8px", fontSize: "0.85rem" }}>
+                          {revSubmitting ? "Saving..." : "Save Review"}
+                        </button>
+                      </form>
                     </div>
 
                   </div>

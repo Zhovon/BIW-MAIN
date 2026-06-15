@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.clinic import Branch, CostEntry, Customer, Employee, PayrollRun, RevenueEntry, Sale, SaleEmployee, Service, ServiceAssignment
+from app.models.clinic import Branch, CostEntry, Customer, Employee, PayrollRun, RevenueEntry, Sale, SaleEmployee, Service, ServiceAssignment, BranchTarget, AttendanceRecord, CustomerReview
 
 
 def list_branches(db: Session) -> Sequence[Branch]:
@@ -72,3 +72,29 @@ def get_customer_by_id(db: Session, customer_id: str) -> Optional[Customer]:
 def get_sale_employee_ids(db: Session, sale_id: str) -> list[str]:
     rows = db.query(SaleEmployee.employee_id).filter(SaleEmployee.sale_id == sale_id).all()
     return [r[0] for r in rows]
+
+# ── Branch Targets ────────────────────────────────────────────
+
+def list_branch_targets(db: Session, branch_id: Optional[str] = None) -> Sequence[BranchTarget]:
+    query = db.query(BranchTarget)
+    if branch_id:
+        query = query.filter(BranchTarget.branch_id == branch_id)
+    return query.order_by(BranchTarget.month.desc()).all()
+
+
+# ── Attendance Records ────────────────────────────────────────
+
+def list_attendance_records(db: Session, employee_id: Optional[str] = None) -> Sequence[AttendanceRecord]:
+    query = db.query(AttendanceRecord)
+    if employee_id:
+        query = query.filter(AttendanceRecord.employee_id == employee_id)
+    return query.order_by(AttendanceRecord.date.desc()).all()
+
+
+# ── Customer Reviews ──────────────────────────────────────────
+
+def list_customer_reviews(db: Session, employee_id: Optional[str] = None) -> Sequence[CustomerReview]:
+    query = db.query(CustomerReview)
+    if employee_id:
+        query = query.filter(CustomerReview.employee_id == employee_id)
+    return query.order_by(CustomerReview.created_at.desc()).all()
