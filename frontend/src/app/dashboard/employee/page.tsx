@@ -22,6 +22,9 @@ type EarningsProfile = {
   base_salary: number;
   bonus_earned: number;
   commission_earned: number;
+  late_deduction: number;
+  leave_deduction: number;
+  total_deductions: number;
   total_earned: number;
   treatment_count: number;
   treatments: TreatmentDetail[];
@@ -234,11 +237,11 @@ export default function EmployeeDashboardPage() {
           </div>
           <button
             onClick={handlePunch}
-            disabled={punchSubmitting || !!todaysPunch?.clock_out_time}
+            disabled={punchSubmitting}
             className={isPunchedIn ? "button button--secondary" : "button button--primary"}
             style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
           >
-            {punchSubmitting ? "Wait..." : todaysPunch?.clock_out_time ? "Shift Ended" : isPunchedIn ? "Clock Out" : "Clock In"}
+            {punchSubmitting ? "Wait..." : isPunchedIn ? "Clock Out" : "Clock In"}
           </button>
         </article>
 
@@ -269,6 +272,18 @@ export default function EmployeeDashboardPage() {
             </strong>
             <p className="stat-card__detail">Subject to owner verification run.</p>
           </article>
+
+          {earnings && earnings.total_deductions > 0 && (
+            <article className="stat-card" style={{ "--accent": "#ff6b6b" } as React.CSSProperties}>
+              <span className="stat-card__label" style={{ color: "#ff6b6b" }}>Total Deductions Applied</span>
+              <strong className="stat-card__value" style={{ color: "#ff6b6b" }}>
+                -৳{earnings.total_deductions.toLocaleString()}
+              </strong>
+              <p className="stat-card__detail" style={{ color: "var(--muted)" }}>
+                From late penalties or leaves.
+              </p>
+            </article>
+          )}
         </div>
 
         {/* Main Content split */}

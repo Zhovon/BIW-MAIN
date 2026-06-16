@@ -775,11 +775,11 @@ export default function ManagerDashboardPage() {
               </div>
               <button
                 onClick={handlePunch}
-                disabled={punchSubmitting || !!todaysPunch?.clock_out_time}
+                disabled={punchSubmitting}
                 className={isPunchedIn ? "button button--secondary" : "button button--primary"}
                 style={{ padding: "0.8rem 2rem", fontSize: "1.05rem", minWidth: "160px" }}
               >
-                {punchSubmitting ? "Wait..." : todaysPunch?.clock_out_time ? "Shift Ended" : isPunchedIn ? "Clock Out" : "Clock In"}
+                {punchSubmitting ? "Wait..." : isPunchedIn ? "Clock Out" : "Clock In"}
               </button>
             </article>
 
@@ -816,7 +816,7 @@ export default function ManagerDashboardPage() {
                         {r.clock_in_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>In: {new Date(r.clock_in_time).toLocaleTimeString()}</div>}
                         {r.clock_out_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Out: {new Date(r.clock_out_time).toLocaleTimeString()}</div>}
                         {r.overtime_minutes > 0 && <div style={{ fontSize: "0.85rem", color: "var(--gold-light)" }}>Overtime: {(r.overtime_minutes / 60).toFixed(1)} hrs</div>}
-                        {r.status === "Leave" && <div style={{ fontSize: "0.85rem", color: "#ff7c7c" }}>Deduction: ৳{r.deduction_amount}</div>}
+                        {r.deduction_amount > 0 && <div style={{ fontSize: "0.85rem", color: "#ff7c7c" }}>Deduction: ৳{r.deduction_amount}</div>}
                       </div>
                     </div>
                   ))}
