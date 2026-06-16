@@ -42,7 +42,7 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
     record = db.query(AttendanceRecord).filter(
         AttendanceRecord.employee_id == payload.employee_id,
         AttendanceRecord.date == payload.date
-    ).first()
+    ).order_by(AttendanceRecord.created_at.desc()).first()
 
     now = datetime.now(timezone.utc)
     local_now = datetime.now()
@@ -59,7 +59,7 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
         shift_duration_hours = 9.0
         sh, sm = 10, 0
 
-    if not record:
+    if not record or record.clock_out_time is not None:
         status = "Present"
         # Check Late (15 min grace period)
         try:
@@ -77,12 +77,11 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
         )
         db.add(record)
     else:
-        if record.clock_out_time is None:
-            record.clock_out_time = now
-            diff = now - record.clock_in_time.replace(tzinfo=timezone.utc)
-            diff_hours = diff.total_seconds() / 3600
-            if diff_hours > shift_duration_hours:
-                record.overtime_minutes = int((diff_hours - shift_duration_hours) * 60)
+        record.clock_out_time = now
+        diff = now - record.clock_in_time.replace(tzinfo=timezone.utc)
+        diff_hours = diff.total_seconds() / 3600
+        if diff_hours > shift_duration_hours:
+            record.overtime_minutes = int((diff_hours - shift_duration_hours) * 60)
     
     db.commit()
     db.refresh(record)
@@ -95,22 +94,30 @@ def get_daily_roster(date: str, branch_id: Optional[str] = None, db: Session = D
         query = query.filter(Employee.branch_id == branch_id)
     employees = query.all()
 
-    attendances = db.query(AttendanceRecord).filter(AttendanceRecord.date == date).all()
-    att_map = {a.employee_id: a for a in attendances}
+    attendances = db.query(AttendanceRecord).filter(AttendanceRecord.date == date).order_by(AttendanceRecord.created_at.asc()).all()
+    from collections import defaultdict
+    att_map = defaultdict(list)
+    for a in attendances:
+        att_map[a.employee_id].append(a)
 
     roster = []
     for emp in employees:
-        att = att_map.get(emp.id)
-        if att:
+        emp_atts = att_map.get(emp.id)
+        if emp_atts:
+            first_att = emp_atts[0]
+            last_att = emp_atts[-1]
+            total_overtime = sum(a.overtime_minutes for a in emp_atts)
+            total_deduction = sum(float(a.deduction_amount) for a in emp_atts if a.deduction_amount)
+
             roster.append({
                 "employee_id": emp.id,
                 "full_name": emp.full_name,
                 "role": emp.role,
-                "status": att.status,
-                "clock_in_time": att.clock_in_time.isoformat() if att.clock_in_time else None,
-                "clock_out_time": att.clock_out_time.isoformat() if att.clock_out_time else None,
-                "overtime_minutes": att.overtime_minutes,
-                "deduction_amount": float(att.deduction_amount) if att.deduction_amount else 0.0
+                "status": first_att.status,
+                "clock_in_time": first_att.clock_in_time.isoformat() if first_att.clock_in_time else None,
+                "clock_out_time": last_att.clock_out_time.isoformat() if last_att.clock_out_time else None,
+                "overtime_minutes": total_overtime,
+                "deduction_amount": total_deduction
             })
         else:
             roster.append({

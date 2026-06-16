@@ -88,7 +88,7 @@ def list_attendance_records(db: Session, employee_id: Optional[str] = None) -> S
     query = db.query(AttendanceRecord)
     if employee_id:
         query = query.filter(AttendanceRecord.employee_id == employee_id)
-    return query.order_by(AttendanceRecord.date.desc()).all()
+    return query.order_by(AttendanceRecord.date.desc(), AttendanceRecord.created_at.desc()).all()
 
 
 # ── Customer Reviews ──────────────────────────────────────────

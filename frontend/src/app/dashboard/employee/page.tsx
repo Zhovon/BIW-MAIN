@@ -113,9 +113,10 @@ export default function EmployeeDashboardPage() {
         const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${earningsData.employee_id}`);
         if (attRes.ok) {
           const attData = await attRes.json();
-          const todayAtt = attData.find((a: AttendanceRecordType) => a.date === todayStr && a.status === "Present");
-          setTodaysPunch(todayAtt || null);
-          setIsPunchedIn(!!(todayAtt && !todayAtt.clock_out_time));
+          const todaysRecords = attData.filter((a: AttendanceRecordType) => a.date === todayStr);
+          const latestPunch = todaysRecords.length > 0 ? todaysRecords[0] : null;
+          setTodaysPunch(latestPunch);
+          setIsPunchedIn(!!(latestPunch && !latestPunch.clock_out_time));
         }
 
       } catch (err) {
