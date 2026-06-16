@@ -61,21 +61,26 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
 
     if not record or record.clock_out_time is not None:
         status = "Present"
-        # Check Late (15 min grace period)
-        try:
-            expected_start = local_now.replace(hour=sh, minute=sm, second=0, microsecond=0)
-            if local_now.timestamp() > expected_start.timestamp() + (15 * 60):
-                status = "Late"
-        except Exception:
-            pass
+        deduction_amount = 0.0
+        
+        # Check Late only on the very first punch of the day
+        if not record:
+            try:
+                expected_start = local_now.replace(hour=sh, minute=sm, second=0, microsecond=0)
+                if local_now.timestamp() > expected_start.timestamp() + (15 * 60):
+                    status = "Late"
+            except Exception:
+                pass
 
-        record = AttendanceRecord(
+        new_record = AttendanceRecord(
             employee_id=payload.employee_id,
             date=payload.date,
             status=status,
-            clock_in_time=now
+            clock_in_time=now,
+            deduction_amount=0.0
         )
-        db.add(record)
+        db.add(new_record)
+        record = new_record
     else:
         record.clock_out_time = now
         diff = now - record.clock_in_time.replace(tzinfo=timezone.utc)
