@@ -15,6 +15,7 @@ from app.api.v1.sales import router as sales_router
 from app.api.v1.targets import router as targets_router
 from app.api.v1.attendance import router as attendance_router
 from app.api.v1.reviews import router as reviews_router
+from app.api.v1.analytics import router as analytics_router
 from app.core.config import settings
 from app.core.auth import get_current_user
 
@@ -26,6 +27,7 @@ api_router.include_router(health_router)
 api_router.include_router(health_seed_router)
 api_router.include_router(branches_router,            dependencies=_auth)
 api_router.include_router(overview_router,            dependencies=_auth)
+api_router.include_router(analytics_router,           dependencies=_auth)
 api_router.include_router(services_router,            dependencies=_auth)
 api_router.include_router(service_assignments_router, dependencies=_auth)
 api_router.include_router(sales_router,               dependencies=_auth)

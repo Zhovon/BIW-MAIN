@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
 import { CalendarPicker } from "@/components/calendar-picker";
+import { RiskCodedDashboard } from "@/components/risk-coded-dashboard";
 
 type Branch = {
   id: string;
@@ -109,7 +110,7 @@ export default function OwnerDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"dashboard" | "crm">("dashboard");
+  const [activeTab, setActiveTab] = useState<"risk" | "dashboard" | "crm">("risk");
 
   // CRM Portal States
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -550,7 +551,20 @@ export default function OwnerDashboardPage() {
         </div>
 
         {/* Tabs Bar */}
-        <div style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
+        <div style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setActiveTab("risk")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "risk" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "risk" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Risk Dashboard
+          </button>
           <button
             onClick={() => setActiveTab("dashboard")}
             style={{
@@ -562,7 +576,7 @@ export default function OwnerDashboardPage() {
               transition: "all 0.2s ease"
             }}
           >
-            Financials & Payroll
+            Payroll & Targets
           </button>
           <button
             onClick={() => setActiveTab("crm")}
@@ -578,6 +592,10 @@ export default function OwnerDashboardPage() {
             Customer CRM Portal
           </button>
         </div>
+
+        {activeTab === "risk" && (
+          <RiskCodedDashboard />
+        )}
 
         {activeTab === "dashboard" && (
           <>

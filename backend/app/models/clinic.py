@@ -97,6 +97,7 @@ class Sale(Base):
     customer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("customers.id", ondelete="SET NULL"))
     sale_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     discount_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    payment_method: Mapped[str] = mapped_column(String, server_default="Cash", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     customer: Mapped[Optional["Customer"]] = relationship(back_populates="sales")

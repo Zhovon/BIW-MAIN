@@ -108,8 +108,8 @@ export default function ManagerDashboardPage() {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [showEmpDropdown, setShowEmpDropdown] = useState(false);
   const [saleServiceId, setSaleServiceId] = useState("");
-  const [saleAmount, setSaleAmount] = useState("");
   const [discountAmount, setDiscountAmount] = useState("0");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [saleSubmitting, setSaleSubmitting] = useState(false);
   const [saleError, setSaleError] = useState<string | null>(null);
   const [saleSuccess, setSaleSuccess] = useState(false);
@@ -267,7 +267,6 @@ export default function ManagerDashboardPage() {
         setServices(branchServices);
         if (branchServices.length > 0) {
           setSaleServiceId(branchServices[0].id);
-          setSaleAmount(branchServices[0].price.toString());
         }
 
         const branchSales = managerBranchId ? salesData.filter(s => s.branch_id === managerBranchId) : salesData;
@@ -419,10 +418,7 @@ export default function ManagerDashboardPage() {
   };
 
   const handleServiceChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const serviceId = e.target.value;
-    setSaleServiceId(serviceId);
-    const service = services.find(s => s.id === serviceId);
-    if (service) setSaleAmount(service.price.toString());
+    setSaleServiceId(e.target.value);
   };
 
   const handleRecordTreatment = async (e: FormEvent) => {
@@ -436,19 +432,24 @@ export default function ManagerDashboardPage() {
       setSaleSubmitting(false);
       return;
     }
-    if (!saleServiceId || !saleAmount) {
-      setSaleError("Please fill out all required fields.");
+    if (!saleServiceId) {
+      setSaleError("Please select a service.");
       setSaleSubmitting(false);
       return;
     }
+
+    const service = services.find(s => s.id === saleServiceId);
+    const servicePrice = service ? service.price : 0;
+    const finalSaleAmount = servicePrice - (parseFloat(discountAmount) || 0);
 
     const payload = {
       branch_id: profile?.branch_id || null,
       service_id: saleServiceId,
       employee_ids: selectedEmployeeIds,
       customer_id: selectedCustomer?.id || null,
-      sale_amount: parseFloat(saleAmount) || 0,
+      sale_amount: finalSaleAmount,
       discount_amount: parseFloat(discountAmount) || 0,
+      payment_method: paymentMethod,
     };
 
     try {
@@ -1042,16 +1043,19 @@ export default function ManagerDashboardPage() {
                       </div>
                     )}
 
-                    {/* Price & Discount */}
+                    {/* Payment & Discount */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Sale Price (৳) *</span>
-                        <input
-                          type="number" required
-                          value={saleAmount}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => setSaleAmount(e.target.value)}
-                          style={inputStyle}
-                        />
+                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Payment Method *</span>
+                        <select
+                          value={paymentMethod}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => setPaymentMethod(e.target.value)}
+                          style={selectInputStyle}
+                        >
+                          <option value="Cash">Cash</option>
+                          <option value="Bank">Bank</option>
+                          <option value="bKash">bKash</option>
+                        </select>
                       </label>
                       <label style={{ display: "grid", gap: "6px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Discount applied (৳)</span>
@@ -1062,6 +1066,14 @@ export default function ManagerDashboardPage() {
                           style={inputStyle}
                         />
                       </label>
+                    </div>
+
+                    {/* Final Price Display */}
+                    <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>Final Sale Amount:</span>
+                      <strong style={{ fontSize: "1.1rem", color: "var(--accent-3)" }}>
+                        ৳{((services.find(s => s.id === saleServiceId)?.price || 0) - (parseFloat(discountAmount) || 0)).toLocaleString()}
+                      </strong>
                     </div>
 
                     <button

@@ -8,22 +8,22 @@
 
 :root {
   /* --- Background --- */
-  --bg:           #0f0f0f;
-  --bg-soft:      #111111;
+  --bg:           #fcfcfc;
+  --bg-soft:      #f0f0f0;
 
   /* --- Surfaces --- */
-  --surface:      #181818;
-  --surface-2:    #202020;
-  --surface-3:    #272727;
+  --surface:      #ffffff;
+  --surface-2:    #f9f9f9;
+  --surface-3:    #f0f0f0;
 
   /* --- Borders --- */
-  --border:       #2a2a2a;
-  --border-soft:  #222222;
+  --border:       #dddddd;
+  --border-soft:  #eeeeee;
 
   /* --- Text --- */
-  --text:         #f5f5f5;
-  --muted:        #888888;
-  --muted-light:  #aaaaaa;
+  --text:         #111111;
+  --muted:        #555555;
+  --muted-light:  #777777;
 
   /* --- Gold Accent (from BIW logo) --- */
   --gold:         #C9A84C;
@@ -32,22 +32,31 @@
   --gold-dim:     rgba(201, 168, 76, 0.12);
   --gold-border:  rgba(201, 168, 76, 0.28);
 
+  /* The 7-tier scale from RiskCoded */
+  --g1: #004d00;
+  --g2: #008000;
+  --g3: #66cc00;
+  --y:  #ffcc00;
+  --o:  #ff9900;
+  --r2: #ff3300;
+  --r1: #990000;
+
   /* --- Legacy aliases so existing code doesn't break --- */
   --panel:        var(--surface);
   --panel-strong: var(--surface-2);
   --line:         var(--border);
-  --accent:       var(--gold);
-  --accent-2:     var(--gold-dark);
-  --accent-3:     var(--gold-light);
+  --accent:       #333333;
+  --accent-2:     #555555;
+  --accent-3:     #111111;
 
   /* --- Shadow --- */
-  --shadow:       0 4px 24px rgba(0, 0, 0, 0.5);
-  --shadow-sm:    0 2px 8px  rgba(0, 0, 0, 0.4);
+  --shadow:       none;
+  --shadow-sm:    none;
 }
 
 /* ============================================================
    Reset & Base
-============================================================ */
+=========================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -60,7 +69,7 @@ body {
   margin: 0;
   background-color: var(--bg);
   color: var(--text);
-  font-family: var(--font-body), "Inter", system-ui, sans-serif;
+  font-family: 'Times New Roman', Times, serif;
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -322,39 +331,37 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  padding: 0.75rem 1.2rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border-radius: 0px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #111111;
+  background: #ffffff;
+  color: #111111;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 120ms ease;
+  transition: all 0.1s ease;
 }
 
 .topbar__cta:hover,
 .button:hover {
-  border-color: var(--gold-border);
-  background: var(--surface-2);
-  transform: translateY(-1px);
+  background: #f0f0f0;
 }
 
 .button--primary {
-  background: var(--gold);
-  color: #0a0a0a;
-  border-color: var(--gold);
-  font-weight: 600;
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+  font-weight: normal;
 }
 
 .button--primary:hover {
-  background: var(--gold-light);
-  border-color: var(--gold-light);
-  color: #0a0a0a;
+  background: #333333;
+  color: #ffffff;
 }
 
 .button--secondary {
-  background: var(--surface);
-  color: var(--muted-light);
+  background: #ffffff;
+  color: #111111;
 }
 
 /* ============================================================
@@ -364,9 +371,9 @@ a {
 .glass-card,
 .stat-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #111111;
+  border-radius: 0px;
+  box-shadow: none;
 }
 
 /* ============================================================
