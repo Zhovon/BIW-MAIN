@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Optional
 
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, cast, Date
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.clinic import Branch, CostEntry, Customer, Employee, PayrollRun, RevenueEntry, Sale, SaleEmployee, Service, ServiceAssignment, BranchTarget, AttendanceRecord, CustomerReview
@@ -15,7 +15,7 @@ def list_branches(db: Session) -> Sequence[Branch]:
 def list_sales(db: Session, limit: int = 50, date_str: Optional[str] = None, month_str: Optional[str] = None) -> Sequence[Sale]:
     q = db.query(Sale).options(joinedload(Sale.assigned_employees))
     if date_str:
-        q = q.filter(func.date(Sale.created_at) == date_str)
+        q = q.filter(cast(Sale.created_at, Date) == cast(date_str, Date))
     if month_str:
         q = q.filter(func.to_char(Sale.created_at, 'YYYY-MM') == month_str)
     return q.order_by(Sale.created_at.desc()).limit(limit).all()
@@ -28,7 +28,7 @@ def list_revenue_entries(db: Session) -> Sequence[RevenueEntry]:
 def list_cost_entries(db: Session, limit: int = 50, date_str: Optional[str] = None, month_str: Optional[str] = None) -> Sequence[CostEntry]:
     q = db.query(CostEntry)
     if date_str:
-        q = q.filter(func.date(CostEntry.created_at) == date_str)
+        q = q.filter(cast(CostEntry.created_at, Date) == cast(date_str, Date))
     if month_str:
         q = q.filter(func.to_char(CostEntry.created_at, 'YYYY-MM') == month_str)
     return q.order_by(CostEntry.created_at.desc()).limit(limit).all()
