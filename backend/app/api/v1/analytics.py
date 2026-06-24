@@ -3,11 +3,15 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, extract, and_
 from sqlalchemy.orm import Session
+from cachetools import cached, TTLCache
 
 from app.db.session import get_db
 from app.models.clinic import Sale, SaleEmployee, Service, Customer, Employee, Branch, BranchTarget
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+# Cache analytics calculations for 5 minutes to prevent DB bottleneck
+analytics_cache = TTLCache(maxsize=100, ttl=300)
 
 @router.get("/risk-dashboard")
 def get_risk_dashboard_data(
@@ -16,9 +20,13 @@ def get_risk_dashboard_data(
     branch_id: Optional[str] = None,
     staff_name: Optional[str] = None,
     payment_method: Optional[str] = None,
-    ticket_band: Optional[str] = None,
+    ticket_band: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
+    cache_key = f"risk_{start_date}_{end_date}_{branch_id}_{staff_name}_{payment_method}_{ticket_band}"
+    if cache_key in analytics_cache:
+        return analytics_cache[cache_key]
+
     """
     Returns aggregated data for the Risk-Coded Owner Dashboard.
     Performs grouping in PostgreSQL to avoid memory overload.
@@ -257,21 +265,20 @@ def get_risk_dashboard_data(
         "trailing_avg": float(trailing_avg)
     }
 
-    return {
-        "target_amount": target_amount,
-        "target_run_rate": target_run_rate,
-        "snapshot": snapshot,
+    result = {
         "revenue": total_revenue,
         "count": total_count,
         "avgTicket": total_revenue / total_count if total_count > 0 else 0,
-        "payment": payment_mix,
         "daily": daily_revenue,
         "prev_daily": prev_daily_revenue,
-        "visit_frequency": visit_frequency,
-        "hourly": hourly_demand,
-        "weekday": weekday_demand,
-        "band": ticket_bands,
+        "payment_methods": payment_mix,
         "staff_performance": staff_performance,
-        "utilization_heatmap": utilization_heatmap,
-        "vip_cohort": vip_cohort
+        "hourly_demand": hourly_demand,
+        "weekday_demand": weekday_demand,
+        "ticket_sizes": ticket_bands,
+        "vip_cohort": vip_cohort,
+        "target_amount": target_amount,
+        "target_run_rate": target_run_rate
     }
+    analytics_cache[cache_key] = result
+    return result

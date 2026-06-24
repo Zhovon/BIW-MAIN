@@ -62,7 +62,7 @@ def delete_service(service_id: str, db: Session = Depends(get_db)):
             detail="Service not found",
         )
     try:
-        db.delete(service)
+        service.is_active = False
         db.commit()
     except Exception as e:
         db.rollback()

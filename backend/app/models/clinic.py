@@ -51,11 +51,12 @@ class Service(Base):
     __tablename__ = "services"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"))
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     cost: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     branch: Mapped[Optional["Branch"]] = relationship(back_populates="services")
     assignments: Mapped[list["ServiceAssignment"]] = relationship(back_populates="service")
@@ -68,7 +69,7 @@ class ServiceAssignment(Base):
     service_id: Mapped[str] = mapped_column(ForeignKey("services.id", ondelete="CASCADE"))
     employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
     bonus_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=20.0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     service: Mapped["Service"] = relationship(back_populates="assignments")
 
@@ -82,7 +83,7 @@ class Customer(Base):
     phone: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     sales: Mapped[list["Sale"]] = relationship(back_populates="customer")
 
@@ -91,7 +92,7 @@ class Sale(Base):
     __tablename__ = "sales"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
     service_id: Mapped[Optional[str]] = mapped_column(ForeignKey("services.id", ondelete="SET NULL"))
     # Legacy single-employee field — kept for backward compatibility
     employee_id: Mapped[Optional[str]] = mapped_column(ForeignKey("employees.id", ondelete="SET NULL"))
@@ -99,7 +100,7 @@ class Sale(Base):
     sale_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     discount_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     payment_method: Mapped[str] = mapped_column(String, server_default="Cash", nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     customer: Mapped[Optional["Customer"]] = relationship(back_populates="sales")
     assigned_employees: Mapped[list["SaleEmployee"]] = relationship(back_populates="sale", cascade="all, delete-orphan")
@@ -112,7 +113,7 @@ class SaleEmployee(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     sale_id: Mapped[str] = mapped_column(ForeignKey("sales.id", ondelete="CASCADE"))
     employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     sale: Mapped["Sale"] = relationship(back_populates="assigned_employees")
 
@@ -121,43 +122,43 @@ class RevenueEntry(Base):
     __tablename__ = "revenue_entries"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
     source: Mapped[str] = mapped_column(String, nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
 
 class CostEntry(Base):
     __tablename__ = "cost_entries"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
     cost_type: Mapped[str] = mapped_column(String, nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     note: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
 
 class PayrollRun(Base):
     __tablename__ = "payroll_runs"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
-    month: Mapped[str] = mapped_column(String, nullable=False)
+    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
+    month: Mapped[str] = mapped_column(String, index=True, nullable=False)
     salary_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     bonus_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     commission_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
 
 class BranchTarget(Base):
     __tablename__ = "branch_targets"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"))
-    month: Mapped[str] = mapped_column(String, nullable=False)  # Format YYYY-MM
+    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
+    month: Mapped[str] = mapped_column(String, index=True, nullable=False)  # Format YYYY-MM
     target_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     branch: Mapped["Branch"] = relationship()
 
@@ -167,13 +168,13 @@ class AttendanceRecord(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    date: Mapped[str] = mapped_column(String, nullable=False)  # Format YYYY-MM-DD
+    date: Mapped[str] = mapped_column(String, index=True, nullable=False)  # Format YYYY-MM-DD
     status: Mapped[str] = mapped_column(String, nullable=False)  # 'Late', 'Leave', 'Present'
     deduction_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     clock_in_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     clock_out_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     overtime_minutes: Mapped[int] = mapped_column(default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
 
     employee: Mapped["Employee"] = relationship()
 

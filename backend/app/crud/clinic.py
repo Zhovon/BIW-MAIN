@@ -25,7 +25,7 @@ def list_cost_entries(db: Session) -> Sequence[CostEntry]:
 
 
 def list_employees(db: Session) -> Sequence[Employee]:
-    return db.query(Employee).order_by(Employee.created_at.desc()).all()
+    return db.query(Employee).filter(Employee.is_active == True).order_by(Employee.created_at.desc()).all()
 
 
 def list_payroll_runs(db: Session) -> Sequence[PayrollRun]:
@@ -33,7 +33,7 @@ def list_payroll_runs(db: Session) -> Sequence[PayrollRun]:
 
 
 def list_services(db: Session) -> Sequence[Service]:
-    return db.query(Service).order_by(Service.created_at.desc()).all()
+    return db.query(Service).filter(Service.is_active == True).order_by(Service.created_at.desc()).all()
 
 
 def list_service_assignments(db: Session) -> Sequence[ServiceAssignment]:

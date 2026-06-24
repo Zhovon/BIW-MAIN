@@ -9,3 +9,4 @@ bcrypt==4.1.2
 PyJWT==2.9.0
 uvicorn[standard]>=0.30.6
 slowapi==0.1.9
+cachetools==5.3.3

@@ -123,9 +123,9 @@ def delete_employee(employee_id: str, db: Session = Depends(get_db)):
         except Exception as e:
             print(f"Failed to delete user {employee.user_id} from Supabase: {e}")
 
-    # 2. Delete from database
+    # 2. Set inactive in database
     try:
-        db.delete(employee)
+        employee.is_active = False
         db.commit()
     except Exception as e:
         db.rollback()
