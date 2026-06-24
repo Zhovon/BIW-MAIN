@@ -53,40 +53,34 @@ def list_service_assignments(db: Session) -> Sequence[ServiceAssignment]:
 # ── Customer CRUD ─────────────────────────────────────────────
 
 
-def _attach_totals(results):
-    customers = []
-    for customer, visits, spent in results:
-        customer.total_visits = visits
-        customer.total_spent = spent
-        customers.append(customer)
+def _attach_totals(customers, db: Session):
+    if not customers:
+        return []
+    
+    customer_ids = [c.id for c in customers]
+    aggs = db.query(
+        Sale.customer_id,
+        func.count(Sale.id).label('total_visits'),
+        func.coalesce(func.sum(Sale.sale_amount), 0).label('total_spent')
+    ).filter(Sale.customer_id.in_(customer_ids)).group_by(Sale.customer_id).all()
+    
+    agg_map = {row.customer_id: {'visits': row.total_visits, 'spent': row.total_spent} for row in aggs}
+    
+    for c in customers:
+        c.total_visits = agg_map.get(c.id, {}).get('visits', 0)
+        c.total_spent = agg_map.get(c.id, {}).get('spent', 0)
+        
     return customers
 
 def list_customers(db: Session, skip: int = 0, limit: int = 100) -> Sequence[Customer]:
-    results = (
-        db.query(
-            Customer,
-            func.count(Sale.id).label('total_visits'),
-            func.coalesce(func.sum(Sale.sale_amount), 0).label('total_spent')
-        )
-        .outerjoin(Sale, Sale.customer_id == Customer.id)
-        .group_by(Customer.id)
-        .order_by(Customer.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
-    return _attach_totals(results)
+    customers = db.query(Customer).order_by(Customer.created_at.desc()).offset(skip).limit(limit).all()
+    return _attach_totals(customers, db)
 
 
 def search_customers(db: Session, query: str, skip: int = 0, limit: int = 20) -> Sequence[Customer]:
     pattern = f"%{query}%"
-    results = (
-        db.query(
-            Customer,
-            func.count(Sale.id).label('total_visits'),
-            func.coalesce(func.sum(Sale.sale_amount), 0).label('total_spent')
-        )
-        .outerjoin(Sale, Sale.customer_id == Customer.id)
+    customers = (
+        db.query(Customer)
         .filter(
             or_(
                 Customer.full_name.ilike(pattern),
@@ -94,13 +88,12 @@ def search_customers(db: Session, query: str, skip: int = 0, limit: int = 20) ->
                 Customer.email.ilike(pattern),
             )
         )
-        .group_by(Customer.id)
         .order_by(Customer.full_name)
         .offset(skip)
         .limit(limit)
         .all()
     )
-    return _attach_totals(results)
+    return _attach_totals(customers, db)
 
 
 def get_customer_by_id(db: Session, customer_id: str) -> Optional[Customer]:
