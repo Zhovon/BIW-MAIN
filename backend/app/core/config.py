@@ -17,7 +17,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        # Force the production domain to always be allowed, even if Vercel ENV overrides cors_origins
+        if "https://crm.biw.salon" not in origins:
+            origins.append("https://crm.biw.salon")
+        return origins
 
 
 @lru_cache
