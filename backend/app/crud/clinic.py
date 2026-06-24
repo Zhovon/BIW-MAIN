@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Optional
 
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.clinic import Branch, CostEntry, Customer, Employee, PayrollRun, RevenueEntry, Sale, SaleEmployee, Service, ServiceAssignment, BranchTarget, AttendanceRecord, CustomerReview
@@ -52,7 +52,6 @@ def list_service_assignments(db: Session) -> Sequence[ServiceAssignment]:
 
 # ── Customer CRUD ─────────────────────────────────────────────
 
-from sqlalchemy import func
 
 def _attach_totals(results):
     customers = []

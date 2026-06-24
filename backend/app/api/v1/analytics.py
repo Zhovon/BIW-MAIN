@@ -266,16 +266,19 @@ def get_risk_dashboard_data(
     }
 
     result = {
+        "snapshot": snapshot,
         "revenue": total_revenue,
         "count": total_count,
         "avgTicket": total_revenue / total_count if total_count > 0 else 0,
         "daily": daily_revenue,
         "prev_daily": prev_daily_revenue,
-        "payment_methods": payment_mix,
+        "payment": payment_mix,
+        "visit_frequency": visit_frequency,
+        "hourly": hourly_demand,
+        "weekday": weekday_demand,
+        "band": ticket_bands,
         "staff_performance": staff_performance,
-        "hourly_demand": hourly_demand,
-        "weekday_demand": weekday_demand,
-        "ticket_sizes": ticket_bands,
+        "utilization_heatmap": utilization_heatmap,
         "vip_cohort": vip_cohort,
         "target_amount": target_amount,
         "target_run_rate": target_run_rate
