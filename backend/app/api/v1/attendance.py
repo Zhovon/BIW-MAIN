@@ -21,11 +21,25 @@ def get_attendance_records(employee_id: Optional[str] = None, db: Session = Depe
 
 @router.post("", response_model=AttendanceRecordRead, status_code=201)
 def create_attendance_record(payload: AttendanceRecordCreate, db: Session = Depends(get_db)) -> AttendanceRecord:
+    deduction_amount = payload.deduction_amount
+    if payload.status == "Late" and deduction_amount == 0.0:
+        employee = db.query(Employee).filter(Employee.id == payload.employee_id).first()
+        if employee:
+            current_month = payload.date[:7]
+            lates_this_month = db.query(AttendanceRecord).filter(
+                AttendanceRecord.employee_id == payload.employee_id,
+                AttendanceRecord.status == "Late",
+                AttendanceRecord.date.like(f"{current_month}%")
+            ).count()
+            
+            if (lates_this_month + 1) % 3 == 0:
+                deduction_amount = float(employee.salary or 0) / 30.0
+
     record = AttendanceRecord(
         employee_id=payload.employee_id,
         date=payload.date,
         status=payload.status,
-        deduction_amount=payload.deduction_amount
+        deduction_amount=deduction_amount
     )
     db.add(record)
     db.commit()
@@ -69,6 +83,18 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
                 expected_start = local_now.replace(hour=sh, minute=sm, second=0, microsecond=0)
                 if local_now.timestamp() > expected_start.timestamp() + (15 * 60):
                     status = "Late"
+                    
+                    # Apply Strike System: 3 Lates = 1 Day Salary Deduction
+                    current_month = payload.date[:7] # YYYY-MM
+                    lates_this_month = db.query(AttendanceRecord).filter(
+                        AttendanceRecord.employee_id == payload.employee_id,
+                        AttendanceRecord.status == "Late",
+                        AttendanceRecord.date.like(f"{current_month}%")
+                    ).count()
+                    
+                    lates_total = lates_this_month + 1
+                    if lates_total % 3 == 0:
+                        deduction_amount = float(employee.salary or 0) / 30.0
             except Exception:
                 pass
 
@@ -77,7 +103,7 @@ def punch_time(payload: PunchRequest, db: Session = Depends(get_db)):
             date=payload.date,
             status=status,
             clock_in_time=now,
-            deduction_amount=0.0
+            deduction_amount=deduction_amount
         )
         db.add(new_record)
         record = new_record
