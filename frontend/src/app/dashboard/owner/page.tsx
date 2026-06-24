@@ -612,7 +612,7 @@ export default function OwnerDashboardPage() {
               transition: "all 0.2s ease"
             }}
           >
-            Risk Dashboard
+            Dashboard
           </button>
           <button
             onClick={() => setActiveTab("dashboard")}
