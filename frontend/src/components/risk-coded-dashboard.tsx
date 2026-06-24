@@ -136,7 +136,7 @@ export function RiskCodedDashboard({
   }, [period, branchId, customDate, staffName, paymentMethod, ticketBand]);
 
   const formatTaka = (amount: number): string => {
-    return `৳${Math.round(amount).toLocaleString()}`;
+    return `৳${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
   };
 
   const chartOptions = {

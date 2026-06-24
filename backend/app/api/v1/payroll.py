@@ -85,7 +85,7 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
     late_count = sum([1 for a in attendances if a.status.lower() == "late"])
     late_deduction = float(employee.salary) / 30.0 * (late_count // 3)
 
-    absent_count = sum([1 for a in attendances if a.status.lower() == "absent"])
+    absent_count = sum([1 for a in attendances if a.status.lower() in ["absent", "leave"]])
     leave_deduction = float(employee.salary) / 30.0 * absent_count
 
     # Manual deductions (manager typed in an amount)
