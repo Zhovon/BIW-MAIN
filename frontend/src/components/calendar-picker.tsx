@@ -143,7 +143,7 @@ export function CalendarPicker({ value, onChange, activeDates }: CalendarPickerP
                   ? "#000"
                   : isFuture
                     ? "rgba(0, 0, 0,0.2)"
-                    : "#fff",
+                    : "var(--text)",
                 cursor: isFuture ? "default" : "pointer",
                 fontSize: "0.82rem",
                 fontWeight: isSelected || isToday ? 700 : 400,

@@ -581,7 +581,7 @@ export default function OwnerDashboardPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: "12px", border: "1px solid var(--line)",
     background: "var(--surface-2)", padding: "0.75rem 0.95rem",
-    color: "var(--text)", outline: "none",
+    color: "var(--text)", outline: "none", colorScheme: "light",
   };
 
   return (

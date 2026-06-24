@@ -681,7 +681,7 @@ export default function ManagerDashboardPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: "8px", border: "1px solid var(--border)",
     background: "var(--surface-2)", padding: "0.75rem 0.95rem",
-    color: "var(--text)", outline: "none",
+    color: "var(--text)", outline: "none", colorScheme: "light",
   };
   const selectInputStyle: React.CSSProperties = {
     ...inputStyle, background: "var(--surface-2)",
