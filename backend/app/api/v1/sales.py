@@ -28,9 +28,11 @@ def _sale_to_read(sale: Sale) -> dict:
     }
 
 
+from typing import Optional
+
 @router.get("", response_model=list[SaleRead])
-def get_sales(db: Session = Depends(get_db)):
-    sales = list_sales(db)
+def get_sales(limit: int = 50, date: Optional[str] = None, month: Optional[str] = None, db: Session = Depends(get_db)):
+    sales = list_sales(db, limit=limit, date_str=date, month_str=month)
     return [_sale_to_read(s) for s in sales]
 
 

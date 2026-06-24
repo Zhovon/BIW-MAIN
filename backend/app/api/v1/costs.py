@@ -9,9 +9,11 @@ from app.schemas.clinic import CostEntryCreate, CostEntryRead
 router = APIRouter(prefix="/costs", tags=["costs"])
 
 
+from typing import Optional
+
 @router.get("", response_model=list[CostEntryRead])
-def get_costs(db: Session = Depends(get_db)):
-    return list_cost_entries(db)
+def get_costs(limit: int = 50, date: Optional[str] = None, month: Optional[str] = None, db: Session = Depends(get_db)):
+    return list_cost_entries(db, limit=limit, date_str=date, month_str=month)
 
 
 @router.post("", response_model=CostEntryRead, status_code=201)

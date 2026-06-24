@@ -243,3 +243,22 @@ def get_daily_chart_data(
         total_costs=total_costs,
         profit_margin=profit_margin
     )
+
+
+@router.get("/active-dates", response_model=list[str])
+def get_active_dates(db: Session = Depends(get_db)):
+    """
+    Returns a unique list of YYYY-MM-DD strings indicating days with sales or costs,
+    so the frontend calendar can render indicator dots instantly without downloading the entire database.
+    """
+    sales_dates = db.query(func.date(Sale.created_at)).distinct().all()
+    costs_dates = db.query(func.date(CostEntry.created_at)).distinct().all()
+    
+    unique_dates = set()
+    for (d,) in sales_dates:
+        if d: unique_dates.add(str(d))
+    for (d,) in costs_dates:
+        if d: unique_dates.add(str(d))
+        
+    return sorted(list(unique_dates))
+

@@ -12,16 +12,26 @@ def list_branches(db: Session) -> Sequence[Branch]:
     return db.query(Branch).order_by(Branch.created_at.desc()).all()
 
 
-def list_sales(db: Session) -> Sequence[Sale]:
-    return db.query(Sale).options(joinedload(Sale.assigned_employees)).order_by(Sale.created_at.desc()).all()
+def list_sales(db: Session, limit: int = 50, date_str: Optional[str] = None, month_str: Optional[str] = None) -> Sequence[Sale]:
+    q = db.query(Sale).options(joinedload(Sale.assigned_employees))
+    if date_str:
+        q = q.filter(func.date(Sale.created_at) == date_str)
+    if month_str:
+        q = q.filter(func.to_char(Sale.created_at, 'YYYY-MM') == month_str)
+    return q.order_by(Sale.created_at.desc()).limit(limit).all()
 
 
 def list_revenue_entries(db: Session) -> Sequence[RevenueEntry]:
     return db.query(RevenueEntry).order_by(RevenueEntry.created_at.desc()).all()
 
 
-def list_cost_entries(db: Session) -> Sequence[CostEntry]:
-    return db.query(CostEntry).order_by(CostEntry.created_at.desc()).all()
+def list_cost_entries(db: Session, limit: int = 50, date_str: Optional[str] = None, month_str: Optional[str] = None) -> Sequence[CostEntry]:
+    q = db.query(CostEntry)
+    if date_str:
+        q = q.filter(func.date(CostEntry.created_at) == date_str)
+    if month_str:
+        q = q.filter(func.to_char(CostEntry.created_at, 'YYYY-MM') == month_str)
+    return q.order_by(CostEntry.created_at.desc()).limit(limit).all()
 
 
 def list_employees(db: Session) -> Sequence[Employee]:

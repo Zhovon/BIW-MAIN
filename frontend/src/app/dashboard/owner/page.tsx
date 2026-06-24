@@ -175,8 +175,8 @@ export default function OwnerDashboardPage() {
     const refreshSalesData = async () => {
       try {
         const [salesRes, costsRes] = await Promise.all([
-          authFetch(`${base}/api/v1/sales`),
-          authFetch(`${base}/api/v1/costs`),
+          authFetch(`${base}/api/v1/sales?limit=50`),
+          authFetch(`${base}/api/v1/costs?limit=50`),
         ]);
         if (salesRes.ok) setSales(await salesRes.json());
         if (costsRes.ok) setCosts(await costsRes.json());
@@ -200,15 +200,17 @@ export default function OwnerDashboardPage() {
           costsRes,
           servicesRes,
           employeesRes,
-          customersRes
+          customersRes,
+          activeDatesRes
         ] = await Promise.all([
           authFetch(`${base}/api/v1/branches`),
           authFetch(`${base}/api/v1/payroll`),
-          authFetch(`${base}/api/v1/sales`),
-          authFetch(`${base}/api/v1/costs`),
+          authFetch(`${base}/api/v1/sales?limit=50`),
+          authFetch(`${base}/api/v1/costs?limit=50`),
           authFetch(`${base}/api/v1/services`),
           authFetch(`${base}/api/v1/employees`),
-          authFetch(`${base}/api/v1/customers`)
+          authFetch(`${base}/api/v1/customers?limit=50`),
+          authFetch(`${base}/api/v1/overview/active-dates`)
         ]);
 
         if (
@@ -218,7 +220,8 @@ export default function OwnerDashboardPage() {
           !costsRes.ok ||
           !servicesRes.ok ||
           !employeesRes.ok ||
-          !customersRes.ok
+          !customersRes.ok ||
+          !activeDatesRes.ok
         ) {
           throw new Error("Failed to load operations metrics.");
         }
@@ -238,6 +241,7 @@ export default function OwnerDashboardPage() {
         setServices(servicesData);
         setEmployees(employeesData);
         setCustomers(customersData);
+        if (activeDatesRes.ok) setActiveDatesData(await activeDatesRes.json());
 
         if (branchesData.length > 0) {
           setPayrollBranchId(branchesData[0].id);
@@ -305,6 +309,27 @@ export default function OwnerDashboardPage() {
       getSupabaseBrowserClient().removeChannel(channel);
     };
   }, [rosterDate, rosterBranch]);
+
+  // Fetch Sales when auditDate changes
+  useEffect(() => {
+    if (!auditDate) return;
+    const fetchDayLogs = async () => {
+      try {
+        const [salesRes, costsRes] = await Promise.all([
+          authFetch(`${getApiBaseUrl()}/api/v1/sales?date=${auditDate}&limit=200`),
+          authFetch(`${getApiBaseUrl()}/api/v1/costs?date=${auditDate}&limit=200`)
+        ]);
+        if (salesRes.ok) setSales(await salesRes.json());
+        if (costsRes.ok) setCosts(await costsRes.json());
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchDayLogs();
+  }, [auditDate]);
+
+  const [activeDatesData, setActiveDatesData] = useState<string[]>([]);
+  const auditActiveDates = useMemo(() => new Set(activeDatesData), [activeDatesData]);
 
   // Derived Values
   const handleCalculatePayroll = async () => {
@@ -506,11 +531,7 @@ export default function OwnerDashboardPage() {
       .sort((a, b) => b.profit - a.profit);
   }, [ownerFilteredSales, ownerFilteredCosts, branches]);
 
-  const auditActiveDates = useMemo(() => {
-    const s = new Set<string>();
-    [...sales, ...costs].forEach(item => s.add(new Date(item.created_at).toLocaleDateString("en-CA")));
-    return s;
-  }, [sales, costs]);
+
 
   const periodLabel = ownerPeriod === "today"
     ? `Today, ${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}`

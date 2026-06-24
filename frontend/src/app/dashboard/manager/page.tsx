@@ -143,14 +143,9 @@ export default function ManagerDashboardPage() {
   const [activeTab, setActiveTab] = useState<"operations" | "crm">("operations");
   const [logDate, setLogDate] = useState<string>(new Date().toLocaleDateString("en-CA")); // YYYY-MM-DD in local time
 
+  const [activeDatesData, setActiveDatesData] = useState<string[]>([]);
   // Compute active dates for calendar dot indicators
-  const activeDates = useMemo(() => {
-    const s = new Set<string>();
-    [...sales, ...costs].forEach(item =>
-      s.add(new Date(item.created_at).toLocaleDateString("en-CA"))
-    );
-    return s;
-  }, [sales, costs]);
+  const activeDates = useMemo(() => new Set(activeDatesData), [activeDatesData]);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCrmCustomer, setSelectedCrmCustomer] = useState<Customer | null>(null);
@@ -251,16 +246,17 @@ export default function ManagerDashboardPage() {
         }
 
         // Fetch Branch Targets, Services, Sales, Costs, and Analytics
-        const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes, targetsRes] = await Promise.all([
+        const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes, targetsRes, activeDatesRes] = await Promise.all([
           authFetch(`${base}/api/v1/services`),
-          authFetch(`${base}/api/v1/sales`),
-          authFetch(`${base}/api/v1/costs`),
+          authFetch(`${base}/api/v1/sales?limit=50`),
+          authFetch(`${base}/api/v1/costs?limit=50`),
           authFetch(`${base}/api/v1/overview/daily-chart?branch_id=${managerBranchId || ""}`),
-          authFetch(`${base}/api/v1/customers`),
-          authFetch(`${base}/api/v1/targets${managerBranchId ? `?branch_id=${managerBranchId}` : ""}`)
+          authFetch(`${base}/api/v1/customers?limit=50`),
+          authFetch(`${base}/api/v1/targets${managerBranchId ? `?branch_id=${managerBranchId}` : ""}`),
+          authFetch(`${base}/api/v1/overview/active-dates`)
         ]);
 
-        if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok || !targetsRes.ok) {
+        if (!servicesRes.ok || !salesRes.ok || !costsRes.ok || !dailyChartRes.ok || !customersRes.ok || !targetsRes.ok || !activeDatesRes.ok) {
           throw new Error("Failed to load operations catalogs.");
         }
 
@@ -294,6 +290,7 @@ export default function ManagerDashboardPage() {
         setCosts(branchCosts);
         setDailyChartData(dailyChartDataVal);
         setCustomers(customersData);
+        if (activeDatesRes.ok) setActiveDatesData(await activeDatesRes.json());
 
         // Fetch Manager's Punch status for today
         const todayStr = new Date().toLocaleDateString("en-CA");
@@ -316,6 +313,30 @@ export default function ManagerDashboardPage() {
 
     loadManagerData();
   }, []);
+
+  // Fetch Sales when logDate changes
+  useEffect(() => {
+    if (!profile?.branch_id || !logDate) return;
+    const fetchDayLogs = async () => {
+      try {
+        const [salesRes, costsRes] = await Promise.all([
+          authFetch(`${getApiBaseUrl()}/api/v1/sales?date=${logDate}&limit=200`),
+          authFetch(`${getApiBaseUrl()}/api/v1/costs?date=${logDate}&limit=200`)
+        ]);
+        if (salesRes.ok) {
+           const sData = await salesRes.json();
+           setSales(sData.filter((s: Sale) => s.branch_id === profile.branch_id));
+        }
+        if (costsRes.ok) {
+           const cData = await costsRes.json();
+           setCosts(cData.filter((c: CostEntry) => c.branch_id === profile.branch_id));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchDayLogs();
+  }, [logDate, profile?.branch_id]);
 
   // Fetch Roster when rosterDate changes
   useEffect(() => {
