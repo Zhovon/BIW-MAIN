@@ -35,21 +35,11 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
         earned = 0.0
         earning_type = "commission"
 
-        # For non-managers, calculate commission from sales directly
-        if employee.role.lower() != "manager":
-            if assignment:
-                earned = float(assignment.bonus_amount)
-                bonus_earned += earned
-                earning_type = "bonus"
-            else:
-                # Commission calculation: Fixed amount per treatment, OR percentage if configured
-                treatment_fixed = float(employee.treatment_commission_amount)
-                if treatment_fixed > 0:
-                    earned = treatment_fixed
-                else:
-                    rate = float(employee.commission_rate) / 100.0
-                    earned = float(sale.sale_amount) * rate
-                commission_earned += earned
+        # For non-managers, award fixed task bonus unconditionally
+        if "manager" not in employee.role.lower():
+            earned = 20.0
+            bonus_earned += earned
+            earning_type = "bonus"
 
         treatments_details.append(
             {
@@ -64,7 +54,7 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
         )
 
     # Manager-specific logic for commission based on branch target
-    if employee.role.lower() == "manager" and employee.branch_id:
+    if "manager" in employee.role.lower() and employee.branch_id:
         target_record = db.query(BranchTarget).filter(
             BranchTarget.branch_id == employee.branch_id,
             BranchTarget.month == f"{year}-{month:02d}"
@@ -95,10 +85,13 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
     late_count = sum([1 for a in attendances if a.status.lower() == "late"])
     late_deduction = float(employee.salary) / 30.0 * (late_count // 3)
 
+    absent_count = sum([1 for a in attendances if a.status.lower() == "absent"])
+    leave_deduction = float(employee.salary) / 30.0 * absent_count
+
     # Manual deductions (manager typed in an amount)
     manual_deductions = sum([float(a.deduction_amount) for a in attendances if a.deduction_amount])
     
-    total_deductions = late_deduction + manual_deductions
+    total_deductions = late_deduction + leave_deduction + manual_deductions
 
     total_earned = float(employee.salary) + bonus_earned + commission_earned - total_deductions
 

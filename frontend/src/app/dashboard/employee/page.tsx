@@ -113,14 +113,31 @@ export default function EmployeeDashboardPage() {
 
         // 3. Fetch today's attendance for the punch clock
         const todayStr = new Date().toLocaleDateString("en-CA");
-        const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${earningsData.employee_id}`);
-        if (attRes.ok) {
-          const attData = await attRes.json();
-          const todaysRecords = attData.filter((a: AttendanceRecordType) => a.date === todayStr);
-          const latestPunch = todaysRecords.length > 0 ? todaysRecords[0] : null;
-          setTodaysPunch(latestPunch);
-          setIsPunchedIn(!!(latestPunch && !latestPunch.clock_out_time));
-        }
+        const fetchAttendance = async () => {
+          const attRes = await authFetch(`${base}/api/v1/attendance?employee_id=${earningsData.employee_id}`);
+          if (attRes.ok) {
+            const attData = await attRes.json();
+            const todaysRecords = attData.filter((a: AttendanceRecordType) => a.date === todayStr);
+            const latestPunch = todaysRecords.length > 0 ? todaysRecords[0] : null;
+            setTodaysPunch(latestPunch);
+            setIsPunchedIn(!!(latestPunch && !latestPunch.clock_out_time));
+          }
+        };
+        await fetchAttendance();
+
+        // 4. Supabase Real-Time Subscription
+        supabase
+          .channel('public:attendance')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'attendance', filter: `employee_id=eq.${earningsData.employee_id}` },
+            (payload) => {
+              // Whenever attendance changes for this employee, refetch or update state
+              console.log("Realtime attendance change received!", payload);
+              fetchAttendance();
+            }
+          )
+          .subscribe();
 
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
@@ -218,7 +235,7 @@ export default function EmployeeDashboardPage() {
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                style={{ borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.65rem 1rem", color: "#fff", outline: "none", font: "inherit" }}
+                style={{ borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.65rem 1rem", color: "var(--text)", outline: "none", font: "inherit" }}
               />
             </label>
           </div>
@@ -310,7 +327,7 @@ export default function EmployeeDashboardPage() {
                       style={{
                         padding: "16px",
                         borderRadius: "16px",
-                        background: "rgba(255, 255, 255, 0.02)",
+                        background: "rgba(0, 0, 0, 0.02)",
                         border: "1px solid var(--line)",
                         display: "flex",
                         justifyContent: "space-between",
@@ -318,12 +335,12 @@ export default function EmployeeDashboardPage() {
                       }}
                     >
                       <div>
-                        <strong style={{ fontSize: "1.05rem", color: "#fff" }}>{t.service_name}</strong>
+                        <strong style={{ fontSize: "1.05rem", color: "var(--text)" }}>{t.service_name}</strong>
                         <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "4px" }}>
                           Treatment Price: ৳{t.sale_amount.toLocaleString()} 
                           {t.discount_amount > 0 && ` (৳${t.discount_amount.toLocaleString()} discount applied)`}
                         </div>
-                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)" }}>{dateStr}</span>
+                        <span style={{ fontSize: "0.72rem", color: "var(--muted-light)" }}>{dateStr}</span>
                       </div>
 
                       <div style={{ textAlign: "right" }}>
@@ -371,7 +388,7 @@ export default function EmployeeDashboardPage() {
                     style={{
                       padding: "14px 16px",
                       borderRadius: "14px",
-                      background: "rgba(255, 255, 255, 0.02)",
+                      background: "rgba(0, 0, 0, 0.02)",
                       border: "1px solid var(--line)",
                       display: "flex",
                       justifyContent: "space-between",
@@ -379,7 +396,7 @@ export default function EmployeeDashboardPage() {
                     }}
                   >
                     <div>
-                      <strong style={{ display: "block", fontSize: "0.95rem", color: "#fff" }}>
+                      <strong style={{ display: "block", fontSize: "0.95rem", color: "var(--text)" }}>
                         {getServiceName(asg.service_id)}
                       </strong>
                       <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>

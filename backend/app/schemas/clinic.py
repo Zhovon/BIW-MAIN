@@ -102,16 +102,21 @@ class ServiceAssignmentCreate(BaseModel):
 
 # ── Customer CRM ──────────────────────────────────────────────
 
-class CustomerCreate(BaseModel):
+class CustomerBase(BaseModel):
     full_name: str
     phone: str
     email: Optional[str] = None
     notes: Optional[str] = None
 
+class CustomerCreate(CustomerBase):
+    pass
 
-class CustomerRead(CustomerCreate):
+class CustomerRead(CustomerBase):
     id: str
+    uid: Optional[int] = None
     created_at: Optional[datetime] = None
+    total_spent: float = 0
+    total_visits: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

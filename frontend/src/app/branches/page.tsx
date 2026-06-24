@@ -128,7 +128,7 @@ export default function BranchesPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: "12px", border: "1px solid var(--line)",
     background: "var(--surface-2)", padding: "0.75rem 0.95rem",
-    color: "#fff", outline: "none", font: "inherit",
+    color: "var(--text)", outline: "none", font: "inherit",
   };
 
   const labelStyle: React.CSSProperties = { display: "grid", gap: "6px" };
@@ -173,7 +173,7 @@ export default function BranchesPage() {
           <article className="glass-card" style={{ padding: "28px", border: "1px solid var(--accent)" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent)" }}>New Branch</h2>
             {addError && (
-              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                 {addError}
               </div>
             )}

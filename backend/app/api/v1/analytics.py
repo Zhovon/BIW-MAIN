@@ -5,7 +5,7 @@ from sqlalchemy import func, extract, and_
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.clinic import Sale, SaleEmployee, Service, Customer, Employee, Branch
+from app.models.clinic import Sale, SaleEmployee, Service, Customer, Employee, Branch, BranchTarget
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -16,6 +16,7 @@ def get_risk_dashboard_data(
     branch_id: Optional[str] = None,
     staff_name: Optional[str] = None,
     payment_method: Optional[str] = None,
+    ticket_band: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -41,6 +42,14 @@ def get_risk_dashboard_data(
     if payment_method:
         sales_q = sales_q.filter(Sale.payment_method == payment_method)
     
+    if ticket_band:
+        if ticket_band == "10k+": sales_q = sales_q.filter(Sale.sale_amount >= 10000)
+        elif ticket_band == "5k-10k": sales_q = sales_q.filter(Sale.sale_amount >= 5000, Sale.sale_amount < 10000)
+        elif ticket_band == "2.5k-5k": sales_q = sales_q.filter(Sale.sale_amount >= 2500, Sale.sale_amount < 5000)
+        elif ticket_band == "1k-2.5k": sales_q = sales_q.filter(Sale.sale_amount >= 1000, Sale.sale_amount < 2500)
+        elif ticket_band == "500-1k": sales_q = sales_q.filter(Sale.sale_amount >= 500, Sale.sale_amount < 1000)
+        elif ticket_band == "0-500": sales_q = sales_q.filter(Sale.sale_amount >= 0, Sale.sale_amount < 500)
+    
     # Optional staff filter
     if staff_name:
         sales_q = sales_q.join(Sale.assigned_employees).join(SaleEmployee.employee).filter(
@@ -64,13 +73,59 @@ def get_risk_dashboard_data(
     
     payment_mix = {row.payment_method: float(row.amount or 0) for row in payment_mix_raw}
 
-    # 3. Daily Revenue Trend
-    daily_revenue_raw = db.query(
-        func.date_trunc('day', Sale.created_at).label('day'),
+    # 3. Daily Revenue (Selected Period)
+    daily_revenue_raw = sales_q.with_entities(
+        func.date(Sale.created_at).label('date'),
         func.sum(Sale.sale_amount).label('revenue')
-    ).select_from(sales_q.subquery()).group_by('day').all()
+    ).group_by(func.date(Sale.created_at)).all()
 
-    daily_trend = {row.day.strftime("%Y-%m-%d"): float(row.revenue or 0) for row in daily_revenue_raw if row.day}
+    # Pad with all dates in range
+    daily_revenue = {}
+    curr = start_dt
+    while curr.date() <= end_dt.date():
+        daily_revenue[curr.strftime("%Y-%m-%d")] = 0.0
+        curr += timedelta(days=1)
+    
+    for row in daily_revenue_raw:
+        daily_revenue[str(row.date)] = float(row.revenue or 0)
+
+
+    # 3b. Daily Revenue (Previous Period)
+    period_delta = end_dt - start_dt
+    prev_start_dt = start_dt - period_delta
+    prev_end_dt = start_dt
+    
+    prev_sales_q = db.query(Sale).filter(
+        Sale.created_at >= prev_start_dt,
+        Sale.created_at < prev_end_dt
+    )
+    prev_daily_raw = prev_sales_q.with_entities(
+        func.date(Sale.created_at).label('date'),
+        func.sum(Sale.sale_amount).label('revenue')
+    ).group_by(func.date(Sale.created_at)).all()
+    # Pad with all dates in previous range
+    prev_daily_revenue = {}
+    curr = prev_start_dt
+    while curr.date() < prev_end_dt.date():
+        prev_daily_revenue[curr.strftime("%Y-%m-%d")] = 0.0
+        curr += timedelta(days=1)
+        
+    for row in prev_daily_raw:
+        prev_daily_revenue[str(row.date)] = float(row.revenue or 0)
+
+
+    # 3c. Visit Frequency (Count of visits per customer)
+    visit_counts = sales_q.with_entities(
+        Sale.customer_id,
+        func.count(Sale.id).label('visits')
+    ).group_by(Sale.customer_id).all()
+    
+    visit_frequency = {"1 visit": 0, "2 visits": 0, "3+ visits": 0}
+    for row in visit_counts:
+        v = row.visits
+        if v == 1: visit_frequency["1 visit"] += 1
+        elif v == 2: visit_frequency["2 visits"] += 1
+        elif v >= 3: visit_frequency["3+ visits"] += 1
 
     # 4. Hourly Demand (Services per hour)
     hourly_demand_raw = db.query(
@@ -122,12 +177,13 @@ def get_risk_dashboard_data(
     ]
     staff_performance.sort(key=lambda x: x["revenue"], reverse=True)
 
-    # 8. Utilization Heatmap (Count per dow and hour)
-    heatmap_raw = sales_q.with_entities(
+    # 8. Utilization Heatmap (Count per dow, hour, staff)
+    heatmap_raw = sales_q.join(Sale.assigned_employees).join(Employee, Employee.id == SaleEmployee.employee_id).with_entities(
         extract('dow', Sale.created_at).label('dow'),
         extract('hour', Sale.created_at).label('hour'),
+        Employee.full_name.label('staff_name'),
         func.count(Sale.id).label('count')
-    ).group_by('dow', 'hour').all()
+    ).group_by('dow', 'hour', Employee.full_name).all()
 
     utilization_heatmap = []
     for row in heatmap_raw:
@@ -136,6 +192,7 @@ def get_risk_dashboard_data(
         utilization_heatmap.append({
             "dow": js_dow,
             "hour": int(row.hour),
+            "staff_name": row.staff_name,
             "count": int(row.count or 0)
         })
 
@@ -158,16 +215,63 @@ def get_risk_dashboard_data(
         } for row in vip_raw
     ]
 
+    # 10. Snapshot Data
+    now = datetime.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday_start = today_start - timedelta(days=1)
+    last_week_start = today_start - timedelta(days=7)
+    
+    snapshot_q = db.query(Sale)
+    if branch_id:
+        snapshot_q = snapshot_q.filter(Sale.branch_id == branch_id)
+        
+    today_stats = snapshot_q.filter(Sale.created_at >= today_start).with_entities(func.sum(Sale.sale_amount), func.count(Sale.id)).first()
+    yesterday_stats = snapshot_q.filter(Sale.created_at >= yesterday_start, Sale.created_at < today_start).with_entities(func.sum(Sale.sale_amount), func.count(Sale.id)).first()
+    last_week_stats = snapshot_q.filter(Sale.created_at >= last_week_start, Sale.created_at < last_week_start + timedelta(days=1)).with_entities(func.sum(Sale.sale_amount)).first()
+    
+    trailing_revs = []
+    for i in range(1, 5):
+        d_start = today_start - timedelta(days=7*i)
+        d_end = d_start + timedelta(days=1)
+        r = snapshot_q.filter(Sale.created_at >= d_start, Sale.created_at < d_end).with_entities(func.sum(Sale.sale_amount)).scalar()
+        trailing_revs.append(r or 0)
+    
+    trailing_avg = sum(trailing_revs) / 4 if trailing_revs else 0
+    
+    # 5. Target Run-Rate
+    month_str = f"{end_dt.year}-{end_dt.month:02d}"
+    target_q = db.query(BranchTarget).filter(BranchTarget.month == month_str)
+    if branch_id and branch_id != "all":
+        target_q = target_q.filter(BranchTarget.branch_id == branch_id)
+    
+    targets = target_q.all()
+    target_amount = sum(float(t.target_amount) for t in targets)
+    target_run_rate = (total_revenue / target_amount * 100) if target_amount > 0 else 0
+
+    snapshot = {
+        "today_rev": float(today_stats[0] or 0) if today_stats else 0,
+        "today_count": int(today_stats[1] or 0) if today_stats else 0,
+        "yesterday_rev": float(yesterday_stats[0] or 0) if yesterday_stats else 0,
+        "yesterday_count": int(yesterday_stats[1] or 0) if yesterday_stats else 0,
+        "last_week_rev": float(last_week_stats[0] or 0) if last_week_stats else 0,
+        "trailing_avg": float(trailing_avg)
+    }
+
     return {
+        "target_amount": target_amount,
+        "target_run_rate": target_run_rate,
+        "snapshot": snapshot,
         "revenue": total_revenue,
         "count": total_count,
         "avgTicket": total_revenue / total_count if total_count > 0 else 0,
         "payment": payment_mix,
-        "daily": daily_trend,
+        "daily": daily_revenue,
+        "prev_daily": prev_daily_revenue,
+        "visit_frequency": visit_frequency,
         "hourly": hourly_demand,
         "weekday": weekday_demand,
         "band": ticket_bands,
         "staff_performance": staff_performance,
         "utilization_heatmap": utilization_heatmap,
-        "vip_cohort": vip_cohort,
+        "vip_cohort": vip_cohort
     }

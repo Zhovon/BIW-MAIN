@@ -214,7 +214,7 @@ export default function EmployeesPage() {
         <section className="content-grid" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div className="glass-card auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)", maxWidth: "500px", width: "100%", padding: "40px", textAlign: "center" }}>
             <p className="section-label" style={{ color: "#ff6464" }}>Access Denied</p>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", margin: "14px 0", color: "#fff" }}>Owner Access Required</h1>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", margin: "14px 0", color: "var(--text)" }}>Owner Access Required</h1>
             <p className="dashboard-lead" style={{ fontSize: "0.95rem", color: "var(--muted)", margin: "0 0 24px" }}>
               Only clinic owners are authorized to access the employee management portal.
             </p>
@@ -282,7 +282,7 @@ export default function EmployeesPage() {
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.8rem", margin: "0 0 24px" }}>Register Employee & Login Account</h2>
             
             {submitError && (
-              <div style={{ padding: "12px 16px", borderRadius: "12px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.3)", color: "#ff8282", fontSize: "0.9rem", marginBottom: "20px" }}>
+              <div style={{ padding: "12px 16px", borderRadius: "12px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.3)", color: "#cc0000", fontSize: "0.9rem", marginBottom: "20px" }}>
                 {submitError}
               </div>
             )}
@@ -299,7 +299,7 @@ export default function EmployeesPage() {
                     value={fullName}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
                     placeholder="e.g. Tasnim Jahan"
-                    style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                   />
                 </label>
 
@@ -308,7 +308,7 @@ export default function EmployeesPage() {
                   <select
                     value={branchId}
                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setBranchId(e.target.value)}
-                    style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                    style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                   >
                     {branches.map((b: Branch) => (
                       <option key={b.id} value={b.id}>
@@ -324,7 +324,7 @@ export default function EmployeesPage() {
                     <select
                       value={clinicalRole}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setClinicalRole(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     >
                       <option value="Senior Therapist">Senior Therapist</option>
                       <option value="Front Desk Manager">Front Desk Manager</option>
@@ -342,7 +342,7 @@ export default function EmployeesPage() {
                         value={customClinicalRole}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setCustomClinicalRole(e.target.value)}
                         placeholder="e.g. Skin specialist"
-                        style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                        style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                       />
                     </label>
                   )}
@@ -356,7 +356,7 @@ export default function EmployeesPage() {
                       required
                       value={salary}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setSalary(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                   <label style={{ display: "grid", gap: "6px" }}>
@@ -365,7 +365,7 @@ export default function EmployeesPage() {
                       type="number"
                       value={bonusRate}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setBonusRate(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                   <label style={{ display: "grid", gap: "6px" }}>
@@ -374,7 +374,7 @@ export default function EmployeesPage() {
                       type="number"
                       value={commissionRate}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setCommissionRate(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                   <label style={{ display: "grid", gap: "6px" }}>
@@ -383,7 +383,7 @@ export default function EmployeesPage() {
                       type="number"
                       value={treatmentCommissionAmount}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setTreatmentCommissionAmount(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                 </div>
@@ -396,7 +396,7 @@ export default function EmployeesPage() {
                       type="time"
                       value={shiftStartTime}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setShiftStartTime(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                   <label style={{ display: "grid", gap: "6px" }}>
@@ -405,7 +405,7 @@ export default function EmployeesPage() {
                       type="time"
                       value={shiftEndTime}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setShiftEndTime(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
                   <label style={{ display: "grid", gap: "6px" }}>
@@ -413,7 +413,7 @@ export default function EmployeesPage() {
                     <select
                       value={offDays}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setOffDays(e.target.value)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     >
                       <option value="Sunday">Sunday</option>
                       <option value="Monday">Monday</option>
@@ -429,7 +429,7 @@ export default function EmployeesPage() {
 
               {/* Right Column: Supabase Credentials */}
               <div style={{ display: "grid", gap: "16px", alignContent: "start" }}>
-                <div style={{ padding: "16px", borderRadius: "18px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                <div style={{ padding: "16px", borderRadius: "18px", background: "rgba(0, 0, 0, 0.02)", border: "1px solid rgba(0, 0, 0, 0.04)" }}>
                   <h3 style={{ fontSize: "0.95rem", margin: "0 0 12px", color: "var(--accent)" }}>System Login & Dashboard Permissions</h3>
                   
                   <label style={{ display: "grid", gap: "6px", marginBottom: "14px" }}>
@@ -439,7 +439,7 @@ export default function EmployeesPage() {
                       value={email}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                       placeholder="e.g. employee@zhovon.com"
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
 
@@ -450,7 +450,7 @@ export default function EmployeesPage() {
                       value={password}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                       placeholder="At least 6 characters"
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(255, 255, 255, 0.03)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "rgba(0, 0, 0, 0.03)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     />
                   </label>
 
@@ -459,7 +459,7 @@ export default function EmployeesPage() {
                     <select
                       value={dashboardRole}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setDashboardRole(e.target.value as AuthRole)}
-                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "#fff", outline: "none" }}
+                      style={{ width: "100%", borderRadius: "14px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.8rem 1rem", color: "var(--text)", outline: "none" }}
                     >
                       <option value="employee">Employee Dashboard (Personal earnings, services)</option>
                       <option value="manager">Manager Dashboard (Daily branch operations entry)</option>
@@ -508,7 +508,7 @@ export default function EmployeesPage() {
                       letterSpacing: "0.05em",
                       padding: "4px 8px",
                       borderRadius: "8px",
-                      background: employee.user_id ? "rgba(110, 231, 255, 0.12)" : "rgba(255, 255, 255, 0.05)",
+                      background: employee.user_id ? "rgba(110, 231, 255, 0.12)" : "rgba(0, 0, 0, 0.05)",
                       color: employee.user_id ? "var(--accent)" : "var(--muted)",
                       border: employee.user_id ? "1px solid rgba(110, 231, 255, 0.2)" : "1px solid var(--line)"
                     }}>
@@ -519,7 +519,7 @@ export default function EmployeesPage() {
                   <dl style={{ gap: "12px" }}>
                     <div>
                       <dt>Clinical Role</dt>
-                      <dd style={{ fontSize: "1rem", fontWeight: "600", color: "#fff" }}>{employee.role}</dd>
+                      <dd style={{ fontSize: "1rem", fontWeight: "600", color: "var(--text)" }}>{employee.role}</dd>
                     </div>
                     <div>
                       <dt>Branch Location</dt>
@@ -555,7 +555,7 @@ export default function EmployeesPage() {
                       style={{
                         padding: "6px 14px",
                         fontSize: "0.85rem",
-                        color: "#ff6c6c",
+                        color: "#cc0000",
                         borderColor: "rgba(255, 108, 108, 0.2)",
                         background: "rgba(255, 108, 108, 0.04)"
                       }}

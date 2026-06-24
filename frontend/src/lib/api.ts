@@ -13,21 +13,43 @@ export function getApiBaseUrl(): string {
  * Authenticated fetch — automatically attaches the Supabase JWT as a
  * Bearer token on every request. Drop-in replacement for `fetch()`.
  */
+let cachedToken: string | undefined;
+let tokenExpiresAt = 0;
+let tokenFetchPromise: Promise<string | undefined> | null = null;
+
 export async function authFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  let token: string | undefined;
-  try {
-    const supabase = getSupabaseBrowserClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    token = session?.access_token;
-  } catch {
-    // If Supabase client is unavailable, proceed without token.
-    // The backend will respond with 401.
+  const now = Date.now();
+
+  if (!cachedToken || now > tokenExpiresAt) {
+    if (!tokenFetchPromise) {
+      tokenFetchPromise = (async () => {
+        try {
+          const supabase = getSupabaseBrowserClient();
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            cachedToken = session.access_token;
+            tokenExpiresAt = Date.now() + 60 * 1000;
+          } else {
+            cachedToken = undefined;
+            tokenExpiresAt = 0;
+          }
+        } catch (err) {
+          console.error("Auth fetch getSession error", err);
+          cachedToken = undefined;
+          tokenExpiresAt = 0;
+        } finally {
+          tokenFetchPromise = null;
+        }
+        return cachedToken;
+      })();
+    }
+    await tokenFetchPromise;
   }
+
+  const token = cachedToken;
 
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string> ?? {}),

@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import { CrmPortal } from "@/components/crm-portal";
 
 import { useEffect, useState, useRef, useMemo, ChangeEvent, FormEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
@@ -8,6 +10,7 @@ import { CalendarPicker } from "@/components/calendar-picker";
 
 type Employee = {
   id: string;
+  user_id?: string | null;
   branch_id: string | null;
   full_name: string;
   role: string;
@@ -87,6 +90,7 @@ type AttendanceRecordType = {
 
 export default function ManagerDashboardPage() {
   const [profile, setProfile] = useState<ManagerProfile | null>(null);
+  const [employeeRecord, setEmployeeRecord] = useState<Employee | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -214,24 +218,39 @@ export default function ManagerDashboardPage() {
         const base = getApiBaseUrl();
         const currentMonth = new Date().toISOString().substring(0, 7);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let profileData: any = null;
+        let managerBranchId = null;
+        let allEmps: Employee[] = [];
+
         const profileRes = await authFetch(`${base}/api/v1/payroll/employee/user/${user.id}?month=${currentMonth}`);
-        if (!profileRes.ok) {
-          throw new Error("Could not find manager profile in the database. Ensure you are registered as an employee with 'manager' metadata.");
+        if (profileRes.ok) {
+          profileData = await profileRes.json();
+        } else {
+          console.warn("No employee profile found for this manager account.");
         }
-        const profileData = await profileRes.json();
 
         const empDetailRes = await authFetch(`${base}/api/v1/employees`);
-        const allEmps: Employee[] = await empDetailRes.json();
-        const matchedEmp = allEmps.find(e => e.id === profileData.employee_id);
-        const managerBranchId = matchedEmp?.branch_id ?? null;
+        if (empDetailRes.ok) {
+          allEmps = await empDetailRes.json();
+          // Find the manager's true employee record by user_id
+          const me = allEmps.find((e) => e.user_id === user.id);
+          if (me) {
+            setEmployeeRecord(me);
+            managerBranchId = me.branch_id;
+          }
+          
+          if (profileData) {
+            setProfile({
+              employee_id: profileData.employee_id,
+              full_name: profileData.full_name,
+              role: profileData.role,
+              branch_id: managerBranchId
+            });
+          }
+        }
 
-        setProfile({
-          employee_id: profileData.employee_id,
-          full_name: profileData.full_name,
-          role: profileData.role,
-          branch_id: managerBranchId
-        });
-
+        // Fetch Branch Targets, Services, Sales, Costs, and Analytics
         const [servicesRes, salesRes, costsRes, dailyChartRes, customersRes, targetsRes] = await Promise.all([
           authFetch(`${base}/api/v1/services`),
           authFetch(`${base}/api/v1/sales`),
@@ -316,6 +335,22 @@ export default function ManagerDashboardPage() {
       }
     };
     fetchRoster();
+
+    const channel = getSupabaseBrowserClient()
+      .channel('public:attendance')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'attendance' },
+        (payload) => {
+          console.log("Realtime roster update!", payload);
+          fetchRoster();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      getSupabaseBrowserClient().removeChannel(channel);
+    };
   }, [rosterDate, profile?.branch_id]);
 
   // ── Employee multi-select helpers ──
@@ -467,6 +502,12 @@ export default function ManagerDashboardPage() {
 
       const loggedSale = await res.json();
       setSales(prev => [loggedSale, ...prev]);
+
+      // Re-fetch daily chart so dashboard graphs update in realtime
+      const chartRes = await authFetch(`${base}/api/v1/overview/daily-chart?branch_id=${profile?.branch_id || ""}`);
+      if (chartRes.ok) {
+        setDailyChartData(await chartRes.json());
+      }
 
       setDiscountAmount("0");
       setSelectedEmployeeIds([]);
@@ -739,7 +780,7 @@ export default function ManagerDashboardPage() {
                     </div>
                     <div>
                       <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Net Margin</span>
-                      <strong style={{ display: "block", fontSize: "1.15rem", color: "#fff", fontFamily: "monospace" }}>
+                      <strong style={{ display: "block", fontSize: "1.15rem", color: "var(--text)", fontFamily: "monospace" }}>
                         {dailyChartData.profit_margin.toFixed(1)}%
                       </strong>
                     </div>
@@ -784,7 +825,41 @@ export default function ManagerDashboardPage() {
               </button>
             </article>
 
+            {/* Manager Personal Payroll Summary */}
+            {(employeeRecord || profile) && (() => {
+              const currentRevenue = sales.reduce((sum, s) => sum + s.sale_amount, 0);
+              const targetAmount = branchTarget?.target_amount || 0;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const emp = employeeRecord as any;
+              const commissionRate = emp?.commission_rate || 0;
+              const baseSalary = emp?.salary || 0;
+              const commissionEarned = currentRevenue > targetAmount && targetAmount > 0
+                ? (currentRevenue - targetAmount) * (commissionRate / 100)
+                : 0;
+              return (
+                <article className="glass-card" style={{ padding: "20px 24px", marginBottom: "24px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", alignItems: "center", borderColor: "rgba(201,168,76,0.2)" }}>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Base Salary</span>
+                    <strong style={{ fontSize: "1.15rem", color: "var(--text)", fontFamily: "monospace" }}>৳{baseSalary.toLocaleString()}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Rate</span>
+                    <strong style={{ fontSize: "1.15rem", color: "var(--accent)", fontFamily: "monospace" }}>{commissionRate}%</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Earned</span>
+                    <strong style={{ fontSize: "1.15rem", color: commissionEarned > 0 ? "var(--accent-3)" : "var(--muted)", fontFamily: "monospace" }}>৳{commissionEarned.toLocaleString()}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Est. Total This Month</span>
+                    <strong style={{ fontSize: "1.15rem", color: "var(--accent-3)", fontFamily: "monospace" }}>৳{(baseSalary + commissionEarned).toLocaleString()}</strong>
+                  </div>
+                </article>
+              );
+            })()}
+
             {/* Daily Roster Card */}
+
             <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
                 <div>
@@ -806,9 +881,9 @@ export default function ManagerDashboardPage() {
               ) : (
                 <div style={{ display: "grid", gap: "12px" }}>
                   {roster.map((r: AttendanceRecordType) => (
-                    <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                    <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
                       <div>
-                        <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
+                        <strong style={{ display: "block", color: "var(--text)" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
                         <span style={{ fontSize: "0.8rem", color: r.status === "Present" ? "#92fb9c" : r.status === "Absent" ? "#ff7c7c" : "var(--accent)" }}>
                           {r.status.toUpperCase()}
                         </span>
@@ -837,7 +912,7 @@ export default function ManagerDashboardPage() {
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent)" }}>Record Service Treatment</h2>
 
                   {saleError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {saleError}
                     </div>
                   )}
@@ -887,7 +962,7 @@ export default function ManagerDashboardPage() {
                         style={{
                           ...selectInputStyle,
                           cursor: "pointer", textAlign: "left",
-                          color: selectedEmployeeIds.length > 0 ? "var(--muted)" : "rgba(244,248,255,0.38)",
+                          color: selectedEmployeeIds.length > 0 ? "var(--muted)" : "var(--muted-light)",
                         }}
                       >
                         {selectedEmployeeIds.length > 0
@@ -915,13 +990,13 @@ export default function ManagerDashboardPage() {
                                     padding: "10px 16px", cursor: "pointer",
                                     display: "flex", justifyContent: "space-between", alignItems: "center",
                                     background: isSelected ? "rgba(110, 231, 255, 0.08)" : "transparent",
-                                    borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                    borderBottom: "1px solid rgba(0, 0, 0, 0.03)",
                                     transition: "background 0.15s ease",
                                   }}
-                                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+                                  onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = "rgba(0, 0, 0, 0.04)"; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = isSelected ? "rgba(110, 231, 255, 0.08)" : "transparent"; }}
                                 >
-                                  <span style={{ color: "#fff", fontSize: "0.9rem" }}>
+                                  <span style={{ color: "var(--text)", fontSize: "0.9rem" }}>
                                     {emp.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>({emp.role})</span>
                                   </span>
                                   {isSelected && <span style={{ color: "var(--accent)", fontSize: "1.1rem" }}>✓</span>}
@@ -994,13 +1069,13 @@ export default function ManagerDashboardPage() {
                               onClick={() => selectCustomer(c)}
                               style={{
                                 padding: "10px 16px", cursor: "pointer",
-                                borderBottom: "1px solid rgba(255,255,255,0.03)",
+                                borderBottom: "1px solid rgba(0, 0, 0, 0.03)",
                                 transition: "background 0.15s ease",
                               }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(0, 0, 0, 0.04)"; }}
                               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
                             >
-                              <span style={{ color: "#fff", fontSize: "0.9rem" }}>{c.full_name}</span>
+                              <span style={{ color: "var(--text)", fontSize: "0.9rem" }}>{c.full_name}</span>
                               <span style={{ color: "var(--muted)", fontSize: "0.8rem", marginLeft: "8px" }}>{c.phone}</span>
                             </div>
                           ))}
@@ -1069,7 +1144,7 @@ export default function ManagerDashboardPage() {
                     </div>
 
                     {/* Final Price Display */}
-                    <div style={{ padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ padding: "12px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>Final Sale Amount:</span>
                       <strong style={{ fontSize: "1.1rem", color: "var(--accent-3)" }}>
                         ৳{((services.find(s => s.id === saleServiceId)?.price || 0) - (parseFloat(discountAmount) || 0)).toLocaleString()}
@@ -1088,11 +1163,11 @@ export default function ManagerDashboardPage() {
                 </article>
 
                 {/* Form 2: Expense Logger */}
-                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(0, 0, 0, 0.05)" }}>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Branch Expense</h2>
 
                   {costError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {costError}
                     </div>
                   )}
@@ -1151,11 +1226,11 @@ export default function ManagerDashboardPage() {
                 </article>
 
                 {/* Form 3: Attendance Logger */}
-                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(0, 0, 0, 0.05)" }}>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Attendance</h2>
 
                   {attError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {attError}
                     </div>
                   )}
@@ -1234,7 +1309,7 @@ export default function ManagerDashboardPage() {
                       <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(110, 231, 255, 0.05)", border: "1px solid rgba(110, 231, 255, 0.2)", marginBottom: "16px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                           <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Monthly Target ({branchTarget.month})</span>
-                          <strong style={{ fontSize: "0.85rem", color: "#fff" }}>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--text)" }}>
                             ৳{sales.reduce((sum, s) => sum + s.sale_amount, 0).toLocaleString()} / ৳{branchTarget.target_amount.toLocaleString()}
                           </strong>
                         </div>
@@ -1281,13 +1356,13 @@ export default function ManagerDashboardPage() {
                             <span style={{ fontSize: "0.72rem", color: "#ff7c7c", display: "block" }}>Expenses</span>
                             <strong style={{ color: "#ff7c7c", fontSize: "0.95rem" }}>-৳{dayExpenses.toLocaleString()}</strong>
                           </div>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(0, 0, 0, 0.04)", border: "1px solid var(--line)" }}>
                             <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Net</span>
                             <strong style={{ color: dayNet >= 0 ? "var(--accent-3)" : "#ff7c7c", fontSize: "0.95rem" }}>৳{dayNet.toLocaleString()}</strong>
                           </div>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(0, 0, 0, 0.04)", border: "1px solid var(--line)" }}>
                             <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Entries</span>
-                            <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{dayItems.length}</strong>
+                            <strong style={{ color: "var(--text)", fontSize: "0.95rem" }}>{dayItems.length}</strong>
                           </div>
                         </div>
                       );
@@ -1329,7 +1404,7 @@ export default function ManagerDashboardPage() {
                               <span style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.05em", color: isSale ? "var(--accent)" : "#ff7c7c" }}>
                                 {isSale ? "Treatment Completed" : "Branch Expense"}
                               </span>
-                              <strong style={{ fontSize: "1rem", color: "#fff" }}>
+                              <strong style={{ fontSize: "1rem", color: "var(--text)" }}>
                                 {isSale ? getServiceName((item as Sale).service_id) : (item as CostEntry).cost_type}
                               </strong>
                               <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
@@ -1338,7 +1413,7 @@ export default function ManagerDashboardPage() {
                                   : (item as CostEntry).note || "No note specified"
                                 }
                               </span>
-                              <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
+                              <span style={{ fontSize: "0.72rem", color: "var(--muted-light)", marginTop: "4px" }}>
                                 {timeStr}
                               </span>
                             </div>
@@ -1347,7 +1422,7 @@ export default function ManagerDashboardPage() {
                                 {isSale ? `+৳${(item as Sale).sale_amount.toLocaleString()}` : `-৳${(item as CostEntry).amount.toLocaleString()}`}
                               </strong>
                               {isSale && (item as Sale).discount_amount > 0 && (
-                                <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
+                                <div style={{ fontSize: "0.78rem", color: "rgba(0, 0, 0,0.4)" }}>
                                   ৳{(item as Sale).discount_amount.toLocaleString()} disc
                                 </div>
                               )}
@@ -1364,314 +1439,9 @@ export default function ManagerDashboardPage() {
           </>
         )}
 
-        {activeTab === "crm" && (
-          <section style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            
-            {/* CRM Search & Action Bar */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-              <div style={{ flex: "1 1 300px" }}>
-                <input
-                  type="text"
-                  placeholder="Search customer directory by name or phone..."
-                  value={crmSearchQuery}
-                  onChange={(e) => setCrmSearchQuery(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <button
-                onClick={() => setShowCrmAddForm(!showCrmAddForm)}
-                className="button button--primary"
-                style={{ padding: "0.75rem 1.5rem" }}
-              >
-                {showCrmAddForm ? "Close Form" : "＋ Register Customer"}
-              </button>
-            </div>
-
-            {/* Inline Customer Add Form */}
-            {showCrmAddForm && (
-              <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(142, 240, 178, 0.2)" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", margin: "0 0 16px", color: "var(--accent-3)" }}>
-                  Register New Client Record
-                </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-                  <label style={{ display: "grid", gap: "6px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Full Name *</span>
-                    <input
-                      type="text" required
-                      value={newCrmName}
-                      onChange={(e) => setNewCrmName(e.target.value)}
-                      placeholder="e.g. Asif Mahmud"
-                      style={inputStyle}
-                    />
-                  </label>
-                  <label style={{ display: "grid", gap: "6px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Phone Number *</span>
-                    <input
-                      type="text" required
-                      value={newCrmPhone}
-                      onChange={(e) => setNewCrmPhone(e.target.value)}
-                      placeholder="e.g. 01712345678"
-                      style={inputStyle}
-                    />
-                  </label>
-                </div>
-                <div style={{ display: "grid", gap: "16px", marginBottom: "20px" }}>
-                  <label style={{ display: "grid", gap: "6px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Email Address</span>
-                    <input
-                      type="email"
-                      value={newCrmEmail}
-                      onChange={(e) => setNewCrmEmail(e.target.value)}
-                      placeholder="e.g. client@domain.com"
-                      style={inputStyle}
-                    />
-                  </label>
-                  <label style={{ display: "grid", gap: "6px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Consultation / Profile Notes</span>
-                    <textarea
-                      value={newCrmNotes}
-                      onChange={(e) => setNewCrmNotes(e.target.value)}
-                      placeholder="Describe skin condition, treatment goals, allergies, or past treatments..."
-                      rows={3}
-                      style={{ ...inputStyle, resize: "none", font: "inherit" }}
-                    />
-                  </label>
-                </div>
-                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <button type="button" onClick={() => setShowCrmAddForm(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}>
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateCrmCustomer}
-                    disabled={crmCustCreating || !newCrmName || !newCrmPhone}
-                    className="button button--primary"
-                    style={{ padding: "0.75rem 1.6rem" }}
-                  >
-                    {crmCustCreating ? "Saving..." : "Save Customer"}
-                  </button>
-                </div>
-              </article>
-            )}
-
-            {/* CRM Two Column Directory */}
-            <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
-              
-              {/* Left Column: Customer Directory List */}
-              <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", maxHeight: "650px" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.35rem", margin: "0 0 16px" }}>Client Directory</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", flex: 1, paddingRight: "4px" }}>
-                  {customers
-                    .filter(c => {
-                      const query = crmSearchQuery.toLowerCase();
-                      return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
-                    })
-                    .map(c => {
-                      const clientSales = sales.filter(s => s.customer_id === c.id);
-                      const totalSpent = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
-                      const isSelected = selectedCrmCustomer?.id === c.id;
-
-                      return (
-                        <div
-                          key={c.id}
-                          onClick={() => setSelectedCrmCustomer(c)}
-                          style={{
-                            padding: "16px",
-                            borderRadius: "16px",
-                            background: isSelected ? "rgba(110, 231, 255, 0.06)" : "rgba(255, 255, 255, 0.01)",
-                            border: `1px solid ${isSelected ? "rgba(110, 231, 255, 0.25)" : "var(--line)"}`,
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                          }}
-                        >
-                          <strong style={{ display: "block", fontSize: "1.05rem", color: isSelected ? "var(--accent)" : "#fff" }}>
-                            {c.full_name}
-                          </strong>
-                          <span style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
-                            {c.phone} {c.email ? `• ${c.email}` : ""}
-                          </span>
-                          <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
-                            <span style={{ fontSize: "0.72rem", background: "var(--surface-2)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px", color: "var(--muted)" }}>
-                              {clientSales.length} Treatments
-                            </span>
-                            <span style={{ fontSize: "0.72rem", background: "rgba(110, 231, 255, 0.08)", padding: "2px 8px", borderRadius: "6px", color: "var(--accent)" }}>
-                              ৳{totalSpent.toLocaleString()} Spent
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  {customers.filter(c => {
-                    const query = crmSearchQuery.toLowerCase();
-                    return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
-                  }).length === 0 && (
-                    <p style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0", fontSize: "0.95rem" }}>
-                      No clients found in directory.
-                    </p>
-                  )}
-                </div>
-              </article>
-
-              {/* Right Column: Customer Details & Treatment History */}
-              <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", minHeight: "500px" }}>
-                {selectedCrmCustomer ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
-                    
-                    <div>
-                      <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 8px", borderRadius: "6px", background: "rgba(110,231,255,0.06)", border: "1px solid rgba(110,231,255,0.15)", color: "var(--accent)" }}>
-                        Client Profile
-                      </span>
-                      <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", margin: "10px 0 4px", color: "#fff" }}>
-                        {selectedCrmCustomer.full_name}
-                      </h3>
-                      <span style={{ fontSize: "0.88rem", color: "var(--muted)" }}>
-                        Contact: {selectedCrmCustomer.phone} {selectedCrmCustomer.email ? `• ${selectedCrmCustomer.email}` : ""}
-                      </span>
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Lifetime Spent</span>
-                        <strong style={{ fontSize: "1.2rem", color: "var(--accent-3)" }}>
-                          ৳{sales.filter(s => s.customer_id === selectedCrmCustomer.id).reduce((acc, curr) => acc + curr.sale_amount, 0).toLocaleString()}
-                        </strong>
-                      </div>
-                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Total Visits</span>
-                        <strong style={{ fontSize: "1.2rem", color: "#fff" }}>
-                          {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length}
-                        </strong>
-                      </div>
-                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Avg. Treatment Ticket</span>
-                        <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
-                          ৳{(() => {
-                            const clientSales = sales.filter(s => s.customer_id === selectedCrmCustomer.id);
-                            if (clientSales.length === 0) return 0;
-                            const total = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
-                            return Math.round(total / clientSales.length);
-                          })().toLocaleString()}
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div>
-                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "8px" }}>
-                        Consultation & Profile Notes
-                      </strong>
-                      <div style={{
-                        padding: "16px",
-                        borderRadius: "14px",
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--line)",
-                        fontSize: "0.9rem",
-                        lineHeight: 1.5,
-                        color: "var(--muted)",
-                        minHeight: "80px",
-                        whiteSpace: "pre-wrap"
-                      }}>
-                        {selectedCrmCustomer.notes || "No notes registered for this client."}
-                      </div>
-                    </div>
-
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "220px" }}>
-                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "12px" }}>
-                        Treatment & Purchase History
-                      </strong>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", flex: 1, maxHeight: "300px" }}>
-                        {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length === 0 ? (
-                          <p style={{ color: "var(--muted)", padding: "30px 0", fontSize: "0.88rem", textAlign: "center" }}>
-                            No treatments recorded for this client yet.
-                          </p>
-                        ) : (
-                          sales
-                            .filter(s => s.customer_id === selectedCrmCustomer.id)
-                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                            .map(sale => (
-                              <div
-                                key={sale.id}
-                                style={{
-                                  padding: "14px",
-                                  borderRadius: "14px",
-                                  background: "rgba(255, 255, 255, 0.01)",
-                                  border: "1px solid var(--line)",
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center"
-                                }}
-                              >
-                                <div>
-                                  <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{getServiceName(sale.service_id)}</strong>
-                                  <span style={{ fontSize: "0.8rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
-                                    Staff: {getTherapistNames(sale)} • {new Date(sale.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                                  </span>
-                                </div>
-                                <strong style={{ color: "var(--accent-3)", fontSize: "1.05rem" }}>
-                                  +৳{sale.sale_amount.toLocaleString()}
-                                </strong>
-                              </div>
-                            ))
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid var(--line)" }}>
-                      <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "12px" }}>
-                        Log Client Review
-                      </strong>
-                      
-                      {revError && <div style={{ padding: "8px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#ff7373", fontSize: "0.8rem", marginBottom: "12px" }}>{revError}</div>}
-                      {revSuccess && <div style={{ padding: "8px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.8rem", marginBottom: "12px" }}>Review logged successfully!</div>}
-
-                      <form onSubmit={handleLogReview} style={{ display: "grid", gap: "10px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                          <label style={{ display: "grid", gap: "4px" }}>
-                            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Review For (Therapist)</span>
-                            <select value={revEmployeeId} onChange={e => setRevEmployeeId(e.target.value)} style={{...selectInputStyle, padding: "8px"}} required>
-                              {employees.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label style={{ display: "grid", gap: "4px" }}>
-                            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Rating (1-5)</span>
-                            <select value={revRating} onChange={e => setRevRating(e.target.value)} style={{...selectInputStyle, padding: "8px"}} required>
-                              <option value="5">⭐⭐⭐⭐⭐ (5) Excellent</option>
-                              <option value="4">⭐⭐⭐⭐ (4) Good</option>
-                              <option value="3">⭐⭐⭐ (3) Average</option>
-                              <option value="2">⭐⭐ (2) Poor</option>
-                              <option value="1">⭐ (1) Terrible</option>
-                            </select>
-                          </label>
-                        </div>
-                        <label style={{ display: "grid", gap: "4px" }}>
-                          <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Review Comments</span>
-                          <textarea 
-                            value={revText} 
-                            onChange={e => setRevText(e.target.value)} 
-                            placeholder="Client feedback..." 
-                            rows={2} 
-                            style={{ ...inputStyle, padding: "8px", resize: "none" }} 
-                          />
-                        </label>
-                        <button type="submit" disabled={revSubmitting} className="button button--secondary" style={{ padding: "8px", fontSize: "0.85rem" }}>
-                          {revSubmitting ? "Saving..." : "Save Review"}
-                        </button>
-                      </form>
-                    </div>
-
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: "var(--muted)" }}>
-                    <p style={{ fontSize: "0.95rem" }}>Select a client from the directory to track details.</p>
-                  </div>
-                )}
-              </article>
-
-            </div>
-          </section>
+                {activeTab === "crm" && (
+          <CrmPortal services={services} />
         )}
-
       </section>
     </main>
   );

@@ -78,7 +78,7 @@ export function CalendarPicker({ value, onChange, activeDates }: CalendarPickerP
         </button>
 
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, color: "#fff" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, color: "var(--text)" }}>
             {MONTHS[month]}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{year}</div>
@@ -142,7 +142,7 @@ export function CalendarPicker({ value, onChange, activeDates }: CalendarPickerP
                 color: isSelected
                   ? "#000"
                   : isFuture
-                    ? "rgba(255,255,255,0.2)"
+                    ? "rgba(0, 0, 0,0.2)"
                     : "#fff",
                 cursor: isFuture ? "default" : "pointer",
                 fontSize: "0.82rem",
@@ -154,7 +154,7 @@ export function CalendarPicker({ value, onChange, activeDates }: CalendarPickerP
               }}
               onMouseEnter={e => {
                 if (!isSelected && !isFuture) {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(0, 0, 0,0.06)";
                   (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--line)";
                 }
               }}

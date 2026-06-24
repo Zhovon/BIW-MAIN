@@ -4,17 +4,17 @@ const floatingCards = [
   {
     title: "Owner view",
     value: "All branches",
-    background: "linear-gradient(135deg, rgba(110, 231, 255, 0.16), rgba(255, 255, 255, 0.05))",
+    background: "linear-gradient(135deg, rgba(110, 231, 255, 0.16), rgba(0, 0, 0, 0.05))",
   },
   {
     title: "Revenue",
     value: "Live dashboard",
-    background: "linear-gradient(135deg, rgba(156, 123, 255, 0.18), rgba(255, 255, 255, 0.05))",
+    background: "linear-gradient(135deg, rgba(156, 123, 255, 0.18), rgba(0, 0, 0, 0.05))",
   },
   {
     title: "Payroll",
     value: "Service bonuses",
-    background: "linear-gradient(135deg, rgba(142, 240, 178, 0.18), rgba(255, 255, 255, 0.05))",
+    background: "linear-gradient(135deg, rgba(142, 240, 178, 0.18), rgba(0, 0, 0, 0.05))",
   },
 ];
 

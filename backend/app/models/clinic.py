@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -67,7 +67,7 @@ class ServiceAssignment(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
     service_id: Mapped[str] = mapped_column(ForeignKey("services.id", ondelete="CASCADE"))
     employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    bonus_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    bonus_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=20.0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     service: Mapped["Service"] = relationship(back_populates="assignments")
@@ -76,7 +76,8 @@ class ServiceAssignment(Base):
 class Customer(Base):
     __tablename__ = "customers"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    uid: Mapped[int] = mapped_column(server_default=text("nextval('customers_uid_seq')"))
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(String, nullable=True)

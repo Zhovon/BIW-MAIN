@@ -42,14 +42,42 @@ def list_service_assignments(db: Session) -> Sequence[ServiceAssignment]:
 
 # ── Customer CRUD ─────────────────────────────────────────────
 
-def list_customers(db: Session) -> Sequence[Customer]:
-    return db.query(Customer).order_by(Customer.created_at.desc()).all()
+from sqlalchemy import func
+
+def _attach_totals(results):
+    customers = []
+    for customer, visits, spent in results:
+        customer.total_visits = visits
+        customer.total_spent = spent
+        customers.append(customer)
+    return customers
+
+def list_customers(db: Session, skip: int = 0, limit: int = 100) -> Sequence[Customer]:
+    results = (
+        db.query(
+            Customer,
+            func.count(Sale.id).label('total_visits'),
+            func.coalesce(func.sum(Sale.sale_amount), 0).label('total_spent')
+        )
+        .outerjoin(Sale, Sale.customer_id == Customer.id)
+        .group_by(Customer.id)
+        .order_by(Customer.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return _attach_totals(results)
 
 
-def search_customers(db: Session, query: str) -> Sequence[Customer]:
+def search_customers(db: Session, query: str, skip: int = 0, limit: int = 20) -> Sequence[Customer]:
     pattern = f"%{query}%"
-    return (
-        db.query(Customer)
+    results = (
+        db.query(
+            Customer,
+            func.count(Sale.id).label('total_visits'),
+            func.coalesce(func.sum(Sale.sale_amount), 0).label('total_spent')
+        )
+        .outerjoin(Sale, Sale.customer_id == Customer.id)
         .filter(
             or_(
                 Customer.full_name.ilike(pattern),
@@ -57,10 +85,13 @@ def search_customers(db: Session, query: str) -> Sequence[Customer]:
                 Customer.email.ilike(pattern),
             )
         )
+        .group_by(Customer.id)
         .order_by(Customer.full_name)
-        .limit(20)
+        .offset(skip)
+        .limit(limit)
         .all()
     )
+    return _attach_totals(results)
 
 
 def get_customer_by_id(db: Session, customer_id: str) -> Optional[Customer]:

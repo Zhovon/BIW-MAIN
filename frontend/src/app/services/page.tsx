@@ -201,7 +201,7 @@ export default function ServicesPage() {
           <article className="glass-card" style={{ padding: "28px", border: "1px solid var(--accent)" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent)" }}>New Service</h2>
             {addError && (
-              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.2)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+              <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                 {addError}
               </div>
             )}
@@ -293,7 +293,7 @@ export default function ServicesPage() {
                     <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                       <button onClick={() => handleDelete(service.id)} className="button" style={{
                         padding: "6px 14px", fontSize: "0.85rem",
-                        color: "#ff6c6c", borderColor: "rgba(255,108,108,0.2)",
+                        color: "#cc0000", borderColor: "rgba(255,108,108,0.2)",
                         background: "rgba(255,108,108,0.04)",
                       }}>
                         Delete

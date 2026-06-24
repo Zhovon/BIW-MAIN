@@ -40,7 +40,7 @@ export function InteractiveChart({
           color: "var(--muted)",
           border: "1px dashed var(--line)",
           borderRadius: "16px",
-          background: "rgba(255, 255, 255, 0.01)",
+          background: "rgba(0, 0, 0, 0.01)",
         }}
       >
         No chart data available.
@@ -212,7 +212,7 @@ export function InteractiveChart({
         onMouseLeave={handleMouseLeave}
       >
         {/* Horizontal Grid lines */}
-        <g stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3">
+        <g stroke="rgba(0, 0, 0,0.04)" strokeDasharray="3 3">
           {yTicks.map((tickVal, i) => {
             const y = getY(tickVal);
             return <line key={i} x1={padding.left} y1={y} x2={viewWidth - padding.right} y2={y} />;
@@ -257,7 +257,7 @@ export function InteractiveChart({
             y1={padding.top}
             x2={getX(hoverIndex)}
             y2={viewHeight - padding.bottom}
-            stroke="rgba(255, 255, 255, 0.12)"
+            stroke="rgba(0, 0, 0, 0.12)"
             strokeWidth="1.5"
             strokeDasharray="4 4"
           />
@@ -286,7 +286,7 @@ export function InteractiveChart({
             minWidth: "150px",
           }}
         >
-          <strong style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "4px", color: "#fff" }}>
+          <strong style={{ borderBottom: "1px solid rgba(0, 0, 0,0.06)", paddingBottom: "4px", color: "var(--text)" }}>
             {data[hoverIndex][xAxisKey]}
           </strong>
           {series.map((s) => {
@@ -297,7 +297,7 @@ export function InteractiveChart({
                   <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: s.strokeColor }} />
                   {s.label}
                 </span>
-                <strong style={{ color: "#fff" }}>{valueFormatter(val)}</strong>
+                <strong style={{ color: "var(--text)" }}>{valueFormatter(val)}</strong>
               </div>
             );
           })}

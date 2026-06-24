@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { CrmPortal } from "@/components/crm-portal";
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
@@ -167,10 +170,24 @@ export default function OwnerDashboardPage() {
   const [rosterLoading, setRosterLoading] = useState(false);
 
   useEffect(() => {
+    const base = getApiBaseUrl();
+
+    const refreshSalesData = async () => {
+      try {
+        const [salesRes, costsRes] = await Promise.all([
+          authFetch(`${base}/api/v1/sales`),
+          authFetch(`${base}/api/v1/costs`),
+        ]);
+        if (salesRes.ok) setSales(await salesRes.json());
+        if (costsRes.ok) setCosts(await costsRes.json());
+      } catch (err) {
+        console.error("Failed to refresh sales data:", err);
+      }
+    };
+
     const initOwnerDashboard = async () => {
       try {
         setLoading(true);
-        const base = getApiBaseUrl();
         const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
         setPayrollMonth(currentMonth);
         setTargetMonth(currentMonth);
@@ -236,6 +253,22 @@ export default function OwnerDashboardPage() {
     };
 
     initOwnerDashboard();
+
+    // Realtime subscription: refresh sales data whenever any manager records a new treatment
+    const salesChannel = getSupabaseBrowserClient()
+      .channel('owner:sales')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'sales' },
+        () => {
+          refreshSalesData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      getSupabaseBrowserClient().removeChannel(salesChannel);
+    };
   }, []);
 
   // Fetch Roster when date or branch changes
@@ -255,6 +288,22 @@ export default function OwnerDashboardPage() {
       }
     };
     fetchRoster();
+
+    const channel = getSupabaseBrowserClient()
+      .channel('public:attendance')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'attendance' },
+        (payload) => {
+          console.log("Realtime roster update!", payload);
+          fetchRoster();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      getSupabaseBrowserClient().removeChannel(channel);
+    };
   }, [rosterDate, rosterBranch]);
 
   // Derived Values
@@ -532,7 +581,7 @@ export default function OwnerDashboardPage() {
   const inputStyle: React.CSSProperties = {
     width: "100%", borderRadius: "12px", border: "1px solid var(--line)",
     background: "var(--surface-2)", padding: "0.75rem 0.95rem",
-    color: "#fff", outline: "none",
+    color: "var(--text)", outline: "none",
   };
 
   return (
@@ -594,7 +643,15 @@ export default function OwnerDashboardPage() {
         </div>
 
         {activeTab === "risk" && (
-          <RiskCodedDashboard />
+          <RiskCodedDashboard
+            period="month"
+            branchId=""
+            customDate=""
+            staffName="all"
+            paymentMethod="all"
+            ticketBand="all"
+            staffList={employees}
+          />
         )}
 
         {activeTab === "dashboard" && (
@@ -620,13 +677,13 @@ export default function OwnerDashboardPage() {
             {/* Month input */}
             {ownerPeriod === "month" && (
               <input type="month" value={ownerMonth} onChange={e => setOwnerMonth(e.target.value)}
-                style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "#fff", outline: "none", fontSize: "0.85rem" }}
+                style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "var(--text)", outline: "none", fontSize: "0.85rem" }}
               />
             )}
 
             {/* Branch Filter */}
             <select value={ownerBranch} onChange={e => setOwnerBranch(e.target.value)}
-              style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "#fff", outline: "none", fontSize: "0.85rem", cursor: "pointer" }}
+              style={{ borderRadius: "10px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "6px 14px", color: "var(--text)", outline: "none", fontSize: "0.85rem", cursor: "pointer" }}
             >
               <option value="all">All Branches</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -693,10 +750,10 @@ export default function OwnerDashboardPage() {
                 const profitPercent = b.revenue > 0 ? (b.profit / b.revenue) * 100 : 0;
                 const barWidth = periodRevenue > 0 ? (b.revenue / periodRevenue) * 100 : 0;
                 return (
-                  <div key={b.id} style={{ padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)" }}>
+                  <div key={b.id} style={{ padding: "16px", borderRadius: "16px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "10px" }}>
                       <div>
-                        <strong style={{ fontSize: "1.1rem", color: "#fff", display: "block" }}>{b.name}</strong>
+                        <strong style={{ fontSize: "1.1rem", color: "var(--text)", display: "block" }}>{b.name}</strong>
                         <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
                           Revenue: {formatTaka(b.revenue)} · Expenses: {formatTaka(b.cost)}
                         </span>
@@ -761,7 +818,7 @@ export default function OwnerDashboardPage() {
                       <span style={{ fontSize: "0.7rem", color: "#ff7c7c", display: "block" }}>Expenses</span>
                       <strong style={{ color: "#ff7c7c", fontSize: "0.92rem" }}>-৳{dayCost.toLocaleString()}</strong>
                     </div>
-                    <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--line)" }}>
+                    <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(0, 0, 0, 0.04)", border: "1px solid var(--line)" }}>
                       <span style={{ fontSize: "0.7rem", color: "var(--muted)", display: "block" }}>Net</span>
                       <strong style={{ color: dayNet >= 0 ? "var(--accent-3)" : "#ff7c7c", fontSize: "0.92rem" }}>৳{dayNet.toLocaleString()}</strong>
                     </div>
@@ -772,7 +829,7 @@ export default function OwnerDashboardPage() {
               <label style={{ display: "grid", gap: "6px" }}>
                 <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Filter by Branch</span>
                 <select value={auditBranchId} onChange={(e) => setAuditBranchId(e.target.value)}
-                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none" }}
                 >
                   <option value="all">All Branches</option>
                   {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -782,7 +839,7 @@ export default function OwnerDashboardPage() {
               <label style={{ display: "grid", gap: "6px" }}>
                 <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Log Type</span>
                 <select value={auditType} onChange={(e) => setAuditType(e.target.value)}
-                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none" }}
                 >
                   <option value="all">All Entries</option>
                   <option value="sale">Sales (Treatments Only)</option>
@@ -794,7 +851,7 @@ export default function OwnerDashboardPage() {
                 <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Search logs</span>
                 <input type="text" placeholder="Search by therapist, service, category, or note..."
                   value={auditSearch} onChange={(e) => setAuditSearch(e.target.value)}
-                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none" }}
                 />
               </label>
             </div>
@@ -842,11 +899,11 @@ export default function OwnerDashboardPage() {
                         }}>
                           {isSale ? "Treatment Sale" : "Clinic Expense"}
                         </span>
-                        <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
+                        <span style={{ fontSize: "0.78rem", color: "rgba(0, 0, 0,0.4)" }}>
                           {getBranchName(item.branch_id)}
                         </span>
                       </div>
-                      <strong style={{ fontSize: "1.05rem", color: "#fff", marginTop: "2px" }}>
+                      <strong style={{ fontSize: "1.05rem", color: "var(--text)", marginTop: "2px" }}>
                         {isSale ? getServiceName(item.service_id) : item.cost_type}
                       </strong>
                       <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
@@ -855,7 +912,7 @@ export default function OwnerDashboardPage() {
                           : item.note || "No details provided"
                         }
                       </span>
-                      <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
+                      <span style={{ fontSize: "0.72rem", color: "var(--muted-light)", marginTop: "4px" }}>
                         {timeStr} — {dateStr}
                       </span>
                     </div>
@@ -865,7 +922,7 @@ export default function OwnerDashboardPage() {
                         {isSale ? `+৳${item.sale_amount.toLocaleString()}` : `-৳${item.amount.toLocaleString()}`}
                       </strong>
                       {isSale && item.discount_amount > 0 && (
-                        <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                        <div style={{ fontSize: "0.78rem", color: "rgba(0, 0, 0,0.4)", marginTop: "2px" }}>
                           (৳{item.discount_amount.toLocaleString()} discount applied)
                         </div>
                       )}
@@ -907,9 +964,9 @@ export default function OwnerDashboardPage() {
           ) : (
             <div style={{ display: "grid", gap: "12px", maxHeight: "400px", overflowY: "auto", paddingRight: "8px" }}>
               {roster.map((r: AttendanceRecordType) => (
-                <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
                   <div>
-                    <strong style={{ display: "block", color: "#fff" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
+                    <strong style={{ display: "block", color: "var(--text)" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
                     <span style={{ fontSize: "0.8rem", color: r.status === "Present" ? "#92fb9c" : r.status === "Absent" ? "#ff7c7c" : "var(--accent)" }}>
                       {r.status.toUpperCase()}
                     </span>
@@ -938,7 +995,7 @@ export default function OwnerDashboardPage() {
                 Set monthly minimum revenue targets for branches. Managers only earn commission if this target is exceeded.
               </p>
               
-              {targetError && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>{targetError}</div>}
+              {targetError && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>{targetError}</div>}
               {targetSuccess && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>Monthly branch target saved successfully!</div>}
 
               <form onSubmit={handleSetTarget} style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -947,7 +1004,7 @@ export default function OwnerDashboardPage() {
                   <select
                     value={targetBranchId}
                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setTargetBranchId(e.target.value)}
-                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none" }}
                   >
                     {branches.map((b: Branch) => (
                       <option key={b.id} value={b.id}>{b.name} ({b.city})</option>
@@ -960,7 +1017,7 @@ export default function OwnerDashboardPage() {
                     type="month"
                     value={targetMonth}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setTargetMonth(e.target.value)}
-                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none", font: "inherit" }}
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none", font: "inherit" }}
                   />
                 </label>
                 <label style={{ display: "grid", gap: "6px", flex: 1 }}>
@@ -970,7 +1027,7 @@ export default function OwnerDashboardPage() {
                     value={targetAmount}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setTargetAmount(e.target.value)}
                     placeholder="e.g. 500000"
-                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none", font: "inherit" }}
+                    style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none", font: "inherit" }}
                   />
                 </label>
                 <button
@@ -998,7 +1055,7 @@ export default function OwnerDashboardPage() {
                 <select
                   value={payrollBranchId}
                   onChange={(e: ChangeEvent<HTMLSelectElement>) => setPayrollBranchId(e.target.value)}
-                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none" }}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none" }}
                 >
                   {branches.map((b: Branch) => (
                     <option key={b.id} value={b.id}>{b.name} ({b.city})</option>
@@ -1012,7 +1069,7 @@ export default function OwnerDashboardPage() {
                   type="month"
                   value={payrollMonth}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setPayrollMonth(e.target.value)}
-                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "#fff", outline: "none", font: "inherit" }}
+                  style={{ width: "100%", borderRadius: "12px", border: "1px solid var(--line)", background: "var(--surface-2)", padding: "0.75rem 0.95rem", color: "var(--text)", outline: "none", font: "inherit" }}
                 />
               </label>
 
@@ -1028,7 +1085,7 @@ export default function OwnerDashboardPage() {
 
             {/* Results breakdown */}
             {calcError && (
-              <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", color: "#ff7373", fontSize: "0.86rem", marginBottom: "16px" }}>
+              <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                 {calcError}
               </div>
             )}
@@ -1043,7 +1100,7 @@ export default function OwnerDashboardPage() {
               <div style={{ display: "grid", gap: "20px" }}>
                 <div style={{ padding: "16px", borderRadius: "16px", background: "rgba(110, 231, 255, 0.04)", border: "1px solid rgba(110, 231, 255, 0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <strong style={{ fontSize: "1.1rem", color: "#fff" }}>Consolidation Summary</strong>
+                    <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>Consolidation Summary</strong>
                     <div style={{ fontSize: "0.84rem", color: "var(--muted)", marginTop: "4px" }}>
                       Salaries: ৳{calculatedPayroll.salary_total.toLocaleString()} • Bonuses: ৳{calculatedPayroll.bonus_total.toLocaleString()} • Commissions: ৳{calculatedPayroll.commission_total.toLocaleString()}
                     </div>
@@ -1062,7 +1119,7 @@ export default function OwnerDashboardPage() {
                       style={{
                         padding: "12px 16px",
                         borderRadius: "12px",
-                        background: "rgba(255, 255, 255, 0.01)",
+                        background: "rgba(0, 0, 0, 0.01)",
                         border: "1px solid var(--line)",
                         display: "flex",
                         justifyContent: "space-between",
@@ -1070,7 +1127,7 @@ export default function OwnerDashboardPage() {
                       }}
                     >
                       <div>
-                        <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{emp.full_name}</strong>
+                        <strong style={{ color: "var(--text)", fontSize: "0.95rem" }}>{emp.full_name}</strong>
                         <span style={{ fontSize: "0.8rem", color: "var(--muted)", display: "block" }}>
                           {emp.role} • {emp.treatment_count} treatments
                         </span>
@@ -1121,12 +1178,12 @@ export default function OwnerDashboardPage() {
                     style={{
                       padding: "14px",
                       borderRadius: "14px",
-                      background: "rgba(255, 255, 255, 0.01)",
+                      background: "rgba(0, 0, 0, 0.01)",
                       border: "1px solid var(--line)"
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <strong style={{ color: "#fff" }}>{getBranchName(run.branch_id)}</strong>
+                      <strong style={{ color: "var(--text)" }}>{getBranchName(run.branch_id)}</strong>
                       <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: "600" }}>{run.month}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1147,269 +1204,9 @@ export default function OwnerDashboardPage() {
       </>
     )}
 
-    {activeTab === "crm" && (
-      <section style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        
-        {/* CRM Search & Action Bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-          <div style={{ flex: "1 1 300px" }}>
-            <input
-              type="text"
-              placeholder="Search customer directory by name or phone..."
-              value={crmSearchQuery}
-              onChange={(e) => setCrmSearchQuery(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <button
-            onClick={() => setShowCrmAddForm(!showCrmAddForm)}
-            className="button button--primary"
-            style={{ padding: "0.75rem 1.5rem" }}
-          >
-            {showCrmAddForm ? "Close Form" : "＋ Register Customer"}
-          </button>
-        </div>
-
-        {/* Inline Customer Add Form */}
-        {showCrmAddForm && (
-          <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(142, 240, 178, 0.2)" }}>
-            <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", margin: "0 0 16px", color: "var(--accent-3)" }}>
-              Register New Client Record
-            </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-              <label style={{ display: "grid", gap: "6px" }}>
-                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Full Name *</span>
-                <input
-                  type="text" required
-                  value={newCrmName}
-                  onChange={(e) => setNewCrmName(e.target.value)}
-                  placeholder="e.g. Asif Mahmud"
-                  style={inputStyle}
-                />
-              </label>
-              <label style={{ display: "grid", gap: "6px" }}>
-                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Phone Number *</span>
-                <input
-                  type="text" required
-                  value={newCrmPhone}
-                  onChange={(e) => setNewCrmPhone(e.target.value)}
-                  placeholder="e.g. 01712345678"
-                  style={inputStyle}
-                />
-              </label>
-            </div>
-            <div style={{ display: "grid", gap: "16px", marginBottom: "20px" }}>
-              <label style={{ display: "grid", gap: "6px" }}>
-                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Email Address</span>
-                <input
-                  type="email"
-                  value={newCrmEmail}
-                  onChange={(e) => setNewCrmEmail(e.target.value)}
-                  placeholder="e.g. client@domain.com"
-                  style={inputStyle}
-                />
-              </label>
-              <label style={{ display: "grid", gap: "6px" }}>
-                <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Consultation / Profile Notes</span>
-                <textarea
-                  value={newCrmNotes}
-                  onChange={(e) => setNewCrmNotes(e.target.value)}
-                  placeholder="Describe skin condition, treatment goals, allergies, or past treatments..."
-                  rows={3}
-                  style={{ ...inputStyle, resize: "none", font: "inherit" }}
-                />
-              </label>
-            </div>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button type="button" onClick={() => setShowCrmAddForm(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateCrmCustomer}
-                disabled={crmCustCreating || !newCrmName || !newCrmPhone}
-                className="button button--primary"
-                style={{ padding: "0.75rem 1.6rem" }}
-              >
-                {crmCustCreating ? "Saving..." : "Save Customer"}
-              </button>
-            </div>
-          </article>
+            {activeTab === "crm" && (
+          <CrmPortal services={services} />
         )}
-
-        {/* CRM Two Column Directory */}
-        <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
-          
-          {/* Left Column: Customer Directory List */}
-          <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", maxHeight: "650px" }}>
-            <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.35rem", margin: "0 0 16px" }}>Client Directory</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", flex: 1, paddingRight: "4px" }}>
-              {customers
-                .filter(c => {
-                  const query = crmSearchQuery.toLowerCase();
-                  return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
-                })
-                .map(c => {
-                  const clientSales = sales.filter(s => s.customer_id === c.id);
-                  const totalSpent = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
-                  const isSelected = selectedCrmCustomer?.id === c.id;
-
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => setSelectedCrmCustomer(c)}
-                      style={{
-                        padding: "16px",
-                        borderRadius: "16px",
-                        background: isSelected ? "rgba(110, 231, 255, 0.06)" : "rgba(255, 255, 255, 0.01)",
-                        border: `1px solid ${isSelected ? "rgba(110, 231, 255, 0.25)" : "var(--line)"}`,
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      <strong style={{ display: "block", fontSize: "1.05rem", color: isSelected ? "var(--accent)" : "#fff" }}>
-                        {c.full_name}
-                      </strong>
-                      <span style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
-                        {c.phone} {c.email ? `• ${c.email}` : ""}
-                      </span>
-                      <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
-                        <span style={{ fontSize: "0.72rem", background: "var(--surface-2)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px", color: "var(--muted)" }}>
-                          {clientSales.length} Treatments
-                        </span>
-                        <span style={{ fontSize: "0.72rem", background: "rgba(110, 231, 255, 0.08)", padding: "2px 8px", borderRadius: "6px", color: "var(--accent)" }}>
-                          ৳{totalSpent.toLocaleString()} Spent
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              {customers.filter(c => {
-                const query = crmSearchQuery.toLowerCase();
-                return c.full_name.toLowerCase().includes(query) || c.phone.includes(query);
-              }).length === 0 && (
-                <p style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0", fontSize: "0.95rem" }}>
-                  No clients found in directory.
-                </p>
-              )}
-            </div>
-          </article>
-
-          {/* Right Column: Customer Details & Treatment History */}
-          <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", minHeight: "500px" }}>
-            {selectedCrmCustomer ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
-                
-                <div>
-                  <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 8px", borderRadius: "6px", background: "rgba(110,231,255,0.06)", border: "1px solid rgba(110,231,255,0.15)", color: "var(--accent)" }}>
-                    Client Profile
-                  </span>
-                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", margin: "10px 0 4px", color: "#fff" }}>
-                    {selectedCrmCustomer.full_name}
-                  </h3>
-                  <span style={{ fontSize: "0.88rem", color: "var(--muted)" }}>
-                    Contact: {selectedCrmCustomer.phone} {selectedCrmCustomer.email ? `• ${selectedCrmCustomer.email}` : ""}
-                  </span>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                  <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Lifetime Spent</span>
-                    <strong style={{ fontSize: "1.2rem", color: "var(--accent-3)" }}>
-                      ৳{sales.filter(s => s.customer_id === selectedCrmCustomer.id).reduce((acc, curr) => acc + curr.sale_amount, 0).toLocaleString()}
-                    </strong>
-                  </div>
-                  <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Total Visits</span>
-                    <strong style={{ fontSize: "1.2rem", color: "#fff" }}>
-                      {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length}
-                    </strong>
-                  </div>
-                  <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                    <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Avg. Treatment Ticket</span>
-                    <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
-                      ৳{(() => {
-                        const clientSales = sales.filter(s => s.customer_id === selectedCrmCustomer.id);
-                        if (clientSales.length === 0) return 0;
-                        const total = clientSales.reduce((acc, curr) => acc + curr.sale_amount, 0);
-                        return Math.round(total / clientSales.length);
-                      })().toLocaleString()}
-                    </strong>
-                  </div>
-                </div>
-
-                <div>
-                  <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "8px" }}>
-                    Consultation & Profile Notes
-                  </strong>
-                  <div style={{
-                    padding: "16px",
-                    borderRadius: "14px",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--line)",
-                    fontSize: "0.9rem",
-                    lineHeight: 1.5,
-                    color: "var(--muted)",
-                    minHeight: "80px",
-                    whiteSpace: "pre-wrap"
-                  }}>
-                    {selectedCrmCustomer.notes || "No notes registered for this client."}
-                  </div>
-                </div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "220px" }}>
-                  <strong style={{ fontSize: "0.88rem", color: "#fff", display: "block", marginBottom: "12px" }}>
-                    Treatment & Purchase History
-                  </strong>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", flex: 1, maxHeight: "300px" }}>
-                    {sales.filter(s => s.customer_id === selectedCrmCustomer.id).length === 0 ? (
-                      <p style={{ color: "var(--muted)", padding: "30px 0", fontSize: "0.88rem", textAlign: "center" }}>
-                        No treatments recorded for this client yet.
-                      </p>
-                    ) : (
-                      sales
-                        .filter(s => s.customer_id === selectedCrmCustomer.id)
-                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                        .map(sale => (
-                          <div
-                            key={sale.id}
-                            style={{
-                              padding: "14px",
-                              borderRadius: "14px",
-                              background: "rgba(255, 255, 255, 0.01)",
-                              border: "1px solid var(--line)",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center"
-                            }}
-                          >
-                            <div>
-                              <strong style={{ color: "#fff", fontSize: "0.95rem" }}>{getServiceName(sale.service_id)}</strong>
-                              <span style={{ fontSize: "0.8rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
-                                Staff: {getTherapistNames(sale)} • {new Date(sale.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </span>
-                            </div>
-                            <strong style={{ color: "var(--accent-3)", fontSize: "1.05rem" }}>
-                              +৳{sale.sale_amount.toLocaleString()}
-                            </strong>
-                          </div>
-                        ))
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: "var(--muted)" }}>
-                <p style={{ fontSize: "0.95rem" }}>Select a client from the directory to track details.</p>
-              </div>
-            )}
-          </article>
-
-        </div>
-      </section>
-    )}
-
       </section>
     </main>
   );

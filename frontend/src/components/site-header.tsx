@@ -178,7 +178,7 @@ export function SiteHeader() {
                 <span className="site-header__auth-label" style={{ fontSize: "0.8rem", color: "var(--accent)" }}>
                   Role: {role ? role : "signed in"}
                 </span>
-                <span className="site-header__auth-email" style={{ fontSize: "0.95rem", color: "#fff", fontFamily: "monospace" }}>
+                <span className="site-header__auth-email" style={{ fontSize: "0.95rem", color: "var(--text)", fontFamily: "monospace" }}>
                   {email}
                 </span>
               </div>

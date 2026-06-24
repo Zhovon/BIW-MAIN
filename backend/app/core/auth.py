@@ -8,9 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import Client, create_client
 
 from app.core.config import settings
-
-_bearer = HTTPBearer(auto_error=True)
-
+_bearer = HTTPBearer(auto_error=False)
 
 @lru_cache(maxsize=1)
 def _supabase() -> Client:
@@ -22,6 +20,12 @@ def _supabase() -> Client:
     return create_client(settings.supabase_url, settings.supabase_service_role_key)
 
 
+import time
+from typing import Dict, Tuple
+
+_token_cache: Dict[str, Tuple[dict, float]] = {}
+CACHE_TTL = 300  # 5 minutes
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(_bearer),
 ) -> dict:
@@ -29,8 +33,25 @@ def get_current_user(
     Verify the Supabase JWT by calling auth.get_user() server-side.
     Returns a dict with at minimum {"sub": user_id, "email": user_email}.
     Raises HTTP 401 if the token is missing, expired, or invalid.
+    Uses in-memory caching to avoid rate-limiting from Supabase.
     """
+    if not credentials or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated. Please sign in.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     token = credentials.credentials
+    
+    # Check cache
+    now = time.time()
+    if token in _token_cache:
+        cached_user, expires_at = _token_cache[token]
+        if now < expires_at:
+            return cached_user
+        else:
+            del _token_cache[token]
+
     try:
         client = _supabase()
         response = client.auth.get_user(token)
@@ -41,10 +62,15 @@ def get_current_user(
                 detail="Invalid or expired session. Please sign in again.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        return {"sub": str(user.id), "email": user.email}
+        
+        user_dict = {"sub": str(user.id), "email": user.email}
+        _token_cache[token] = (user_dict, now + CACHE_TTL)
+        return user_dict
+        
     except HTTPException:
         raise  # re-raise our own exceptions untouched
-    except Exception:
+    except Exception as e:
+        print(f"Supabase auth validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed. Please sign in again.",

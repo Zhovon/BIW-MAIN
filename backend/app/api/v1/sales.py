@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.crud.clinic import list_sales
 from app.db.session import get_db
@@ -31,6 +31,12 @@ def _sale_to_read(sale: Sale) -> dict:
 @router.get("", response_model=list[SaleRead])
 def get_sales(db: Session = Depends(get_db)):
     sales = list_sales(db)
+    return [_sale_to_read(s) for s in sales]
+
+
+@router.get("/customer/{customer_id}", response_model=list[SaleRead])
+def get_sales_by_customer(customer_id: str, db: Session = Depends(get_db)):
+    sales = db.query(Sale).options(joinedload(Sale.assigned_employees)).filter(Sale.customer_id == customer_id).order_by(Sale.created_at.desc()).all()
     return [_sale_to_read(s) for s in sales]
 
 
