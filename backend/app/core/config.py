@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     project_name: str = "Beauty Intelligent Wellness API"
     api_v1_prefix: str = "/api/v1"
     environment: str = "development"
-    cors_origins: str = "http://localhost:3000,https://biw-main-one.vercel.app"
+    cors_origins: str = "http://localhost:3000,https://biw-main-one.vercel.app,https://crm.biw.salon"
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
