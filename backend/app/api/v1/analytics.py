@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from cachetools import cached, TTLCache
 
 from app.db.session import get_db
-from app.models.clinic import Sale, SaleEmployee, Service, Customer, Employee, Branch, BranchTarget
+from app.models.clinic import Sale, SaleEmployee, Service, Customer, Employee, Branch, BranchTarget, DailyAdSpend
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
