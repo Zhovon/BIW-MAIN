@@ -285,3 +285,51 @@ def get_risk_dashboard_data(
     }
     analytics_cache[cache_key] = result
     return result
+
+
+@router.get("/marketing")
+def get_marketing_analytics(days: int = 30, db: Session = Depends(get_db)):
+    start_date = datetime.now() - timedelta(days=days)
+    
+    spend = db.query(
+        DailyAdSpend.date,
+        func.sum(DailyAdSpend.amount_spent).label("spend"),
+        func.sum(DailyAdSpend.impressions).label("impressions"),
+        func.sum(DailyAdSpend.clicks).label("clicks")
+    ).filter(DailyAdSpend.created_at >= start_date).group_by(DailyAdSpend.date).all()
+    
+    spend_map = {s.date: {"spend": float(s.spend), "impressions": s.impressions, "clicks": s.clicks} for s in spend}
+    
+    sales = db.query(
+        func.date(Sale.created_at).label("date"),
+        func.sum(Sale.sale_amount).label("sales")
+    ).filter(Sale.created_at >= start_date).group_by(func.date(Sale.created_at)).all()
+    
+    sales_map = {str(s.date): float(s.sales) for s in sales}
+    
+    dates = sorted(list(set(spend_map.keys()) | set(sales_map.keys())))
+    result = []
+    
+    total_spend = 0
+    total_sales = 0
+    
+    for d in dates:
+        s = spend_map.get(d, {"spend": 0, "impressions": 0, "clicks": 0})
+        sale = sales_map.get(d, 0)
+        total_spend += s["spend"]
+        total_sales += sale
+        
+        result.append({
+            "date": d,
+            "ad_spend": s["spend"],
+            "sales": sale,
+            "impressions": s["impressions"],
+            "clicks": s["clicks"]
+        })
+        
+    return {
+        "daily_data": result,
+        "total_spend": total_spend,
+        "total_sales": total_sales,
+        "roas": (total_sales / total_spend) if total_spend > 0 else 0
+    }

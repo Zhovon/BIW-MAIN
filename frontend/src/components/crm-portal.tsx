@@ -22,15 +22,15 @@ const inputStyle = {
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const swrFetcher = async (url: string) => {
-  const supabase = getSupabaseBrowserClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  
-  const res = await fetch(url, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
+  const res = await authFetch(url);
   
   if (!res.ok) {
+    if (res.status === 401) {
+      // Throw a specific error so SWR knows not to aggressively retry authentication failures
+      const error = new Error("Not authorized");
+      (error as any).status = 401;
+      throw error;
+    }
     console.error("SWR Fetch Error:", res.status, res.statusText);
     throw new Error("API Fetch Error");
   }
@@ -65,11 +65,13 @@ export function CrmPortal({ services }: { services: Service[] }) {
 
   const { data: customers, mutate, isValidating } = useSWR<Customer[]>(endpoint, swrFetcher, {
     keepPreviousData: true,
+    shouldRetryOnError: false,
   });
 
   const { data: customerSales } = useSWR<Sale[]>(
     selectedCustomer ? `${getApiBaseUrl()}/api/v1/sales/customer/${selectedCustomer.id}` : null,
-    swrFetcher
+    swrFetcher,
+    { shouldRetryOnError: false }
   );
 
   const handleCreateCustomer = async () => {

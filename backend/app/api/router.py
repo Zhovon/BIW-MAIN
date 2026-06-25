@@ -16,6 +16,8 @@ from app.api.v1.targets import router as targets_router
 from app.api.v1.attendance import router as attendance_router
 from app.api.v1.reviews import router as reviews_router
 from app.api.v1.analytics import router as analytics_router
+from app.api.v1.appointments import router as appointments_router
+from app.api.v1.webhooks import router as webhooks_router
 from app.core.config import settings
 from app.core.auth import get_current_user
 
@@ -25,6 +27,9 @@ _auth = [Depends(get_current_user)]
 api_router = APIRouter(prefix=settings.api_v1_prefix)
 api_router.include_router(health_router)
 api_router.include_router(health_seed_router)
+api_router.include_router(appointments_router) # Public (some endpoints)
+api_router.include_router(webhooks_router) # Public for Shopify/Make
+
 api_router.include_router(branches_router,            dependencies=_auth)
 api_router.include_router(overview_router,            dependencies=_auth)
 api_router.include_router(analytics_router,           dependencies=_auth)

@@ -9,6 +9,8 @@ from app.models.clinic import (
     SaleEmployee,
     Service,
     ServiceAssignment,
+    Appointment,
+    DailyAdSpend,
 )
 
 __all__ = [
@@ -22,4 +24,6 @@ __all__ = [
     "SaleEmployee",
     "Service",
     "ServiceAssignment",
+    "Appointment",
+    "DailyAdSpend",
 ]

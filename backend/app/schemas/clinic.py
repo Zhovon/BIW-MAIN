@@ -311,3 +311,45 @@ class CustomerReviewCreate(BaseModel):
     employee_id: str
     rating: int
     review_text: Optional[str] = None
+
+class AppointmentRead(BaseModel):
+    id: str
+    customer_id: str
+    employee_id: str
+    service_id: str
+    branch_id: str
+    appointment_time: datetime
+    status: str
+    payment_status: str
+    notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class AppointmentCreate(BaseModel):
+    customer_id: str
+    employee_id: str
+    service_id: str
+    branch_id: str
+    appointment_time: datetime
+    status: str = "Pending"
+    payment_status: str = "Unpaid"
+    notes: Optional[str] = None
+
+class DailyAdSpendRead(BaseModel):
+    id: str
+    date: str
+    platform: str
+    amount_spent: float
+    impressions: int = 0
+    clicks: int = 0
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class DailyAdSpendCreate(BaseModel):
+    date: str
+    platform: str
+    amount_spent: float
+    impressions: int = 0
+    clicks: int = 0

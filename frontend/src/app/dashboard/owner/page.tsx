@@ -2,6 +2,8 @@
 "use client";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { CrmPortal } from "@/components/crm-portal";
+import { AppointmentsView } from "@/components/appointments-view";
+import { MarketingView } from "@/components/marketing-view";
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
@@ -113,7 +115,7 @@ export default function OwnerDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"risk" | "dashboard" | "crm">("risk");
+  const [activeTab, setActiveTab] = useState<"risk" | "dashboard" | "crm" | "marketing" | "appointments">("risk");
 
   // CRM Portal States
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -660,6 +662,32 @@ export default function OwnerDashboardPage() {
             }}
           >
             Customer CRM Portal
+          </button>
+          <button
+            onClick={() => setActiveTab("marketing")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "marketing" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "marketing" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Marketing Engine
+          </button>
+          <button
+            onClick={() => setActiveTab("appointments")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "appointments" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "appointments" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Appointments
           </button>
         </div>
 
@@ -1226,8 +1254,16 @@ export default function OwnerDashboardPage() {
     )}
 
             {activeTab === "crm" && (
-          <CrmPortal services={services} />
-        )}
+              <CrmPortal services={services} />
+            )}
+
+            {activeTab === "appointments" && (
+              <AppointmentsView />
+            )}
+
+            {activeTab === "marketing" && (
+              <MarketingView />
+            )}
       </section>
     </main>
   );

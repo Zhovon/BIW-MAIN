@@ -193,3 +193,33 @@ class CustomerReview(Base):
     employee: Mapped["Employee"] = relationship()
     customer: Mapped[Optional["Customer"]] = relationship()
     branch: Mapped[Optional["Branch"]] = relationship()
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.id", ondelete="CASCADE"), index=True)
+    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"), index=True)
+    service_id: Mapped[str] = mapped_column(ForeignKey("services.id", ondelete="CASCADE"), index=True)
+    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
+    appointment_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String, default="Pending", nullable=False) # Pending, Confirmed, Completed, Cancelled
+    payment_status: Mapped[str] = mapped_column(String, default="Unpaid", nullable=False) # Unpaid, Paid_SSLCommerz
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    customer: Mapped["Customer"] = relationship()
+    employee: Mapped["Employee"] = relationship()
+    service: Mapped["Service"] = relationship()
+    branch: Mapped["Branch"] = relationship()
+
+class DailyAdSpend(Base):
+    __tablename__ = "daily_ad_spend"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    date: Mapped[str] = mapped_column(String, index=True, nullable=False) # YYYY-MM-DD
+    platform: Mapped[str] = mapped_column(String, nullable=False) # Facebook, Google
+    amount_spent: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    impressions: Mapped[int] = mapped_column(default=0, nullable=False)
+    clicks: Mapped[int] = mapped_column(default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

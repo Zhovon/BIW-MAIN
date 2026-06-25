@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { CrmPortal } from "@/components/crm-portal";
+import { AppointmentsView } from "@/components/appointments-view";
 
 import { useEffect, useState, useRef, useMemo, ChangeEvent, FormEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
@@ -140,7 +141,7 @@ export default function ManagerDashboardPage() {
   const customerSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // CRM Tab States
-  const [activeTab, setActiveTab] = useState<"operations" | "crm">("operations");
+  const [activeTab, setActiveTab] = useState<"operations" | "crm" | "appointments">("operations");
   const [logDate, setLogDate] = useState<string>(new Date().toLocaleDateString("en-CA")); // YYYY-MM-DD in local time
 
   const [activeDatesData, setActiveDatesData] = useState<string[]>([]);
@@ -777,6 +778,19 @@ export default function ManagerDashboardPage() {
             }}
           >
             Customer CRM Portal
+          </button>
+          <button
+            onClick={() => setActiveTab("appointments")}
+            style={{
+              background: "none", border: "none",
+              color: activeTab === "appointments" ? "var(--accent)" : "var(--muted)",
+              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              padding: "8px 16px", cursor: "pointer",
+              borderBottom: activeTab === "appointments" ? "2px solid var(--accent)" : "2px solid transparent",
+              transition: "all 0.2s ease"
+            }}
+          >
+            Appointments
           </button>
         </div>
 
@@ -1460,8 +1474,12 @@ export default function ManagerDashboardPage() {
           </>
         )}
 
-                {activeTab === "crm" && (
+        {activeTab === "crm" && (
           <CrmPortal services={services} />
+        )}
+
+        {activeTab === "appointments" && (
+          <AppointmentsView branchId={profile?.branch_id} />
         )}
       </section>
     </main>
