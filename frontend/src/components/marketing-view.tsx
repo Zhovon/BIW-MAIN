@@ -40,9 +40,7 @@ export function MarketingView() {
   if (loading) return <div className="p-10 text-center text-gray-500">Loading Marketing Data...</div>;
   if (!data) return <div className="p-10 text-center text-red-500">Failed to load marketing data.</div>;
 
-  const totalImpressions = data.daily_data.reduce((sum, d) => sum + d.impressions, 0);
   const totalClicks = data.daily_data.reduce((sum, d) => sum + d.clicks, 0);
-  const cac = data.total_sales > 0 && data.daily_data.length > 0 ? (data.total_spend / (data.total_sales / 1000)) : 0; // rough proxy for CAC if we assume 1k sales = 1 customer for example. We'll just show actual spend per click.
   const cpc = totalClicks > 0 ? data.total_spend / totalClicks : 0;
 
   return (

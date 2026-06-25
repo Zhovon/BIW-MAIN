@@ -19,7 +19,6 @@ const inputStyle = {
   transition: "all 0.2s ease",
 };
 
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const swrFetcher = async (url: string) => {
   const res = await authFetch(url);
@@ -27,8 +26,8 @@ const swrFetcher = async (url: string) => {
   if (!res.ok) {
     if (res.status === 401) {
       // Throw a specific error so SWR knows not to aggressively retry authentication failures
-      const error = new Error("Not authorized");
-      (error as any).status = 401;
+      const error = new Error("Not authorized") as Error & { status?: number };
+      error.status = 401;
       throw error;
     }
     console.error("SWR Fetch Error:", res.status, res.statusText);
