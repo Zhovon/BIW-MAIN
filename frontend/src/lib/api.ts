@@ -58,5 +58,14 @@ export async function authFetch(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  return fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers });
+  
+  if (res.status === 401) {
+    // If the server rejected the token, immediately clear our cache 
+    // so the next request is forced to ask Supabase for a fresh token
+    cachedToken = undefined;
+    tokenExpiresAt = 0;
+  }
+  
+  return res;
 }
