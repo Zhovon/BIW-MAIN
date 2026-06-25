@@ -252,8 +252,8 @@ export function RiskCodedDashboard({
 
       {loading && <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 10 }}>Updating charts...</div>}
 
-      {/* TODAY'S SNAPSHOT */}
-      <div style={{ 
+      {/* Header Filters & Context */}
+      <div className="mobile-grid-1" style={{ 
         border: "1px solid #000", padding: "12px 16px", marginBottom: 16, 
         display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr 1fr", gap: "16px", alignItems: "center" 
       }}>
@@ -284,8 +284,8 @@ export function RiskCodedDashboard({
         </div>
       </div>
 
-      {/* KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", border: "1px solid #000", marginBottom: 18 }}>
+      {/* Top Level KPIs */}
+      <div className="mobile-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", border: "1px solid #000", marginBottom: 18 }}>
         <div style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Total Revenue</div>
           <div style={{ fontSize: 26, fontWeight: "bold", lineHeight: 1 }}>{formatTaka(data.revenue)}</div>
@@ -320,8 +320,8 @@ export function RiskCodedDashboard({
 
       {/* Section 01 */}
       <section style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>01 · The Revenue Story</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>01 · Mid Level - Performance Breakdowns</div>
+        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Daily Revenue (Current Period)</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 4 }}>Green bars = above-average days · Red bars = below-average days</div>
@@ -367,8 +367,8 @@ export function RiskCodedDashboard({
 
       {/* Section 02 */}
       <section style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>02 · Customer & Ticket Mix</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>02 · Distribution Section</div>
+        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
           <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Visit Frequency</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Single visits = retention risk (red)</div>
@@ -430,8 +430,8 @@ export function RiskCodedDashboard({
 
       {/* Section 03 */}
       <section style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>03 · Time & Staffing</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>03 · Heatmap & Time Metrics</div>
+        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Hourly Demand</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Peak hours = green · Dead hours = red</div>
@@ -527,8 +527,9 @@ export function RiskCodedDashboard({
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -652,8 +653,9 @@ export function RiskCodedDashboard({
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -704,8 +706,9 @@ export function RiskCodedDashboard({
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>

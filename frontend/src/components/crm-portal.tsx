@@ -124,7 +124,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* CRM Search & Action Bar */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+      <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
         <div style={{ flex: "1 1 300px", position: "relative" }}>
           <input
             type="text"
@@ -154,7 +154,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
           <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", margin: "0 0 16px", color: "var(--accent-3)" }}>
             Register New Client Record
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
             <label style={{ display: "grid", gap: "6px" }}>
               <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Full Name *</span>
               <input
@@ -216,7 +216,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
       )}
 
       {/* CRM Two Column Directory */}
-      <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
+      <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
         
         {/* Left Column: Customer Directory List */}
         <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", maxHeight: "650px" }}>
@@ -296,7 +296,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
                 </span>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+              <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
                 <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Lifetime Spent</span>
                   <strong style={{ fontSize: "1.2rem", color: "var(--accent-3)" }}>

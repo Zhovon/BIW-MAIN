@@ -89,7 +89,7 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
 
   return (
     <article className="glass-card" style={{ padding: "28px", minHeight: "500px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px" }}>
+      <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px", gap: "16px" }}>
         <div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Appointments</h2>
           <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>Manage upcoming bookings</p>
@@ -114,7 +114,7 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
             const c = getCust(appt.customer_id);
             const dateObj = new Date(appt.appointment_time);
             return (
-              <div key={appt.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderRadius: "12px", border: "1px solid var(--line)", background: "rgba(0,0,0,0.02)" }}>
+              <div key={appt.id} className="mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderRadius: "12px", border: "1px solid var(--line)", background: "rgba(0,0,0,0.02)", gap: "10px" }}>
                 <div>
                   <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--text)" }}>{c?.full_name || "Unknown"} <span style={{ fontSize: "0.8rem", color: "var(--muted)", fontWeight: "normal" }}>({c?.phone || "No phone"})</span></div>
                   <div style={{ color: "var(--accent)", fontSize: "0.9rem" }}>{getSrvName(appt.service_id)} with {getEmpName(appt.employee_id)}</div>

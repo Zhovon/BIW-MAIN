@@ -752,7 +752,7 @@ export default function ManagerDashboardPage() {
         </div>
 
         {/* Tabs Bar */}
-        <div style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
+        <div className="mobile-scroll" style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
           <button
             onClick={() => setActiveTab("operations")}
             style={{
@@ -798,7 +798,7 @@ export default function ManagerDashboardPage() {
           <>
             {/* Daily Operations Trend Chart (Branch Specific) */}
             <article className="glass-card" style={{ padding: "28px", marginBottom: "32px", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+              <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Operations Trend</h2>
                   <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>
@@ -896,7 +896,7 @@ export default function ManagerDashboardPage() {
             {/* Daily Roster Card */}
 
             <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+              <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
                   <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
                   <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>View who was present, absent, or on leave for any specific date.</p>
@@ -1332,7 +1332,7 @@ export default function ManagerDashboardPage() {
 
                   {/* Log Header + Date Picker */}
                   <div style={{ marginBottom: "16px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
                       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operations Log</h2>
                       <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
                         Daily View

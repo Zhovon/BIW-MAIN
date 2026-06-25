@@ -45,7 +45,7 @@ export function MarketingView() {
 
   return (
     <article className="glass-card" style={{ padding: "28px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+      <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", gap: "16px" }}>
         <div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", margin: 0 }}>Native Marketing Engine</h2>
           <p style={{ color: "var(--muted)", fontSize: "0.9rem", marginTop: "4px" }}>Real-time ROAS tracked directly against your CRM Sales.</p>
@@ -53,7 +53,7 @@ export function MarketingView() {
       </div>
 
       {/* KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px" }}>
+      <div className="mobile-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px" }}>
         <div style={{ padding: "20px", borderRadius: "12px", background: "rgba(0,0,0,0.02)", border: "1px solid var(--line)" }}>
           <span style={{ fontSize: "0.75rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Ad Spend</span>
           <strong style={{ display: "block", fontSize: "1.4rem", color: "#ff7c7c", marginTop: "8px" }}>৳{data.total_spend.toLocaleString()}</strong>

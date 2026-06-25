@@ -217,7 +217,7 @@ export default function EmployeeDashboardPage() {
       <section className="content-grid">
         
         {/* Top bar with Month Selector */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", marginBottom: "28px" }}>
+        <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", marginBottom: "28px" }}>
           <div>
             <p className="section-label">Therapist Performance Workspace</p>
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
@@ -242,7 +242,7 @@ export default function EmployeeDashboardPage() {
         </div>
 
         {/* Time Punch Card */}
-        <article className="glass-card" style={{ padding: "24px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)" }}>
+        <article className="glass-card mobile-stack" style={{ padding: "24px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)", gap: "16px" }}>
           <div>
             <h2 style={{ fontSize: "1.2rem", margin: "0 0 4px", color: isPunchedIn ? "#92fb9c" : "var(--muted)" }}>
               {isPunchedIn ? "🟢 You are Clocked In" : "⚪ You are Clocked Out"}
@@ -304,7 +304,7 @@ export default function EmployeeDashboardPage() {
         </div>
 
         {/* Main Content split */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
           
           {/* Left Panel: Completed Treatments Log */}
           <article className="glass-card" style={{ padding: "28px" }}>
@@ -331,8 +331,10 @@ export default function EmployeeDashboardPage() {
                         border: "1px solid var(--line)",
                         display: "flex",
                         justifyContent: "space-between",
-                        alignItems: "center"
+                        alignItems: "center",
+                        gap: "10px"
                       }}
+                      className="mobile-wrap"
                     >
                       <div>
                         <strong style={{ fontSize: "1.05rem", color: "var(--text)" }}>{t.service_name}</strong>

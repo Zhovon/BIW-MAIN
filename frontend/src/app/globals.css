@@ -723,3 +723,51 @@ dd {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* ============================================================
+   Mobile Responsive Utilities
+============================================================ */
+@media (max-width: 768px) {
+  /* Force flex containers to stack vertically on small screens */
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  /* Force flex containers to wrap instead of overflowing */
+  .mobile-wrap {
+    flex-wrap: wrap !important;
+  }
+
+  /* Enable smooth horizontal scrolling for wide elements like tables or tabs */
+  .mobile-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap;
+    padding-bottom: 8px; /* Room for scrollbar */
+  }
+
+  /* Make tables inside mobile-scroll containers behave nicely */
+  .mobile-scroll > table {
+    min-width: max-content;
+  }
+
+  /* Force elements to take up 100% width on mobile */
+  .mobile-100w {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Hide specific elements on mobile if they are purely decorative */
+  .mobile-hide {
+    display: none !important;
+  }
+
+  /* Force grids to single or double column on mobile */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-grid-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

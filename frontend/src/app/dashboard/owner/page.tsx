@@ -623,7 +623,7 @@ export default function OwnerDashboardPage() {
         </div>
 
         {/* Tabs Bar */}
-        <div style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px", flexWrap: "wrap" }}>
+        <div className="mobile-scroll" style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
           <button
             onClick={() => setActiveTab("risk")}
             style={{
@@ -775,7 +775,7 @@ export default function OwnerDashboardPage() {
 
         {/* Branch Operational Margins (period-filtered) */}
         <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operational Margins</h2>
             <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{periodLabel} · {ownerBranch === "all" ? "All Branches" : getBranchName(ownerBranch)}</span>
           </div>
@@ -819,7 +819,7 @@ export default function OwnerDashboardPage() {
 
         {/* Daily Audit Log */}
         <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Audit Log</h2>
             <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
               {filteredLogs.length} Entries
@@ -975,7 +975,7 @@ export default function OwnerDashboardPage() {
 
         {/* Daily Roster Card */}
         <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
               <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>Monitor staff attendance, clock times, and overtime across branches.</p>
@@ -1037,7 +1037,7 @@ export default function OwnerDashboardPage() {
               {targetError && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>{targetError}</div>}
               {targetSuccess && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>Monthly branch target saved successfully!</div>}
 
-              <form onSubmit={handleSetTarget} style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
+              <form onSubmit={handleSetTarget} className="mobile-stack" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
                 <label style={{ display: "grid", gap: "6px", flex: 1 }}>
                   <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Branch</span>
                   <select
@@ -1088,7 +1088,7 @@ export default function OwnerDashboardPage() {
             </p>
 
             {/* Selector controls */}
-            <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div className="mobile-stack" style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", alignItems: "flex-end" }}>
               <label style={{ display: "grid", gap: "6px", flex: 1 }}>
                 <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Select Branch</span>
                 <select
@@ -1137,7 +1137,7 @@ export default function OwnerDashboardPage() {
 
             {calculatedPayroll && (
               <div style={{ display: "grid", gap: "20px" }}>
-                <div style={{ padding: "16px", borderRadius: "16px", background: "rgba(110, 231, 255, 0.04)", border: "1px solid rgba(110, 231, 255, 0.15)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="mobile-stack" style={{ padding: "16px", borderRadius: "16px", background: "rgba(110, 231, 255, 0.04)", border: "1px solid rgba(110, 231, 255, 0.15)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
                   <div>
                     <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>Consolidation Summary</strong>
                     <div style={{ fontSize: "0.84rem", color: "var(--muted)", marginTop: "4px" }}>
