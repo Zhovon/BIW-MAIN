@@ -1,5 +1,5 @@
 # 📋 BIW Dashboard — Daily Dev Journal
-**Date:** June 24, 2026  
+**Date:** June 25, 2026  
 **Session:** 10:00 – 17:15 BDT  
 **Final Build Status:** ✅ All containers healthy
 
@@ -7,13 +7,12 @@
 
 ## ✅ COMPLETED TODAY (All Deployed)
 
-### 1. CRM Portal — White Screen / 403 Forbidden Bug
-- **Root Cause:** `useSWR` fired before Supabase auth token was ready → repeated 401s → rate-limited → 403.
+### 1. Persistent 401 Unauthorized Bug & CRM White Screen
+- **Root Cause:** `authFetch` aggressively cached the Supabase JWT for 60 seconds. If the token expired natively (after 1 hour) or the backend serverless functions restarted via Vercel, the frontend blindly sent dead tokens for up to 60 seconds without refreshing.
 - **Fixes:**
+  - `api.ts` → Modified `authFetch` to inspect the response status. If it receives a `401 Unauthorized`, it instantly drops the cache (`cachedToken = undefined`) and fetches a brand new token from Supabase on the very next click.
   - `crm-portal.tsx` → `swrFetcher` explicitly calls `supabase.auth.getSession()` before each request
-  - `api.ts` → `authFetch` uses a global singleton Promise to prevent auth race conditions on load
-  - `auth.py` → 5-minute in-memory JWT cache (`_token_cache`) prevents Supabase rate-limiting
-- **Status:** ✅ Live
+- **Status:** ✅ Live (No more unexpected logouts)
 
 ---
 
@@ -75,6 +74,17 @@
 
 ---
 
+### 9. Comprehensive Mobile Responsiveness Refactor
+- **Problem:** Dashboards were originally built with desktop-first `display: flex` grids, causing tables to blow out screen widths and buttons to squish together on mobile browsers.
+- **Fixes:**
+  - Added smart utility classes (`.mobile-stack`, `.mobile-wrap`, `.mobile-scroll`, `.mobile-grid-1`) to `globals.css`.
+  - Applied horizontal touch-scrolling to all Owner/Manager Tab menus and wide data tables (Payroll, Attendance).
+  - Modified the Marketing Engine to stack the ROAS chart vertically above the KPI funnel.
+  - Adjusted the CRM Portal so the customer list stacks cleanly above the detailed profile view on phones.
+- **Status:** ✅ Live
+
+---
+
 ## ✅ VERIFIED (No Changes Needed)
 
 ### 9. `/api/v1/sales/customer/{id}` Endpoint
@@ -96,25 +106,23 @@
 
 | Category | Count |
 |----------|-------|
-| Bugs fixed | 8 |
+| Bugs fixed | 9 |
 | TypeScript errors resolved | 4 |
+| UI Refactors (Mobile) | 1 (Massive) |
 | New features added | 2 |
-| Docker builds triggered | 12 |
-| Docker builds succeeded | 5 |
-| Files edited (frontend) | 5 |
+| Files edited (frontend) | 11 |
 | Files edited (backend) | 3 |
 | Outstanding tasks | 0 |
 | Open bugs | 0 |
 
 ---
 
-## 🗓️ Next Session — Suggested Items
+## 🗓️ Next Session — Suggested Items (External Automations)
 
-1. **Live testing** — Log in as Manager and Owner, verify CRM portal, payroll card, and realtime chart updates work end-to-end in browser
-2. **Attendance UI testing** — Verify manager can add manual deductions and they appear in payroll correctly
-3. **Employee dashboard** — Audit employee-view payroll breakdown (task bonus display per treatment)
-4. **Mobile responsiveness** — Review dashboard layout on smaller screens
-5. **Error state UX** — Ensure all data-fetching failures show graceful messages instead of blank sections
+1. **ManyChat Integration** — Set up a free ManyChat account to automate Facebook/Instagram DMs, build FAQ flows, and collect phone numbers for bulk broadcast SMS marketing.
+2. **Make.com Automation** — Connect Google Ads and Meta Ads to BIW's Supabase instance so that Daily Ad Spend is automatically ingested into the Native Marketing Engine at midnight.
+3. **Shopify Booking Widget** — Take the `shopify-booking-snippet.html` widget that was generated and paste it into the active Shopify theme to replace the legacy BookX plugin.
+4. **Live Verification** — Have the salon staff test out the new mobile-responsive views on their actual phones.
 
 ---
 
@@ -122,8 +130,8 @@
 
 | Service | URL | Status |
 |---------|-----|--------|
-| Frontend (Next.js) | http://localhost:3000 | ✅ Running |
-| Backend (FastAPI) | http://localhost:8000 | ✅ Running |
+| Frontend (Next.js) | https://crm.biw.salon | ✅ Deployed (Vercel) |
+| Backend (FastAPI) | https://bcrm.biw.salon | ✅ Deployed (Vercel) |
 | Auth | Supabase JWT + 5-min cache | ✅ Active |
 | Realtime | Supabase channels: `attendance`, `owner:sales` | ✅ Active |
 

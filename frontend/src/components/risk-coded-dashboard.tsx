@@ -495,7 +495,8 @@ export function RiskCodedDashboard({
               Revenue split evenly when multiple staff serve one client · click row to filter · color = quartile of performance
             </div>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+          <div className="mobile-scroll">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
                 <th style={{ padding: "8px 12px" }}>Provider</th>
@@ -617,7 +618,8 @@ export function RiskCodedDashboard({
           <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>
             Weekday-hour slots where multiple staff are consistently free. Each row is an opportunity for an automated promotional trigger.
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+          <div className="mobile-scroll">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
                 <th style={{ padding: "8px 12px" }}>#</th>
@@ -669,7 +671,8 @@ export function RiskCodedDashboard({
               Elite/Premium = green priority · One-time high-spenders = red (re-engage urgently)
             </div>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+          <div className="mobile-scroll">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
                 <th style={{ padding: "8px 12px" }}>Customer Name</th>
