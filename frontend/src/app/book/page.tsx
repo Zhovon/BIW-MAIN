@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { getApiBaseUrl } from "@/lib/api";
 import { useSearchParams } from "next/navigation";
 
@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 type Service = { id: string; name: string; price: number };
 type Employee = { id: string; full_name: string; role: string };
 
-export default function BookingWidget() {
+function BookingWidgetContent() {
   const searchParams = useSearchParams();
   const preselectedServiceName = searchParams.get("service");
 
@@ -260,5 +260,13 @@ export default function BookingWidget() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BookingWidget() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500 font-serif">Loading Booking Engine...</div>}>
+      <BookingWidgetContent />
+    </Suspense>
   );
 }
