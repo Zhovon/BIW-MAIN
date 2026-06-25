@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.crud.clinic import list_services
 from app.db.session import get_db
 from app.models.clinic import Service
@@ -14,7 +15,7 @@ def get_services(db: Session = Depends(get_db)):
     return list_services(db)
 
 
-@router.post("", response_model=ServiceRead, status_code=201)
+@router.post("", response_model=ServiceRead, status_code=201, dependencies=[Depends(get_current_user)])
 def create_service(payload: ServiceCreate, db: Session = Depends(get_db)) -> Service:
     service = Service(
         branch_id=payload.branch_id,
@@ -28,7 +29,7 @@ def create_service(payload: ServiceCreate, db: Session = Depends(get_db)) -> Ser
     return service
 
 
-@router.put("/{service_id}", response_model=ServiceRead)
+@router.put("/{service_id}", response_model=ServiceRead, dependencies=[Depends(get_current_user)])
 def update_service(service_id: str, payload: ServiceUpdate, db: Session = Depends(get_db)) -> Service:
     service = db.query(Service).filter(Service.id == service_id).first()
     if not service:
@@ -53,7 +54,7 @@ def update_service(service_id: str, payload: ServiceUpdate, db: Session = Depend
     return service
 
 
-@router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_current_user)])
 def delete_service(service_id: str, db: Session = Depends(get_db)):
     service = db.query(Service).filter(Service.id == service_id).first()
     if not service:

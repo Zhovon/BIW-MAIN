@@ -33,7 +33,7 @@ api_router.include_router(webhooks_router) # Public for Shopify/Make
 api_router.include_router(branches_router,            dependencies=_auth)
 api_router.include_router(overview_router,            dependencies=_auth)
 api_router.include_router(analytics_router,           dependencies=_auth)
-api_router.include_router(services_router,            dependencies=_auth)
+api_router.include_router(services_router) # GET is public, mutating methods are protected in the router
 api_router.include_router(service_assignments_router, dependencies=_auth)
 api_router.include_router(sales_router,               dependencies=_auth)
 api_router.include_router(revenue_router,             dependencies=_auth)
