@@ -664,19 +664,6 @@ export default function OwnerDashboardPage() {
             Customer CRM Portal
           </button>
           <button
-            onClick={() => setActiveTab("marketing")}
-            style={{
-              background: "none", border: "none",
-              color: activeTab === "marketing" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
-              padding: "8px 16px", cursor: "pointer",
-              borderBottom: activeTab === "marketing" ? "2px solid var(--accent)" : "2px solid transparent",
-              transition: "all 0.2s ease"
-            }}
-          >
-            Marketing Engine
-          </button>
-          <button
             onClick={() => setActiveTab("appointments")}
             style={{
               background: "none", border: "none",
@@ -692,15 +679,18 @@ export default function OwnerDashboardPage() {
         </div>
 
         {activeTab === "risk" && (
-          <RiskCodedDashboard
-            period="month"
-            branchId=""
-            customDate=""
-            staffName="all"
-            paymentMethod="all"
-            ticketBand="all"
-            staffList={employees}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <RiskCodedDashboard
+              period="month"
+              branchId=""
+              customDate=""
+              staffName="all"
+              paymentMethod="all"
+              ticketBand="all"
+              staffList={employees}
+            />
+            <MarketingView />
+          </div>
         )}
 
         {activeTab === "dashboard" && (
@@ -1261,9 +1251,6 @@ export default function OwnerDashboardPage() {
               <AppointmentsView />
             )}
 
-            {activeTab === "marketing" && (
-              <MarketingView />
-            )}
       </section>
     </main>
   );
