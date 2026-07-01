@@ -1,12 +1,19 @@
 <!-- 
   Shopify Booking Popup Snippet 
   Instructions:
-  1. Go to Shopify Theme Editor -> Default Product Template
-  2. Hide the default "Quantity" and "Buy buttons" (using the Eye icon)
-  3. Add a "Custom Liquid" block in their place
-  4. Paste this entire code block into the Custom Liquid block
+  1. In your Shopify Admin, go to Products and add the tag "Service" to all your service products.
+  2. Go to Shopify Theme Editor -> Default Product Template
+  3. Add a "Custom Liquid" block at the bottom of your Product Information section.
+  4. Paste this entire code block into the Custom Liquid block.
+  Note: This code automatically hides the normal "Add to Cart" button and shows the "Book Appointment" button ONLY if the product has the "Service" tag!
 -->
+{% if product.tags contains 'Service' or product.tags contains 'service' %}
 <style>
+  /* Automatically hide the standard Add to Cart and Quantity selectors for Services */
+  .product-form__buttons, .product-form__submit, button[name="add"] { display: none !important; }
+  .quantity__input, .quantity__button, .product-form__quantity { display: none !important; }
+  shopify-payment-terms { display: none !important; }
+
   /* Perfectly matches your "Buy it now" button */
   .custom-book-btn { 
     background: #2b2e2e; 
@@ -69,3 +76,5 @@
     </div>
   </div>
 </div>
+
+{% endif %}
