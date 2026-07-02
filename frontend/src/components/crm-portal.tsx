@@ -9,14 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const inputStyle = {
   width: "100%",
-  padding: "12px 16px",
-  borderRadius: "10px",
-  border: "1px solid var(--line)",
-  background: "var(--surface-2)",
-  color: "var(--text)",
-  fontSize: "0.95rem",
+  padding: "10px 14px",
+  border: "1px solid #000",
+  background: "#fff",
+  color: "#000",
+  fontSize: "14px",
+  fontFamily: "Times New Roman, serif",
   outline: "none",
-  transition: "all 0.2s ease",
 };
 
 
@@ -124,7 +123,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* CRM Search & Action Bar */}
-      <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6 border border-black p-4 bg-white">
         <div style={{ flex: "1 1 300px", position: "relative" }}>
           <input
             type="text"
@@ -134,15 +133,14 @@ export function CrmPortal({ services }: { services: Service[] }) {
             style={inputStyle}
           />
           {isValidating && (
-            <span style={{ position: "absolute", right: "16px", top: "12px", color: "var(--muted)", fontSize: "0.8rem" }}>
+            <span style={{ position: "absolute", right: "16px", top: "12px", color: isSelected ? "#fff" : "#555", fontSize: "0.8rem" }}>
               Searching...
             </span>
           )}
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="button button--primary"
-          style={{ padding: "0.75rem 1.5rem" }}
+          style={{ padding: "10px 16px", background: "#000", color: "#fff", border: "1px solid #000", fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", cursor: "pointer" }}
         >
           {showAddForm ? "Close Form" : "＋ Register Customer"}
         </button>
@@ -150,13 +148,13 @@ export function CrmPortal({ services }: { services: Service[] }) {
 
       {/* Inline Customer Add Form */}
       {showAddForm && (
-        <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(142, 240, 178, 0.2)" }}>
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", margin: "0 0 16px", color: "var(--accent-3)" }}>
+        <article style={{ padding: "20px", border: "1px solid #000", marginBottom: "24px", background: "#fff" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: "4px", borderBottom: "2px solid #000", marginBottom: "16px" }}>01 · Register New Client Record</h3>
             Register New Client Record
           </h3>
-          <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Full Name *</span>
+              <span style={{ fontSize: "0.84rem", color: isSelected ? "#fff" : "#555" }}>Full Name *</span>
               <input
                 type="text" required
                 value={newName}
@@ -166,7 +164,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
               />
             </label>
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Phone Number *</span>
+              <span style={{ fontSize: "0.84rem", color: isSelected ? "#fff" : "#555" }}>Phone Number *</span>
               <input
                 type="text" required
                 value={newPhone}
@@ -178,7 +176,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
           </div>
           <div style={{ display: "grid", gap: "16px", marginBottom: "20px" }}>
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Email Address</span>
+              <span style={{ fontSize: "0.84rem", color: isSelected ? "#fff" : "#555" }}>Email Address</span>
               <input
                 type="email"
                 value={newEmail}
@@ -188,7 +186,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
               />
             </label>
             <label style={{ display: "grid", gap: "6px" }}>
-              <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Consultation / Profile Notes</span>
+              <span style={{ fontSize: "0.84rem", color: isSelected ? "#fff" : "#555" }}>Consultation / Profile Notes</span>
               <textarea
                 value={newNotes}
                 onChange={(e) => setNewNotes(e.target.value)}
@@ -199,15 +197,14 @@ export function CrmPortal({ services }: { services: Service[] }) {
             </label>
           </div>
           <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setShowAddForm(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer" }}>
+            <button type="button" onClick={() => setShowAddForm(false)} style={{ background: "none", border: "1px solid #000", background: "#fff", color: "#000", padding: "10px 16px", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold", cursor: "pointer" }}>
               Cancel
             </button>
             <button
               type="button"
               onClick={handleCreateCustomer}
               disabled={isCreating || !newName || !newPhone}
-              className="button button--primary"
-              style={{ padding: "0.75rem 1.6rem" }}
+              style={{ padding: "10px 16px", background: "#000", color: "#fff", border: "1px solid #000", fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", cursor: "pointer" }}
             >
               {isCreating ? "Saving..." : "Save Customer"}
             </button>
@@ -216,16 +213,16 @@ export function CrmPortal({ services }: { services: Service[] }) {
       )}
 
       {/* CRM Two Column Directory */}
-      <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "24px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-0 border border-black">
         
         {/* Left Column: Customer Directory List */}
-        <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", maxHeight: "650px" }}>
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.35rem", margin: "0 0 16px" }}>Client Directory</h3>
+        <article className="min-w-0" style={{ padding: "20px", display: "flex", flexDirection: "column", maxHeight: "650px", borderRight: "1px solid #000", background: "#fff" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: "4px", borderBottom: "2px solid #000", marginBottom: "16px" }}>02 · Client Directory</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto", flex: 1, paddingRight: "4px" }}>
             {!customers && !isValidating && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} style={{ padding: "16px", borderRadius: "16px", background: "rgba(0, 0, 0, 0.01)", border: "1px solid var(--line)" }}>
+                  <div key={i} style={{ padding: "16px", borderRadius: "0", background: "rgba(0, 0, 0, 0.01)", border: "1px solid var(--line)" }}>
                     <Skeleton style={{ height: "20px", width: "60%", marginBottom: "8px" }} />
                     <Skeleton style={{ height: "16px", width: "40%", marginBottom: "12px" }} />
                     <div style={{ display: "flex", gap: "8px" }}>
@@ -245,25 +242,23 @@ export function CrmPortal({ services }: { services: Service[] }) {
                   onClick={() => setSelectedCustomer(c)}
                   style={{
                     padding: "16px",
-                    borderRadius: "16px",
-                    background: isSelected ? "rgba(110, 231, 255, 0.06)" : "rgba(0, 0, 0, 0.01)",
-                    border: `1px solid ${isSelected ? "rgba(110, 231, 255, 0.25)" : "var(--line)"}`,
+                    borderRadius: "0", background: isSelected ? "#000" : "#fff", border: "1px solid #000",
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                   }}
                 >
-                  <strong style={{ display: "block", fontSize: "1.05rem", color: isSelected ? "var(--accent)" : "var(--text)" }}>
-                    {c.uid && <span style={{ color: "var(--muted)", marginRight: "6px" }}>#{c.uid}</span>}
+                  <strong style={{ display: "block", fontSize: "1.05rem", color: isSelected ? "#C9A84C" : "#000", fontFamily: "Times New Roman, serif" }}>
+                    {c.uid && <span style={{ color: isSelected ? "#fff" : "#555", marginRight: "6px" }}>#{c.uid}</span>}
                     {c.full_name}
                   </strong>
-                  <span style={{ fontSize: "0.82rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                  <span style={{ fontSize: "0.82rem", color: isSelected ? "#fff" : "#555", display: "block", marginTop: "2px" }}>
                     {c.phone} {c.email ? `• ${c.email}` : ""}
                   </span>
                   <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
-                    <span style={{ fontSize: "0.72rem", background: "var(--surface-2)", border: "1px solid var(--line)", padding: "2px 8px", borderRadius: "6px", color: "var(--muted)" }}>
+                    <span style={{ fontSize: "0.72rem", background: isSelected ? "#333" : "#eee", border: "1px solid #000", padding: "2px 8px", borderRadius: "6px", color: isSelected ? "#fff" : "#555" }}>
                       {c.total_visits || 0} Treatments
                     </span>
-                    <span style={{ fontSize: "0.72rem", background: "rgba(110, 231, 255, 0.08)", padding: "2px 8px", borderRadius: "6px", color: "var(--accent)" }}>
+                    <span style={{ fontSize: "0.72rem", background: isSelected ? "#555" : "#ddd", border: "1px solid #000", color: isSelected ? "#fff" : "#000", padding: "2px 8px", borderRadius: "6px", color: "#000" }}>
                       ৳{(c.total_spent || 0).toLocaleString()} Spent
                     </span>
                   </div>
@@ -271,7 +266,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
               );
             })}
             {customers?.length === 0 && (
-              <p style={{ textAlign: "center", color: "var(--muted)", padding: "40px 0", fontSize: "0.95rem" }}>
+              <p style={{ textAlign: "center", color: isSelected ? "#fff" : "#555", padding: "40px 0", fontSize: "0.95rem" }}>
                 No clients found in directory.
               </p>
             )}
@@ -279,56 +274,53 @@ export function CrmPortal({ services }: { services: Service[] }) {
         </article>
 
         {/* Right Column: Customer Details & Treatment History */}
-        <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column", minHeight: "500px" }}>
+        <article className="min-w-0" style={{ padding: "20px", display: "flex", flexDirection: "column", minHeight: "500px", background: "#fff" }}>
           {selectedCustomer ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px", height: "100%" }}>
               
               <div>
-                <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 8px", borderRadius: "6px", background: "rgba(110,231,255,0.06)", border: "1px solid rgba(110,231,255,0.15)", color: "var(--accent)" }}>
+                <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 8px", borderRadius: "6px", background: "rgba(110,231,255,0.06)", border: "1px solid rgba(110,231,255,0.15)", color: "#000" }}>
                   Client Profile
                 </span>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", margin: "10px 0 4px", color: "var(--text)" }}>
-                  {selectedCustomer.uid && <span style={{ color: "var(--muted)", marginRight: "8px" }}>#{selectedCustomer.uid}</span>}
+                <h3 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 4px", color: "#000", fontFamily: "Times New Roman, serif" }}>
+                  {selectedCustomer.uid && <span style={{ color: isSelected ? "#fff" : "#555", marginRight: "8px" }}>#{selectedCustomer.uid}</span>}
                   {selectedCustomer.full_name}
                 </h3>
-                <span style={{ fontSize: "0.88rem", color: "var(--muted)" }}>
+                <span style={{ fontSize: "0.88rem", color: isSelected ? "#fff" : "#555" }}>
                   Contact: {selectedCustomer.phone} {selectedCustomer.email ? `• ${selectedCustomer.email}` : ""}
                 </span>
               </div>
 
-              <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Lifetime Spent</span>
-                  <strong style={{ fontSize: "1.2rem", color: "var(--accent-3)" }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black mb-6">
+                <div style={{ padding: "12px 16px", borderRadius: "0", background: isSelected ? "#333" : "#eee", border: "1px solid #000" }}>
+                  <span style={{ fontSize: "0.75rem", color: isSelected ? "#fff" : "#555", display: "block" }}>Lifetime Spent</span>
+                  <strong style={{ fontSize: "22px", fontWeight: "bold", color: "#000" }}>
                     ৳{(selectedCustomer.total_spent || 0).toLocaleString()}
                   </strong>
                 </div>
-                <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Total Visits</span>
-                  <strong style={{ fontSize: "1.2rem", color: "var(--text)" }}>
+                <div style={{ padding: "12px 16px", borderRadius: "0", background: isSelected ? "#333" : "#eee", border: "1px solid #000" }}>
+                  <span style={{ fontSize: "0.75rem", color: isSelected ? "#fff" : "#555", display: "block" }}>Total Visits</span>
+                  <strong style={{ fontSize: "22px", fontWeight: "bold", color: "#000" }}>
                     {selectedCustomer.total_visits || 0}
                   </strong>
                 </div>
-                <div style={{ padding: "12px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block" }}>Avg. Treatment Ticket</span>
-                  <strong style={{ fontSize: "1.2rem", color: "var(--accent)" }}>
+                <div style={{ padding: "12px 16px", borderRadius: "0", background: isSelected ? "#333" : "#eee", border: "1px solid #000" }}>
+                  <span style={{ fontSize: "0.75rem", color: isSelected ? "#fff" : "#555", display: "block" }}>Avg. Treatment Ticket</span>
+                  <strong style={{ fontSize: "22px", fontWeight: "bold", color: "#000" }}>
                     ৳{selectedCustomer.total_visits > 0 ? Math.round((selectedCustomer.total_spent || 0) / selectedCustomer.total_visits).toLocaleString() : 0}
                   </strong>
                 </div>
               </div>
 
               <div>
-                <strong style={{ fontSize: "0.88rem", color: "var(--text)", display: "block", marginBottom: "8px" }}>
+                <strong style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: "4px", borderBottom: "2px solid #000", marginBottom: "12px", display: "block" }}>
                   Consultation & Profile Notes
                 </strong>
                 <div style={{
-                  padding: "16px",
-                  borderRadius: "14px",
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--line)",
+                  padding: "16px", border: "1px solid #000", background: "#fff",
                   fontSize: "0.9rem",
                   lineHeight: 1.5,
-                  color: "var(--muted)",
+                  color: isSelected ? "#fff" : "#555",
                   minHeight: "80px",
                   whiteSpace: "pre-wrap"
                 }}>
@@ -337,14 +329,14 @@ export function CrmPortal({ services }: { services: Service[] }) {
               </div>
 
               <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "220px" }}>
-                <strong style={{ fontSize: "0.88rem", color: "var(--text)", display: "block", marginBottom: "12px" }}>
+                <strong style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: "4px", borderBottom: "2px solid #000", marginBottom: "12px", display: "block" }}>
                   Treatment & Purchase History
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", flex: 1, maxHeight: "300px" }}>
                   {!customerSales ? (
                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                        {[...Array(3)].map((_, i) => (
-                         <div key={i} style={{ padding: "14px", borderRadius: "14px", border: "1px solid var(--line)", display: "flex", justifyContent: "space-between" }}>
+                         <div key={i} style={{ padding: "14px", borderRadius: "0", border: "1px solid var(--line)", display: "flex", justifyContent: "space-between" }}>
                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
                              <Skeleton style={{ height: "18px", width: "50%" }} />
                              <Skeleton style={{ height: "14px", width: "30%" }} />
@@ -354,7 +346,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
                        ))}
                      </div>
                   ) : customerSales.length === 0 ? (
-                    <p style={{ color: "var(--muted)", padding: "30px 0", fontSize: "0.88rem", textAlign: "center" }}>
+                    <p style={{ color: isSelected ? "#fff" : "#555", padding: "30px 0", fontSize: "0.88rem", textAlign: "center" }}>
                       No treatments recorded for this client yet.
                     </p>
                   ) : (
@@ -362,10 +354,7 @@ export function CrmPortal({ services }: { services: Service[] }) {
                         <div
                           key={sale.id}
                           style={{
-                            padding: "14px",
-                            borderRadius: "14px",
-                            background: "rgba(0, 0, 0, 0.01)",
-                            border: "1px solid var(--line)",
+                            padding: "14px", borderBottom: "1px solid #000", background: "#fff", borderRadius: "0",
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center"
@@ -373,11 +362,11 @@ export function CrmPortal({ services }: { services: Service[] }) {
                         >
                           <div>
                             <strong style={{ color: "var(--text)", fontSize: "0.95rem" }}>{getServiceName(sale.service_id)}</strong>
-                            <span style={{ fontSize: "0.8rem", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                            <span style={{ fontSize: "0.8rem", color: isSelected ? "#fff" : "#555", display: "block", marginTop: "2px" }}>
                               {new Date(sale.created_at).toLocaleDateString()}
                             </span>
                           </div>
-                          <strong style={{ color: "var(--accent)" }}>৳{sale.sale_amount.toLocaleString()}</strong>
+                          <strong style={{ color: "#000" }}>৳{sale.sale_amount.toLocaleString()}</strong>
                         </div>
                       ))
                   )}
@@ -386,8 +375,8 @@ export function CrmPortal({ services }: { services: Service[] }) {
 
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: "var(--muted)" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--surface-2)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: isSelected ? "#fff" : "#555" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: isSelected ? "#333" : "#eee", border: "1px solid #000", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <p style={{ margin: 0, fontSize: "1.05rem" }}>Select a client from the directory</p>
