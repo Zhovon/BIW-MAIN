@@ -701,12 +701,12 @@ export default function ManagerDashboardPage() {
 
   // Shared inline styles
   const inputStyle: React.CSSProperties = {
-    width: "100%", borderRadius: "8px", border: "1px solid var(--border)",
-    background: "var(--surface-2)", padding: "0.75rem 0.95rem",
-    color: "var(--text)", outline: "none", colorScheme: "light",
+    width: "100%", borderRadius: "0", border: "1px solid var(--border)",
+    background: "#fff", padding: "0.75rem 0.95rem",
+    color: "#000", outline: "none", colorScheme: "light",
   };
   const selectInputStyle: React.CSSProperties = {
-    ...inputStyle, background: "var(--surface-2)",
+    ...inputStyle, background: "#fff",
   };
 
   if (loading) {
@@ -726,7 +726,7 @@ export default function ManagerDashboardPage() {
     return (
       <main className="page-shell">
         <section className="content-grid">
-          <div className="glass-card auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
+          <div className="border-2 border-black bg-white" style={{ border: "2px solid #000" }}>
             <p className="section-label" style={{ color: "#ff6464" }}>Error Loading Profile</p>
             <h1>Access Denied</h1>
             <p className="dashboard-lead">{error}</p>
@@ -743,7 +743,7 @@ export default function ManagerDashboardPage() {
         {/* Header */}
         <div style={{ marginBottom: "28px" }}>
           <p className="section-label">Branch Workspace</p>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
+          <h1 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
             Welcome back, {profile?.full_name || "Manager"}
           </h1>
           <p className="dashboard-lead" style={{ marginTop: "8px" }}>
@@ -758,7 +758,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "operations" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "operations" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -771,7 +771,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "crm" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "crm" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -784,7 +784,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "appointments" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "appointments" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -797,25 +797,25 @@ export default function ManagerDashboardPage() {
         {activeTab === "operations" && (
           <>
             {/* Daily Operations Trend Chart (Branch Specific) */}
-            <article className="glass-card" style={{ padding: "28px", marginBottom: "32px", display: "flex", flexDirection: "column" }}>
-              <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "16px" }}>
+            <article className=" border border-black bg-white" style={{ padding: "28px", marginBottom: "32px", display: "flex", flexDirection: "column" }}>
+              <div  style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Operations Trend</h2>
-                  <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "18px", margin: "0", borderBottom: "2px solid #000", paddingBottom: "4px" }}>Daily Operations Trend</h2>
+                  <p style={{ color: "#555", fontSize: "0.85rem", marginTop: "4px" }}>
                     Day-by-day sales vs. daily costs for your branch over the last 30 days.
                   </p>
                 </div>
                 {dailyChartData && (
                   <div style={{ display: "flex", gap: "24px", textAlign: "right" }}>
                     <div>
-                      <span style={{ fontSize: "0.72rem", color: "var(--accent)" }}>Monthly Sales</span>
+                      <span style={{ fontSize: "0.72rem", color: "#000", fontWeight: "bold" }}>Monthly Sales</span>
                       <strong style={{ display: "block", fontSize: "1.15rem", color: "var(--accent-3)", fontFamily: "monospace" }}>
                         ৳{dailyChartData.total_sales.toLocaleString()}
                       </strong>
                     </div>
                     <div>
-                      <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Net Margin</span>
-                      <strong style={{ display: "block", fontSize: "1.15rem", color: "var(--text)", fontFamily: "monospace" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#555" }}>Net Margin</span>
+                      <strong style={{ display: "block", fontSize: "1.15rem", color: "#000", fontFamily: "monospace" }}>
                         {dailyChartData.profit_margin.toFixed(1)}%
                       </strong>
                     </div>
@@ -834,18 +834,18 @@ export default function ManagerDashboardPage() {
                     valueFormatter={(v) => `৳${v.toLocaleString()}`}
                   />
                 ) : (
-                  <p style={{ color: "var(--muted)", textAlign: "center", padding: "40px 0" }}>Loading operations trend...</p>
+                  <p style={{ color: "#555", textAlign: "center", padding: "40px 0" }}>Loading operations trend...</p>
                 )}
               </div>
             </article>
 
             {/* Time Punch Card */}
-            <article className="glass-card" style={{ padding: "24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)" }}>
+            <article className=" border border-black bg-white" style={{ padding: "24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", border: isPunchedIn ? "1px solid rgba(142, 240, 178, 0.4)" : "1px solid var(--line)" }}>
               <div>
                 <h2 style={{ fontSize: "1.2rem", margin: "0 0 4px", color: isPunchedIn ? "#92fb9c" : "var(--muted)" }}>
                   {isPunchedIn ? "🟢 You are Clocked In" : "⚪ You are Clocked Out"}
                 </h2>
-                <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: 0 }}>
+                <p style={{ fontSize: "0.85rem", color: "#555", margin: 0 }}>
                   {todaysPunch?.clock_in_time ? `Clocked in at ${new Date(todaysPunch.clock_in_time).toLocaleTimeString()}` : "Record your attendance for today."}
                   {todaysPunch?.clock_out_time && ` • Clocked out at ${new Date(todaysPunch.clock_out_time).toLocaleTimeString()}`}
                 </p>
@@ -872,21 +872,21 @@ export default function ManagerDashboardPage() {
                 ? (currentRevenue - targetAmount) * (commissionRate / 100)
                 : 0;
               return (
-                <article className="glass-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center mb-6" style={{ padding: "20px 24px", borderColor: "rgba(201,168,76,0.2)" }}>
+                <article className=" grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center mb-6 border border-black bg-white" style={{ padding: "20px 24px", borderColor: "rgba(201,168,76,0.2)" }}>
                   <div>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Base Salary</span>
-                    <strong style={{ fontSize: "1.15rem", color: "var(--text)", fontFamily: "monospace" }}>৳{baseSalary.toLocaleString()}</strong>
+                    <span style={{ fontSize: "0.72rem", color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Base Salary</span>
+                    <strong style={{ fontSize: "1.15rem", color: "#000", fontFamily: "monospace" }}>৳{baseSalary.toLocaleString()}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Rate</span>
-                    <strong style={{ fontSize: "1.15rem", color: "var(--accent)", fontFamily: "monospace" }}>{commissionRate}%</strong>
+                    <span style={{ fontSize: "0.72rem", color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Rate</span>
+                    <strong style={{ fontSize: "1.15rem", color: "#000", fontWeight: "bold", fontFamily: "monospace" }}>{commissionRate}%</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Earned</span>
+                    <span style={{ fontSize: "0.72rem", color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Commission Earned</span>
                     <strong style={{ fontSize: "1.15rem", color: commissionEarned > 0 ? "var(--accent-3)" : "var(--muted)", fontFamily: "monospace" }}>৳{commissionEarned.toLocaleString()}</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Est. Total This Month</span>
+                    <span style={{ fontSize: "0.72rem", color: "#555", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Est. Total This Month</span>
                     <strong style={{ fontSize: "1.15rem", color: "var(--accent-3)", fontFamily: "monospace" }}>৳{(baseSalary + commissionEarned).toLocaleString()}</strong>
                   </div>
                 </article>
@@ -895,11 +895,11 @@ export default function ManagerDashboardPage() {
 
             {/* Daily Roster Card */}
 
-            <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-              <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+            <article className=" border border-black bg-white" style={{ padding: "28px", marginBottom: "32px" }}>
+              <div  style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
-                  <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>View who was present, absent, or on leave for any specific date.</p>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "18px", margin: "0", borderBottom: "2px solid #000", paddingBottom: "4px" }}>Daily Attendance Roster</h2>
+                  <p style={{ color: "#555", fontSize: "0.85rem", marginTop: "4px" }}>View who was present, absent, or on leave for any specific date.</p>
                 </div>
                 <div>
                   <input
@@ -912,26 +912,26 @@ export default function ManagerDashboardPage() {
               </div>
 
               {rosterLoading ? (
-                <p style={{ color: "var(--muted)", textAlign: "center" }}>Loading roster...</p>
+                <p style={{ color: "#555", textAlign: "center" }}>Loading roster...</p>
               ) : (
                 <div style={{ display: "grid", gap: "12px" }}>
                   {roster.map((r: AttendanceRecordType) => (
-                    <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                    <div key={r.employee_id} style={{ display: "flex", justifyContent: "space-between", padding: "16px", background: "rgba(0, 0, 0,0.02)", border: "1px solid #000", borderRadius: "0", }}>
                       <div>
-                        <strong style={{ display: "block", color: "var(--text)" }}>{r.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
+                        <strong style={{ display: "block", color: "#000" }}>{r.full_name} <span style={{ color: "#555", fontSize: "0.8rem", fontWeight: "normal" }}>({r.role})</span></strong>
                         <span style={{ fontSize: "0.8rem", color: r.status === "Present" ? "#92fb9c" : r.status === "Absent" ? "#ff7c7c" : "var(--accent)" }}>
                           {r.status.toUpperCase()}
                         </span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        {r.clock_in_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>In: {new Date(r.clock_in_time).toLocaleTimeString()}</div>}
-                        {r.clock_out_time && <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Out: {new Date(r.clock_out_time).toLocaleTimeString()}</div>}
+                        {r.clock_in_time && <div style={{ fontSize: "0.85rem", color: "#555" }}>In: {new Date(r.clock_in_time).toLocaleTimeString()}</div>}
+                        {r.clock_out_time && <div style={{ fontSize: "0.85rem", color: "#555" }}>Out: {new Date(r.clock_out_time).toLocaleTimeString()}</div>}
                         {r.overtime_minutes > 0 && <div style={{ fontSize: "0.85rem", color: "var(--gold-light)" }}>Overtime: {(r.overtime_minutes / 60).toFixed(1)} hrs</div>}
                         {r.deduction_amount > 0 && <div style={{ fontSize: "0.85rem", color: "#ff7c7c" }}>Deduction: ৳{r.deduction_amount}</div>}
                       </div>
                     </div>
                   ))}
-                  {roster.length === 0 && <p style={{ color: "var(--muted)", textAlign: "center" }}>No employees found for this branch.</p>}
+                  {roster.length === 0 && <p style={{ color: "#555", textAlign: "center" }}>No employees found for this branch.</p>}
                 </div>
               )}
             </article>
@@ -943,16 +943,16 @@ export default function ManagerDashboardPage() {
               <div style={{ display: "grid", gap: "24px", alignContent: "start" }}>
 
                 {/* Form 1: Sales / Treatment Logger */}
-                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(110, 231, 255, 0.15)" }}>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent)" }}>Record Service Treatment</h2>
+                <article className=" border border-black bg-white" style={{ padding: "28px", border: "1px solid #000" }}>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.45rem", margin: "0 0 18px", color: "#000", fontWeight: "bold" }}>Record Service Treatment</h2>
 
                   {saleError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(255, 100, 100, 0.1)", border: "2px solid #000", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {saleError}
                     </div>
                   )}
                   {saleSuccess && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
                       Treatment recorded and revenue updated!
                     </div>
                   )}
@@ -961,7 +961,7 @@ export default function ManagerDashboardPage() {
 
                     {/* Multi-Employee Selector */}
                     <div style={{ display: "grid", gap: "6px" }} ref={empDropdownRef}>
-                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Assigned Therapists * <span style={{ fontSize: "0.76rem", opacity: 0.6 }}>(select multiple for combo packs)</span></span>
+                      <span style={{ fontSize: "0.84rem", color: "#555" }}>Assigned Therapists * <span style={{ fontSize: "0.76rem", opacity: 0.6 }}>(select multiple for combo packs)</span></span>
 
                       {/* Selected chips */}
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", minHeight: "32px" }}>
@@ -970,8 +970,8 @@ export default function ManagerDashboardPage() {
                           return (
                             <span key={empId} style={{
                               display: "inline-flex", alignItems: "center", gap: "6px",
-                              padding: "5px 12px", borderRadius: "20px", fontSize: "0.84rem",
-                              background: "rgba(110, 231, 255, 0.12)", color: "var(--accent)",
+                              padding: "5px 12px", borderRadius: "0", fontSize: "0.84rem",
+                              background: "rgba(110, 231, 255, 0.12)", color: "#000", fontWeight: "bold",
                               border: "1px solid rgba(110, 231, 255, 0.25)",
                             }}>
                               {emp?.full_name || empId}
@@ -979,7 +979,7 @@ export default function ManagerDashboardPage() {
                                 type="button"
                                 onClick={() => removeEmployee(empId)}
                                 style={{
-                                  background: "none", border: "none", color: "var(--accent)",
+                                  background: "none", border: "none", color: "#000", fontWeight: "bold",
                                   cursor: "pointer", padding: "0", fontSize: "1rem", lineHeight: 1,
                                 }}
                               >
@@ -1008,12 +1008,12 @@ export default function ManagerDashboardPage() {
                       {/* Dropdown list */}
                       {showEmpDropdown && (
                         <div style={{
-                          borderRadius: "14px", border: "1px solid var(--line)",
-                          background: "var(--surface-2)", maxHeight: "200px", overflowY: "auto",
+                          borderRadius: "0", border: "1px solid #000",
+                          background: "#fff", maxHeight: "200px", overflowY: "auto",
                           boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
                         }}>
                           {employees.length === 0 ? (
-                            <div style={{ padding: "12px 16px", color: "var(--muted)", fontSize: "0.86rem" }}>No therapists available</div>
+                            <div style={{ padding: "12px 16px", color: "#555", fontSize: "0.86rem" }}>No therapists available</div>
                           ) : (
                             employees.map(emp => {
                               const isSelected = selectedEmployeeIds.includes(emp.id);
@@ -1031,10 +1031,10 @@ export default function ManagerDashboardPage() {
                                   onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = "rgba(0, 0, 0, 0.04)"; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = isSelected ? "rgba(110, 231, 255, 0.08)" : "transparent"; }}
                                 >
-                                  <span style={{ color: "var(--text)", fontSize: "0.9rem" }}>
-                                    {emp.full_name} <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>({emp.role})</span>
+                                  <span style={{ color: "#000", fontSize: "0.9rem" }}>
+                                    {emp.full_name} <span style={{ color: "#555", fontSize: "0.8rem" }}>({emp.role})</span>
                                   </span>
-                                  {isSelected && <span style={{ color: "var(--accent)", fontSize: "1.1rem" }}>✓</span>}
+                                  {isSelected && <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.1rem" }}>✓</span>}
                                 </div>
                               );
                             })
@@ -1045,7 +1045,7 @@ export default function ManagerDashboardPage() {
 
                     {/* Service Treatment */}
                     <label style={{ display: "grid", gap: "6px" }}>
-                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Service Treatment *</span>
+                      <span style={{ fontSize: "0.84rem", color: "#555" }}>Service Treatment *</span>
                       <select
                         value={saleServiceId}
                         onChange={handleServiceChange}
@@ -1060,7 +1060,7 @@ export default function ManagerDashboardPage() {
                     {/* Customer Search */}
                     <div style={{ display: "grid", gap: "6px", position: "relative" }} ref={custDropdownRef}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>
                           Customer
                           {selectedCustomer && (
                             <span style={{ marginLeft: "8px", fontSize: "0.76rem", color: "var(--accent-3)" }}>
@@ -1075,7 +1075,7 @@ export default function ManagerDashboardPage() {
                               setShowNewCustomer(true);
                               setNewCustName(customerSearch);
                             }}
-                            style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", padding: 0 }}
+                            style={{ background: "none", border: "none", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "0.82rem", padding: 0 }}
                           >
                             ＋ New Client
                           </button>
@@ -1094,8 +1094,8 @@ export default function ManagerDashboardPage() {
                       {showCustomerDropdown && customerResults.length > 0 && (
                         <div style={{
                           position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
-                          borderRadius: "14px", border: "1px solid var(--line)",
-                          background: "var(--surface-2)", maxHeight: "180px", overflowY: "auto",
+                          borderRadius: "0", border: "1px solid #000",
+                          background: "#fff", maxHeight: "180px", overflowY: "auto",
                           boxShadow: "0 12px 40px rgba(0,0,0,0.4)", marginTop: "4px",
                         }}>
                           {customerResults.map(c => (
@@ -1110,8 +1110,8 @@ export default function ManagerDashboardPage() {
                               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(0, 0, 0, 0.04)"; }}
                               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
                             >
-                              <span style={{ color: "var(--text)", fontSize: "0.9rem" }}>{c.full_name}</span>
-                              <span style={{ color: "var(--muted)", fontSize: "0.8rem", marginLeft: "8px" }}>{c.phone}</span>
+                              <span style={{ color: "#000", fontSize: "0.9rem" }}>{c.full_name}</span>
+                              <span style={{ color: "#555", fontSize: "0.8rem", marginLeft: "8px" }}>{c.phone}</span>
                             </div>
                           ))}
                         </div>
@@ -1121,13 +1121,13 @@ export default function ManagerDashboardPage() {
                       {showCustomerDropdown && customerResults.length === 0 && customerSearch.trim().length >= 2 && !selectedCustomer && (
                         <div style={{
                           position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
-                          borderRadius: "14px", border: "1px solid var(--line)",
-                          background: "var(--surface-2)", padding: "12px 16px", marginTop: "4px",
+                          borderRadius: "0", border: "1px solid #000",
+                          background: "#fff", padding: "12px 16px", marginTop: "4px",
                           boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
                         }}>
-                          <p style={{ color: "var(--muted)", fontSize: "0.86rem", margin: "0 0 8px" }}>No matching customers found.</p>
+                          <p style={{ color: "#555", fontSize: "0.86rem", margin: "0 0 8px" }}>No matching customers found.</p>
                           <button type="button" onClick={() => { setShowNewCustomer(true); setShowCustomerDropdown(false); setNewCustName(customerSearch); }}
-                            style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.88rem", padding: 0 }}>
+                            style={{ background: "none", border: "none", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "0.88rem", padding: 0 }}>
                             ＋ Create new customer
                           </button>
                         </div>
@@ -1136,7 +1136,7 @@ export default function ManagerDashboardPage() {
 
                     {/* New Customer Inline Form */}
                     {showNewCustomer && !selectedCustomer && (
-                      <div style={{ padding: "16px", borderRadius: "14px", background: "rgba(142,240,178,0.04)", border: "1px solid rgba(142,240,178,0.15)", display: "grid", gap: "10px" }}>
+                      <div style={{ padding: "16px", borderRadius: "0", background: "rgba(142,240,178,0.04)", border: "1px solid rgba(142,240,178,0.15)", display: "grid", gap: "10px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--accent-3)", fontWeight: 600 }}>Create New Customer</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <input placeholder="Full Name *" value={newCustName} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustName(e.target.value)} style={inputStyle} />
@@ -1144,9 +1144,9 @@ export default function ManagerDashboardPage() {
                         </div>
                         <input placeholder="Email (optional)" value={newCustEmail} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustEmail(e.target.value)} style={inputStyle} />
                         <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                          <button type="button" onClick={() => setShowNewCustomer(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: "0.85rem" }}>Cancel</button>
+                          <button type="button" onClick={() => setShowNewCustomer(false)} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "0.85rem" }}>Cancel</button>
                           <button type="button" onClick={handleCreateCustomer} disabled={custCreating || !newCustName || !newCustPhone}
-                            className="button button--primary" style={{ padding: "6px 14px", fontSize: "0.84rem" }}>
+                            className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold" }} style={{ padding: "6px 14px", fontSize: "0.84rem" }}>
                             {custCreating ? "Creating..." : "Save Customer"}
                           </button>
                         </div>
@@ -1156,7 +1156,7 @@ export default function ManagerDashboardPage() {
                     {/* Payment & Discount */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Payment Method *</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Payment Method *</span>
                         <select
                           value={paymentMethod}
                           onChange={(e: ChangeEvent<HTMLSelectElement>) => setPaymentMethod(e.target.value)}
@@ -1168,7 +1168,7 @@ export default function ManagerDashboardPage() {
                         </select>
                       </label>
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Discount applied (৳)</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Discount applied (৳)</span>
                         <input
                           type="number"
                           value={discountAmount}
@@ -1179,8 +1179,8 @@ export default function ManagerDashboardPage() {
                     </div>
 
                     {/* Final Price Display */}
-                    <div style={{ padding: "12px", background: "rgba(0, 0, 0,0.02)", border: "1px solid var(--line)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.9rem", color: "var(--muted)" }}>Final Sale Amount:</span>
+                    <div style={{ padding: "12px", background: "rgba(0, 0, 0,0.02)", border: "1px solid #000", borderRadius: "0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.9rem", color: "#555" }}>Final Sale Amount:</span>
                       <strong style={{ fontSize: "1.1rem", color: "var(--accent-3)" }}>
                         ৳{((services.find(s => s.id === saleServiceId)?.price || 0) - (parseFloat(discountAmount) || 0)).toLocaleString()}
                       </strong>
@@ -1189,7 +1189,7 @@ export default function ManagerDashboardPage() {
                     <button
                       type="submit"
                       disabled={saleSubmitting}
-                      className="button button--primary"
+                      className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold" }}
                       style={{ width: "100%", marginTop: "8px", padding: "0.8rem" }}
                     >
                       {saleSubmitting ? "Saving..." : "Record Treatment"}
@@ -1198,16 +1198,16 @@ export default function ManagerDashboardPage() {
                 </article>
 
                 {/* Form 2: Expense Logger */}
-                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(0, 0, 0, 0.05)" }}>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Branch Expense</h2>
+                <article className=" border border-black bg-white" style={{ padding: "28px", border: "1px solid #000" }}>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Branch Expense</h2>
 
                   {costError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(255, 100, 100, 0.1)", border: "2px solid #000", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {costError}
                     </div>
                   )}
                   {costSuccess && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
                       Branch expense logged successfully!
                     </div>
                   )}
@@ -1215,7 +1215,7 @@ export default function ManagerDashboardPage() {
                   <form onSubmit={handleLogExpense} style={{ display: "grid", gap: "14px" }}>
                     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Expense Category *</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Expense Category *</span>
                         <select
                           value={costType}
                           onChange={(e: ChangeEvent<HTMLSelectElement>) => setCostType(e.target.value)}
@@ -1229,7 +1229,7 @@ export default function ManagerDashboardPage() {
                         </select>
                       </label>
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Amount (৳) *</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Amount (৳) *</span>
                         <input
                           type="number" required
                           value={costAmount}
@@ -1240,7 +1240,7 @@ export default function ManagerDashboardPage() {
                       </label>
                     </div>
                     <label style={{ display: "grid", gap: "6px" }}>
-                      <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Note / Description</span>
+                      <span style={{ fontSize: "0.84rem", color: "#555" }}>Note / Description</span>
                       <textarea
                         value={costNote}
                         onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCostNote(e.target.value)}
@@ -1261,16 +1261,16 @@ export default function ManagerDashboardPage() {
                 </article>
 
                 {/* Form 3: Attendance Logger */}
-                <article className="glass-card" style={{ padding: "28px", border: "1px solid rgba(0, 0, 0, 0.05)" }}>
-                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Attendance</h2>
+                <article className=" border border-black bg-white" style={{ padding: "28px", border: "1px solid #000" }}>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.45rem", margin: "0 0 18px", color: "var(--accent-2)" }}>Log Attendance</h2>
 
                   {attError && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(255, 100, 100, 0.1)", border: "1px solid rgba(255, 100, 100, 0.2)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(255, 100, 100, 0.1)", border: "2px solid #000", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
                       {attError}
                     </div>
                   )}
                   {attSuccess && (
-                    <div style={{ padding: "10px 14px", borderRadius: "10px", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
+                    <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(142, 240, 178, 0.1)", border: "1px solid rgba(142, 240, 178, 0.2)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>
                       Attendance logged successfully!
                     </div>
                   )}
@@ -1278,7 +1278,7 @@ export default function ManagerDashboardPage() {
                   <form onSubmit={handleLogAttendance} style={{ display: "grid", gap: "14px" }}>
                     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Employee *</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Employee *</span>
                         <select
                           value={attEmployeeId}
                           onChange={(e: ChangeEvent<HTMLSelectElement>) => setAttEmployeeId(e.target.value)}
@@ -1291,7 +1291,7 @@ export default function ManagerDashboardPage() {
                         </select>
                       </label>
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Status *</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Status *</span>
                         <select
                           value={attStatus}
                           onChange={(e: ChangeEvent<HTMLSelectElement>) => setAttStatus(e.target.value)}
@@ -1304,7 +1304,7 @@ export default function ManagerDashboardPage() {
                     </div>
                     {attStatus === "Leave" && (
                       <label style={{ display: "grid", gap: "6px" }}>
-                        <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Leave Deduction Amount (৳)</span>
+                        <span style={{ fontSize: "0.84rem", color: "#555" }}>Leave Deduction Amount (৳)</span>
                         <input
                           type="number"
                           value={attDeduction}
@@ -1328,30 +1328,30 @@ export default function ManagerDashboardPage() {
 
               {/* Right Column: Live Activity Feed */}
               <div style={{ display: "grid", alignContent: "start", gap: "20px" }}>
-                <article className="glass-card" style={{ padding: "28px", minHeight: "650px", display: "flex", flexDirection: "column" }}>
+                <article className=" border border-black bg-white" style={{ padding: "28px", minHeight: "650px", display: "flex", flexDirection: "column" }}>
 
                   {/* Log Header + Date Picker */}
                   <div style={{ marginBottom: "16px" }}>
-                    <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operations Log</h2>
-                      <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
+                    <div  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                      <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "18px", margin: "0", borderBottom: "2px solid #000", paddingBottom: "4px" }}>Branch Operations Log</h2>
+                      <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "0", background: "#fff", border: "1px solid #000", color: "#000", fontWeight: "bold" }}>
                         Daily View
                       </span>
                     </div>
 
                     {/* Target Progress Bar */}
                     {branchTarget && (
-                      <div style={{ padding: "14px", borderRadius: "12px", background: "rgba(110, 231, 255, 0.05)", border: "1px solid rgba(110, 231, 255, 0.2)", marginBottom: "16px" }}>
+                      <div style={{ padding: "14px", borderRadius: "0", background: "rgba(110, 231, 255, 0.05)", border: "1px solid rgba(110, 231, 255, 0.2)", marginBottom: "16px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                          <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Monthly Target ({branchTarget.month})</span>
-                          <strong style={{ fontSize: "0.85rem", color: "var(--text)" }}>
+                          <span style={{ fontSize: "0.85rem", color: "#555" }}>Monthly Target ({branchTarget.month})</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#000" }}>
                             ৳{sales.reduce((sum, s) => sum + s.sale_amount, 0).toLocaleString()} / ৳{branchTarget.target_amount.toLocaleString()}
                           </strong>
                         </div>
-                        <div style={{ height: "6px", background: "var(--surface-2)", borderRadius: "3px", overflow: "hidden" }}>
+                        <div style={{ height: "6px", background: "#fff", borderRadius: "0", overflow: "hidden" }}>
                           <div style={{
                             height: "100%",
-                            background: "var(--accent)",
+                            background: "#000",
                             width: `${Math.min(100, (sales.reduce((sum, s) => sum + s.sale_amount, 0) / branchTarget.target_amount) * 100)}%`,
                             transition: "width 0.5s ease"
                           }} />
@@ -1383,21 +1383,21 @@ export default function ManagerDashboardPage() {
                       if (dayItems.length === 0) return null;
                       return (
                         <div style={{ display: "flex", gap: "12px", marginTop: "12px", flexWrap: "wrap" }}>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
-                            <span style={{ fontSize: "0.72rem", color: "var(--accent)", display: "block" }}>Revenue</span>
+                          <div style={{ padding: "8px 14px", borderRadius: "0", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
+                            <span style={{ fontSize: "0.72rem", color: "#000", fontWeight: "bold", display: "block" }}>Revenue</span>
                             <strong style={{ color: "var(--accent-3)", fontSize: "0.95rem" }}>+৳{dayRevenue.toLocaleString()}</strong>
                           </div>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(255,100,100,0.06)", border: "1px solid rgba(255,100,100,0.15)" }}>
+                          <div style={{ padding: "8px 14px", borderRadius: "0", background: "rgba(255,100,100,0.06)", border: "1px solid rgba(255,100,100,0.15)" }}>
                             <span style={{ fontSize: "0.72rem", color: "#ff7c7c", display: "block" }}>Expenses</span>
                             <strong style={{ color: "#ff7c7c", fontSize: "0.95rem" }}>-৳{dayExpenses.toLocaleString()}</strong>
                           </div>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(0, 0, 0, 0.04)", border: "1px solid var(--line)" }}>
-                            <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Net</span>
+                          <div style={{ padding: "8px 14px", borderRadius: "0", background: "rgba(0, 0, 0, 0.04)", border: "1px solid #000" }}>
+                            <span style={{ fontSize: "0.72rem", color: "#555", display: "block" }}>Net</span>
                             <strong style={{ color: dayNet >= 0 ? "var(--accent-3)" : "#ff7c7c", fontSize: "0.95rem" }}>৳{dayNet.toLocaleString()}</strong>
                           </div>
-                          <div style={{ padding: "8px 14px", borderRadius: "10px", background: "rgba(0, 0, 0, 0.04)", border: "1px solid var(--line)" }}>
-                            <span style={{ fontSize: "0.72rem", color: "var(--muted)", display: "block" }}>Entries</span>
-                            <strong style={{ color: "var(--text)", fontSize: "0.95rem" }}>{dayItems.length}</strong>
+                          <div style={{ padding: "8px 14px", borderRadius: "0", background: "rgba(0, 0, 0, 0.04)", border: "1px solid #000" }}>
+                            <span style={{ fontSize: "0.72rem", color: "#555", display: "block" }}>Entries</span>
+                            <strong style={{ color: "#000", fontSize: "0.95rem" }}>{dayItems.length}</strong>
                           </div>
                         </div>
                       );
@@ -1416,7 +1416,7 @@ export default function ManagerDashboardPage() {
 
                       if (dayItems.length === 0) {
                         return (
-                          <p style={{ textAlign: "center", color: "var(--muted)", marginTop: "40px", fontSize: "0.95rem" }}>
+                          <p style={{ textAlign: "center", color: "#555", marginTop: "40px", fontSize: "0.95rem" }}>
                             No entries for {new Date(logDate + "T12:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}.
                           </p>
                         );
@@ -1429,8 +1429,7 @@ export default function ManagerDashboardPage() {
                           <div
                             key={item.id}
                             style={{
-                              padding: "16px", borderRadius: "16px",
-                              background: isSale ? "rgba(201,168,76,0.03)" : "rgba(255,100,100,0.02)",
+                              padding: "16px", borderRadius: "0", background: isSale ? "rgba(201,168,76,0.03)" : "rgba(255,100,100,0.02)",
                               border: `1px solid ${isSale ? "rgba(201,168,76,0.12)" : "rgba(255,100,100,0.08)"}`,
                               display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px"
                             }}
@@ -1439,10 +1438,10 @@ export default function ManagerDashboardPage() {
                               <span style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.05em", color: isSale ? "var(--accent)" : "#ff7c7c" }}>
                                 {isSale ? "Treatment Completed" : "Branch Expense"}
                               </span>
-                              <strong style={{ fontSize: "1rem", color: "var(--text)" }}>
+                              <strong style={{ fontSize: "1rem", color: "#000" }}>
                                 {isSale ? getServiceName((item as Sale).service_id) : (item as CostEntry).cost_type}
                               </strong>
-                              <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
+                              <span style={{ fontSize: "0.82rem", color: "#555" }}>
                                 {isSale
                                   ? `By: ${getTherapistNames(item as Sale)}`
                                   : (item as CostEntry).note || "No note specified"
