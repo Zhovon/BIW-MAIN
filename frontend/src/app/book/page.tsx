@@ -36,6 +36,7 @@ function BookingWidgetContent() {
   const timeSlots = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"];
 
   const [branchId, setBranchId] = useState<string>("");
+  const [branches, setBranches] = useState<{id: string, name: string}[]>([]);
 
   // 1. Load Services & Branches on Mount & Auto-Select
   useEffect(() => {
@@ -47,8 +48,9 @@ function BookingWidgetContent() {
         ]);
         
         if (branchRes.ok) {
-          const branches = await branchRes.json();
-          if (branches.length > 0) setBranchId(branches[0].id);
+          const branchesData = await branchRes.json();
+          setBranches(branchesData);
+          if (branchesData.length > 0) setBranchId(branchesData[0].id);
         }
 
         if (res.ok) {
@@ -165,6 +167,23 @@ function BookingWidgetContent() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full"
           >
+            {branches.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Select Location</h2>
+                <div className="flex flex-wrap gap-2">
+                  {branches.map(b => (
+                    <button 
+                      key={b.id}
+                      onClick={() => setBranchId(b.id)}
+                      className={`px-5 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm ${branchId === b.id ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'}`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <h2 className="text-xl font-semibold mb-6">Select a Service</h2>
             <div className="grid gap-3">
               {services.map(s => (
