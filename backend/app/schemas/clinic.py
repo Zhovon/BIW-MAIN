@@ -329,7 +329,7 @@ class CustomerReviewCreate(BaseModel):
 class AppointmentRead(BaseModel):
     id: str
     customer_id: str
-    employee_id: str
+    employee_id: Optional[str] = None
     service_id: str
     branch_id: str
     appointment_time: datetime
