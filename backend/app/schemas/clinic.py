@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Union, List
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
+
+
 class BranchCreate(BaseModel):
     name: str
     city: str
@@ -102,14 +106,17 @@ class ServiceAssignmentCreate(BaseModel):
 
 # ── Customer CRM ──────────────────────────────────────────────
 
+
 class CustomerBase(BaseModel):
     full_name: str
     phone: str
     email: Optional[str] = None
     notes: Optional[str] = None
 
+
 class CustomerCreate(CustomerBase):
     pass
+
 
 class CustomerRead(CustomerBase):
     id: str
@@ -122,6 +129,7 @@ class CustomerRead(CustomerBase):
 
 
 # ── Sale (with multi-employee + customer) ─────────────────────
+
 
 class SaleEmployeeRead(BaseModel):
     id: str
@@ -223,6 +231,7 @@ class OverviewRead(BaseModel):
 
 # ── Chart Response Schemas ────────────────────────────────────
 
+
 class MonthlyChartEntry(BaseModel):
     month: str
     sales: float
@@ -260,6 +269,7 @@ class DailyChartsRead(BaseModel):
 
 # ── Target, Attendance & Review Schemas ───────────────────────
 
+
 class BranchTargetRead(BaseModel):
     id: str
     branch_id: str
@@ -267,6 +277,7 @@ class BranchTargetRead(BaseModel):
     target_amount: float
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class BranchTargetCreate(BaseModel):
     branch_id: str
@@ -283,6 +294,7 @@ class AttendanceRecordRead(BaseModel):
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class AttendanceRecordCreate(BaseModel):
     employee_id: str
@@ -305,12 +317,14 @@ class CustomerReviewRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class CustomerReviewCreate(BaseModel):
     branch_id: Optional[str] = None
     customer_id: Optional[str] = None
     employee_id: str
     rating: int
     review_text: Optional[str] = None
+
 
 class AppointmentRead(BaseModel):
     id: str
@@ -326,6 +340,7 @@ class AppointmentRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class AppointmentCreate(BaseModel):
     customer_id: str
     employee_id: str
@@ -335,6 +350,7 @@ class AppointmentCreate(BaseModel):
     status: str = "Pending"
     payment_status: str = "Unpaid"
     notes: Optional[str] = None
+
 
 class DailyAdSpendRead(BaseModel):
     id: str
@@ -346,6 +362,7 @@ class DailyAdSpendRead(BaseModel):
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class DailyAdSpendCreate(BaseModel):
     date: str

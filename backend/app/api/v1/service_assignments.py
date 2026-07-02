@@ -15,7 +15,9 @@ def get_service_assignments(db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=ServiceAssignmentRead, status_code=201)
-def create_service_assignment(payload: ServiceAssignmentCreate, db: Session = Depends(get_db)) -> ServiceAssignment:
+def create_service_assignment(
+    payload: ServiceAssignmentCreate, db: Session = Depends(get_db)
+) -> ServiceAssignment:
     assignment = ServiceAssignment(
         service_id=payload.service_id,
         employee_id=payload.employee_id,

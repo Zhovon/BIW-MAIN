@@ -1,4 +1,5 @@
 """JWT authentication using the Supabase SDK — no raw JWT secret needed."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -8,7 +9,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import Client, create_client
 
 from app.core.config import settings
+
 _bearer = HTTPBearer(auto_error=False)
+
 
 @lru_cache(maxsize=1)
 def _supabase() -> Client:
@@ -26,6 +29,7 @@ from typing import Dict, Tuple
 _token_cache: Dict[str, Tuple[dict, float]] = {}
 CACHE_TTL = 300  # 5 minutes
 
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(_bearer),
 ) -> dict:
@@ -42,7 +46,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = credentials.credentials
-    
+
     # Check cache
     now = time.time()
     if token in _token_cache:
@@ -62,11 +66,11 @@ def get_current_user(
                 detail="Invalid or expired session. Please sign in again.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         user_dict = {"sub": str(user.id), "email": user.email}
         _token_cache[token] = (user_dict, now + CACHE_TTL)
         return user_dict
-        
+
     except HTTPException:
         raise  # re-raise our own exceptions untouched
     except Exception as e:

@@ -15,7 +15,9 @@ def get_revenue_entries(db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=RevenueEntryRead, status_code=201)
-def create_revenue_entry(payload: RevenueEntryCreate, db: Session = Depends(get_db)) -> RevenueEntry:
+def create_revenue_entry(
+    payload: RevenueEntryCreate, db: Session = Depends(get_db)
+) -> RevenueEntry:
     revenue_entry = RevenueEntry(
         branch_id=payload.branch_id,
         source=payload.source,

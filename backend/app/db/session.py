@@ -8,7 +8,9 @@ engine = None
 SessionLocal = None
 
 if settings.database_url:
-    database_url = settings.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    database_url = settings.database_url.replace(
+        "postgresql://", "postgresql+psycopg://", 1
+    )
     engine = create_engine(
         database_url,
         poolclass=NullPool,  # Required for serverless — no persistent pool

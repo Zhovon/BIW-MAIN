@@ -1,25 +1,18 @@
 # pyrefly: ignore [missing-import]
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.models.clinic import (
-    Branch,
-    CostEntry,
-    Customer,
-    Employee,
-    PayrollRun,
-    RevenueEntry,
-    Sale,
-    SaleEmployee,
-    Service,
-    ServiceAssignment,
-)
+from app.models.clinic import (Branch, CostEntry, Customer, Employee,
+                               PayrollRun, RevenueEntry, Sale, SaleEmployee,
+                               Service, ServiceAssignment)
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -82,7 +75,10 @@ def seed_database(db: Session = Depends(get_db)):
         supabase_client = None
         if settings.supabase_url and settings.supabase_service_role_key:
             from supabase import create_client
-            supabase_client = create_client(settings.supabase_url, settings.supabase_service_role_key)
+
+            supabase_client = create_client(
+                settings.supabase_url, settings.supabase_service_role_key
+            )
 
         def sync_user(email: str, password: str, role: str) -> Optional[str]:
             if not supabase_client:
@@ -90,29 +86,28 @@ def seed_database(db: Session = Depends(get_db)):
             try:
                 # Check list of users
                 users_resp = supabase_client.auth.admin.list_users()
-                users = users_resp.users if hasattr(users_resp, 'users') else users_resp
+                users = users_resp.users if hasattr(users_resp, "users") else users_resp
                 for u in users:
                     if u.email == email:
                         # Update user password & metadata
                         supabase_client.auth.admin.update_user_by_id(
                             u.id,
-                            {
-                                "password": password,
-                                "user_metadata": {"role": role}
-                            }
+                            {"password": password, "user_metadata": {"role": role}},
                         )
                         return u.id
                 # Create user
-                res = supabase_client.auth.admin.create_user({
-                    "email": email,
-                    "password": password,
-                    "user_metadata": {"role": role},
-                    "email_confirm": True
-                })
-                if hasattr(res, 'user') and res.user:
+                res = supabase_client.auth.admin.create_user(
+                    {
+                        "email": email,
+                        "password": password,
+                        "user_metadata": {"role": role},
+                        "email_confirm": True,
+                    }
+                )
+                if hasattr(res, "user") and res.user:
                     return res.user.id
-                elif isinstance(res, dict) and 'user' in res:
-                    return res['user']['id']
+                elif isinstance(res, dict) and "user" in res:
+                    return res["user"]["id"]
                 else:
                     return res.id
             except Exception as e:
@@ -221,33 +216,70 @@ def seed_database(db: Session = Depends(get_db)):
 
         # 6. Seed Customers
         customers = [
-            Customer(id="customer-1", full_name="John Doe", phone="+8801811111111", email="john@gmail.com", notes="Regular client"),
-            Customer(id="customer-2", full_name="Jane Smith", phone="+8801822222222", email="jane@gmail.com"),
-            Customer(id="customer-3", full_name="Robert Downey", phone="+8801833333333", email="tony@stark.com", notes="VVIP"),
-            Customer(id="customer-4", full_name="Taylor Swift", phone="+8801844444444", email="taylor@music.com"),
-            Customer(id="customer-5", full_name="Selena Gomez", phone="+8801855555555", email="selena@instagram.com"),
+            Customer(
+                id="customer-1",
+                full_name="John Doe",
+                phone="+8801811111111",
+                email="john@gmail.com",
+                notes="Regular client",
+            ),
+            Customer(
+                id="customer-2",
+                full_name="Jane Smith",
+                phone="+8801822222222",
+                email="jane@gmail.com",
+            ),
+            Customer(
+                id="customer-3",
+                full_name="Robert Downey",
+                phone="+8801833333333",
+                email="tony@stark.com",
+                notes="VVIP",
+            ),
+            Customer(
+                id="customer-4",
+                full_name="Taylor Swift",
+                phone="+8801844444444",
+                email="taylor@music.com",
+            ),
+            Customer(
+                id="customer-5",
+                full_name="Selena Gomez",
+                phone="+8801855555555",
+                email="selena@instagram.com",
+            ),
         ]
         for cust in customers:
             db.add(cust)
         db.commit()
 
         # Add a service for Branch 3 (Gulshan Lounge)
-        db.add(Service(id="service-4", branch_id="branch-3", name="Laser Brightening", price=12000, cost=4500))
+        db.add(
+            Service(
+                id="service-4",
+                branch_id="branch-3",
+                name="Laser Brightening",
+                price=12000,
+                cost=4500,
+            )
+        )
         db.commit()
 
         # Ensure active testing users exist as Employee profiles
-        db.add(Employee(
-            id="employee-manager-user",
-            branch_id="branch-1",
-            full_name="Shahadath Hossain",
-            role="Branch Manager",
-            salary=45000,
-            bonus_rate=10,
-            commission_rate=5,
-            email="shahadathossain287@hotmail.com",
-            user_id="d98c64b6-e3b5-4bcd-aedd-c869cfcfd86f",
-            is_active=True
-        ))
+        db.add(
+            Employee(
+                id="employee-manager-user",
+                branch_id="branch-1",
+                full_name="Shahadath Hossain",
+                role="Branch Manager",
+                salary=45000,
+                bonus_rate=10,
+                commission_rate=5,
+                email="shahadathossain287@hotmail.com",
+                user_id="d98c64b6-e3b5-4bcd-aedd-c869cfcfd86f",
+                is_active=True,
+            )
+        )
         db.commit()
 
         import random
@@ -283,7 +315,9 @@ def seed_database(db: Session = Depends(get_db)):
                     discount = random.choice([0.0, 0.0, 200.0, 500.0])
                     sale_amount = float(srv.price) - discount
 
-                    sale_time = day_date.replace(hour=random.randint(9, 20), minute=random.randint(0, 59))
+                    sale_time = day_date.replace(
+                        hour=random.randint(9, 20), minute=random.randint(0, 59)
+                    )
                     sale = Sale(
                         branch_id=branch_id,
                         service_id=srv.id,
@@ -291,7 +325,7 @@ def seed_database(db: Session = Depends(get_db)):
                         customer_id=cust.id,
                         sale_amount=sale_amount,
                         discount_amount=discount,
-                        created_at=sale_time
+                        created_at=sale_time,
                     )
                     db.add(sale)
                     db.flush()
@@ -300,18 +334,30 @@ def seed_database(db: Session = Depends(get_db)):
                     num_emps = min(len(employees_list), random.randint(1, 2))
                     assigned_emps = random.sample(employees_list, num_emps)
                     for emp in assigned_emps:
-                        db.add(SaleEmployee(sale_id=sale.id, employee_id=emp.id, created_at=sale_time))
+                        db.add(
+                            SaleEmployee(
+                                sale_id=sale.id,
+                                employee_id=emp.id,
+                                created_at=sale_time,
+                            )
+                        )
 
                 # Daily cost entry
                 daily_cost_amount = random.randint(1500, 6000)
-                daily_cost_time = day_date.replace(hour=random.randint(9, 18), minute=random.randint(0, 59))
-                db.add(CostEntry(
-                    branch_id=branch_id,
-                    cost_type="Medical Supplies" if random.random() > 0.4 else "Marketing",
-                    amount=daily_cost_amount,
-                    note="Daily clinical operational supplies",
-                    created_at=daily_cost_time
-                ))
+                daily_cost_time = day_date.replace(
+                    hour=random.randint(9, 18), minute=random.randint(0, 59)
+                )
+                db.add(
+                    CostEntry(
+                        branch_id=branch_id,
+                        cost_type=(
+                            "Medical Supplies" if random.random() > 0.4 else "Marketing"
+                        ),
+                        amount=daily_cost_amount,
+                        note="Daily clinical operational supplies",
+                        created_at=daily_cost_time,
+                    )
+                )
 
         # Seed Monthly Revenue and Cost entries for the last 6 months
         for m in range(6):
@@ -321,30 +367,34 @@ def seed_database(db: Session = Depends(get_db)):
                 revenue_sources = [
                     ("Service Sales", random.randint(500000, 900000)),
                     ("Product Retail", random.randint(80000, 200000)),
-                    ("Membership Packages", random.randint(150000, 300000))
+                    ("Membership Packages", random.randint(150000, 300000)),
                 ]
                 for source, amt in revenue_sources:
-                    db.add(RevenueEntry(
-                        branch_id=branch_id,
-                        source=source,
-                        amount=amt,
-                        created_at=month_date
-                    ))
+                    db.add(
+                        RevenueEntry(
+                            branch_id=branch_id,
+                            source=source,
+                            amount=amt,
+                            created_at=month_date,
+                        )
+                    )
 
                 # Monthly Costs
                 costs_breakdown = [
                     ("Rent & Utilities", random.randint(120000, 250000)),
                     ("Medical Supplies", random.randint(80000, 160000)),
-                    ("Marketing", random.randint(25000, 60000))
+                    ("Marketing", random.randint(25000, 60000)),
                 ]
                 for cost_type, amt in costs_breakdown:
-                    db.add(CostEntry(
-                        branch_id=branch_id,
-                        cost_type=cost_type,
-                        amount=amt,
-                        note="Monthly corporate allocated cost",
-                        created_at=month_date
-                    ))
+                    db.add(
+                        CostEntry(
+                            branch_id=branch_id,
+                            cost_type=cost_type,
+                            amount=amt,
+                            note="Monthly corporate allocated cost",
+                            created_at=month_date,
+                        )
+                    )
 
         db.commit()
 

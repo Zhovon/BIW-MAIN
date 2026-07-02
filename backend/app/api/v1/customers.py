@@ -15,7 +15,9 @@ def get_customers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 
 
 @router.get("/search", response_model=list[CustomerRead])
-def search_customers_endpoint(q: str = "", skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+def search_customers_endpoint(
+    q: str = "", skip: int = 0, limit: int = 20, db: Session = Depends(get_db)
+):
     if not q.strip():
         return list_customers(db, skip=skip, limit=limit)
     return search_customers(db, q.strip(), skip=skip, limit=limit)
@@ -32,7 +34,7 @@ def create_customer(payload: CustomerCreate, db: Session = Depends(get_db)) -> C
             val = int(row.id)
             if val > max_numeric_id:
                 max_numeric_id = val
-                
+
     new_id_num = max_numeric_id + 1
     new_id_str = f"{new_id_num:05d}"
 

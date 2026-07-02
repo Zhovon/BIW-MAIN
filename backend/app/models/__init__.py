@@ -1,17 +1,7 @@
-from app.models.clinic import (
-    Branch,
-    CostEntry,
-    Customer,
-    Employee,
-    PayrollRun,
-    RevenueEntry,
-    Sale,
-    SaleEmployee,
-    Service,
-    ServiceAssignment,
-    Appointment,
-    DailyAdSpend,
-)
+from app.models.clinic import (Appointment, Branch, CostEntry, Customer,
+                               DailyAdSpend, Employee, PayrollRun,
+                               RevenueEntry, Sale, SaleEmployee, Service,
+                               ServiceAssignment)
 
 __all__ = [
     "Branch",

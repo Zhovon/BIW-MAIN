@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.crud.clinic import list_payroll_runs
 from app.db.session import get_db
-from app.models.clinic import Branch, Employee, PayrollRun, Sale, Service, ServiceAssignment, BranchTarget, AttendanceRecord
+from app.models.clinic import (AttendanceRecord, Branch, BranchTarget,
+                               Employee, PayrollRun, Sale, Service,
+                               ServiceAssignment)
 from app.schemas.clinic import PayrollRunCreate, PayrollRunRead
 
 router = APIRouter(prefix="/payroll", tags=["payroll"])
@@ -12,11 +14,15 @@ router = APIRouter(prefix="/payroll", tags=["payroll"])
 
 def calculate_employee_earnings(db: Session, employee: Employee, year: int, month: int):
     # Fetch all sales for this employee in the given year and month
-    sales = db.query(Sale).filter(
-        Sale.employee_id == employee.id,
-        extract("year", Sale.created_at) == year,
-        extract("month", Sale.created_at) == month,
-    ).all()
+    sales = (
+        db.query(Sale)
+        .filter(
+            Sale.employee_id == employee.id,
+            extract("year", Sale.created_at) == year,
+            extract("month", Sale.created_at) == month,
+        )
+        .all()
+    )
 
     bonus_earned = 0.0
     commission_earned = 0.0
@@ -27,10 +33,14 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
         service_name = service.name if service else "Unknown Service"
 
         # Check service assignments for therapist + service bonus
-        assignment = db.query(ServiceAssignment).filter(
-            ServiceAssignment.employee_id == employee.id,
-            ServiceAssignment.service_id == sale.service_id,
-        ).first()
+        assignment = (
+            db.query(ServiceAssignment)
+            .filter(
+                ServiceAssignment.employee_id == employee.id,
+                ServiceAssignment.service_id == sale.service_id,
+            )
+            .first()
+        )
 
         earned = 0.0
         earning_type = "commission"
@@ -55,21 +65,29 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
 
     # Manager-specific logic for commission based on branch target
     if "manager" in employee.role.lower() and employee.branch_id:
-        target_record = db.query(BranchTarget).filter(
-            BranchTarget.branch_id == employee.branch_id,
-            BranchTarget.month == f"{year}-{month:02d}"
-        ).first()
-        
+        target_record = (
+            db.query(BranchTarget)
+            .filter(
+                BranchTarget.branch_id == employee.branch_id,
+                BranchTarget.month == f"{year}-{month:02d}",
+            )
+            .first()
+        )
+
         target_amount = float(target_record.target_amount) if target_record else 0.0
 
         # Calculate total branch revenue
-        branch_sales = db.query(Sale).filter(
-            Sale.branch_id == employee.branch_id,
-            extract("year", Sale.created_at) == year,
-            extract("month", Sale.created_at) == month,
-        ).all()
+        branch_sales = (
+            db.query(Sale)
+            .filter(
+                Sale.branch_id == employee.branch_id,
+                extract("year", Sale.created_at) == year,
+                extract("month", Sale.created_at) == month,
+            )
+            .all()
+        )
         branch_revenue = sum([float(s.sale_amount) for s in branch_sales])
-        
+
         if branch_revenue > target_amount and target_amount > 0:
             extra_revenue = branch_revenue - target_amount
             rate = float(employee.commission_rate) / 100.0
@@ -77,23 +95,33 @@ def calculate_employee_earnings(db: Session, employee: Employee, year: int, mont
 
     # Calculate Deductions
     month_str = f"{year}-{month:02d}"
-    attendances = db.query(AttendanceRecord).filter(
-        AttendanceRecord.employee_id == employee.id,
-        AttendanceRecord.date.startswith(month_str)
-    ).all()
+    attendances = (
+        db.query(AttendanceRecord)
+        .filter(
+            AttendanceRecord.employee_id == employee.id,
+            AttendanceRecord.date.startswith(month_str),
+        )
+        .all()
+    )
 
     late_count = sum([1 for a in attendances if a.status.lower() == "late"])
     late_deduction = float(employee.salary) / 30.0 * (late_count // 3)
 
-    absent_count = sum([1 for a in attendances if a.status.lower() in ["absent", "leave"]])
+    absent_count = sum(
+        [1 for a in attendances if a.status.lower() in ["absent", "leave"]]
+    )
     leave_deduction = float(employee.salary) / 30.0 * absent_count
 
     # Manual deductions (manager typed in an amount)
-    manual_deductions = sum([float(a.deduction_amount) for a in attendances if a.deduction_amount])
-    
+    manual_deductions = sum(
+        [float(a.deduction_amount) for a in attendances if a.deduction_amount]
+    )
+
     total_deductions = late_deduction + leave_deduction + manual_deductions
 
-    total_earned = float(employee.salary) + bonus_earned + commission_earned - total_deductions
+    total_earned = (
+        float(employee.salary) + bonus_earned + commission_earned - total_deductions
+    )
 
     return {
         "base_salary": float(employee.salary),
@@ -114,7 +142,9 @@ def get_payroll_runs(db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=PayrollRunRead, status_code=201)
-def create_payroll_run(payload: PayrollRunCreate, db: Session = Depends(get_db)) -> PayrollRun:
+def create_payroll_run(
+    payload: PayrollRunCreate, db: Session = Depends(get_db)
+) -> PayrollRun:
     payroll_run = PayrollRun(
         branch_id=payload.branch_id,
         month=payload.month,
@@ -149,10 +179,14 @@ def calculate_branch_payroll(branch_id: str, month: str, db: Session = Depends(g
         )
 
     # Get active employees for this branch
-    employees = db.query(Employee).filter(
-        Employee.branch_id == branch_id,
-        Employee.is_active == True,
-    ).all()
+    employees = (
+        db.query(Employee)
+        .filter(
+            Employee.branch_id == branch_id,
+            Employee.is_active == True,
+        )
+        .all()
+    )
 
     employees_breakdown = []
     salary_total = 0.0
@@ -193,7 +227,9 @@ def calculate_branch_payroll(branch_id: str, month: str, db: Session = Depends(g
 
 
 @router.get("/employee/{employee_id}")
-def get_employee_earnings_by_id(employee_id: str, month: str, db: Session = Depends(get_db)):
+def get_employee_earnings_by_id(
+    employee_id: str, month: str, db: Session = Depends(get_db)
+):
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         raise HTTPException(
@@ -230,7 +266,9 @@ def get_employee_earnings_by_id(employee_id: str, month: str, db: Session = Depe
 
 
 @router.get("/employee/user/{user_id}")
-def get_employee_earnings_by_user_id(user_id: str, month: str, db: Session = Depends(get_db)):
+def get_employee_earnings_by_user_id(
+    user_id: str, month: str, db: Session = Depends(get_db)
+):
     employee = db.query(Employee).filter(Employee.user_id == user_id).first()
     if not employee:
         raise HTTPException(

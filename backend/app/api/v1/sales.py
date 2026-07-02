@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.crud.clinic import list_sales
 from app.db.session import get_db
-from app.models.clinic import Sale, SaleEmployee, RevenueEntry, Service, Employee
+from app.models.clinic import (Employee, RevenueEntry, Sale, SaleEmployee,
+                               Service)
 from app.schemas.clinic import SaleCreate, SaleRead
 
 router = APIRouter(prefix="/sales", tags=["sales"])
@@ -11,7 +12,11 @@ router = APIRouter(prefix="/sales", tags=["sales"])
 
 def _sale_to_read(sale: Sale) -> dict:
     """Convert a Sale ORM object to a SaleRead-compatible dict with employee_ids populated."""
-    employee_ids = [se.employee_id for se in sale.assigned_employees] if sale.assigned_employees else []
+    employee_ids = (
+        [se.employee_id for se in sale.assigned_employees]
+        if sale.assigned_employees
+        else []
+    )
     # Fallback: if no junction records exist but legacy employee_id is set
     if not employee_ids and sale.employee_id:
         employee_ids = [sale.employee_id]
@@ -30,15 +35,27 @@ def _sale_to_read(sale: Sale) -> dict:
 
 from typing import Optional
 
+
 @router.get("", response_model=list[SaleRead])
-def get_sales(limit: int = 50, date: Optional[str] = None, month: Optional[str] = None, db: Session = Depends(get_db)):
+def get_sales(
+    limit: int = 50,
+    date: Optional[str] = None,
+    month: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
     sales = list_sales(db, limit=limit, date_str=date, month_str=month)
     return [_sale_to_read(s) for s in sales]
 
 
 @router.get("/customer/{customer_id}", response_model=list[SaleRead])
 def get_sales_by_customer(customer_id: str, db: Session = Depends(get_db)):
-    sales = db.query(Sale).options(joinedload(Sale.assigned_employees)).filter(Sale.customer_id == customer_id).order_by(Sale.created_at.desc()).all()
+    sales = (
+        db.query(Sale)
+        .options(joinedload(Sale.assigned_employees))
+        .filter(Sale.customer_id == customer_id)
+        .order_by(Sale.created_at.desc())
+        .all()
+    )
     return [_sale_to_read(s) for s in sales]
 
 

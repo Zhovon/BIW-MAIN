@@ -30,7 +30,9 @@ def create_branch(payload: BranchCreate, db: Session = Depends(get_db)) -> Branc
 
 
 @router.put("/{branch_id}", response_model=BranchRead)
-def update_branch(branch_id: str, payload: BranchUpdate, db: Session = Depends(get_db)) -> Branch:
+def update_branch(
+    branch_id: str, payload: BranchUpdate, db: Session = Depends(get_db)
+) -> Branch:
     branch = db.query(Branch).filter(Branch.id == branch_id).first()
     if not branch:
         raise HTTPException(

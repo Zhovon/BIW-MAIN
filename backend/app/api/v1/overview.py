@@ -1,21 +1,18 @@
 from __future__ import annotations
+
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, extract
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.clinic import Branch, CostEntry, RevenueEntry, Sale
-from app.schemas.clinic import (
-    OverviewBranchRead,
-    OverviewRead,
-    OverviewChartsRead,
-    MonthlyChartEntry,
-    BranchChartEntry,
-    DailyChartsRead,
-    DailyChartEntry,
-)
+from app.schemas.clinic import (BranchChartEntry, DailyChartEntry,
+                                DailyChartsRead, MonthlyChartEntry,
+                                OverviewBranchRead, OverviewChartsRead,
+                                OverviewRead)
 
 router = APIRouter(prefix="/overview", tags=["overview"])
 
@@ -27,20 +24,32 @@ def owner_overview(db: Session = Depends(get_db)) -> OverviewRead:
     by aggregating live database entries for revenue and costs in optimized queries.
     """
     # 1. Fetch aggregated revenues per branch
-    revenues_by_branch = db.query(
-        RevenueEntry.branch_id,
-        func.sum(RevenueEntry.amount).label('total_revenue')
-    ).group_by(RevenueEntry.branch_id).all()
+    revenues_by_branch = (
+        db.query(
+            RevenueEntry.branch_id, func.sum(RevenueEntry.amount).label("total_revenue")
+        )
+        .group_by(RevenueEntry.branch_id)
+        .all()
+    )
 
     # 2. Fetch aggregated costs per branch
-    costs_by_branch = db.query(
-        CostEntry.branch_id,
-        func.sum(CostEntry.amount).label('total_costs')
-    ).group_by(CostEntry.branch_id).all()
+    costs_by_branch = (
+        db.query(CostEntry.branch_id, func.sum(CostEntry.amount).label("total_costs"))
+        .group_by(CostEntry.branch_id)
+        .all()
+    )
 
     # Build maps for lookup
-    revenues_branch_map = {row.branch_id: float(row.total_revenue) for row in revenues_by_branch if row.branch_id}
-    costs_branch_map = {row.branch_id: float(row.total_costs) for row in costs_by_branch if row.branch_id}
+    revenues_branch_map = {
+        row.branch_id: float(row.total_revenue)
+        for row in revenues_by_branch
+        if row.branch_id
+    }
+    costs_branch_map = {
+        row.branch_id: float(row.total_costs)
+        for row in costs_by_branch
+        if row.branch_id
+    }
 
     db_branches = db.query(Branch).filter(Branch.is_active == True).all()
     branches_summary = []
@@ -76,30 +85,59 @@ def get_financial_chart_data(db: Session = Depends(get_db)) -> OverviewChartsRea
     Returns aggregated monthly data for the past 6 months and branch-level totals.
     """
     base_date = datetime.now()
-    start_date = (base_date - timedelta(days=180)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    start_date = (base_date - timedelta(days=180)).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
 
     # 1. Fetch monthly aggregated sales
-    sales_by_month = db.query(
-        func.date_trunc('month', Sale.created_at).label('month'),
-        func.sum(Sale.sale_amount).label('total_sales')
-    ).filter(Sale.created_at >= start_date).group_by('month').all()
+    sales_by_month = (
+        db.query(
+            func.date_trunc("month", Sale.created_at).label("month"),
+            func.sum(Sale.sale_amount).label("total_sales"),
+        )
+        .filter(Sale.created_at >= start_date)
+        .group_by("month")
+        .all()
+    )
 
     # 2. Fetch monthly aggregated revenues
-    revenues_by_month = db.query(
-        func.date_trunc('month', RevenueEntry.created_at).label('month'),
-        func.sum(RevenueEntry.amount).label('total_revenue')
-    ).filter(RevenueEntry.created_at >= start_date).group_by('month').all()
+    revenues_by_month = (
+        db.query(
+            func.date_trunc("month", RevenueEntry.created_at).label("month"),
+            func.sum(RevenueEntry.amount).label("total_revenue"),
+        )
+        .filter(RevenueEntry.created_at >= start_date)
+        .group_by("month")
+        .all()
+    )
 
     # 3. Fetch monthly aggregated costs
-    costs_by_month = db.query(
-        func.date_trunc('month', CostEntry.created_at).label('month'),
-        func.sum(CostEntry.amount).label('total_costs')
-    ).filter(CostEntry.created_at >= start_date).group_by('month').all()
+    costs_by_month = (
+        db.query(
+            func.date_trunc("month", CostEntry.created_at).label("month"),
+            func.sum(CostEntry.amount).label("total_costs"),
+        )
+        .filter(CostEntry.created_at >= start_date)
+        .group_by("month")
+        .all()
+    )
 
     # Create lookups using start-of-month date objects
-    sales_map = {row.month.date().replace(day=1): float(row.total_sales) for row in sales_by_month if row.month}
-    revenues_map = {row.month.date().replace(day=1): float(row.total_revenue) for row in revenues_by_month if row.month}
-    costs_map = {row.month.date().replace(day=1): float(row.total_costs) for row in costs_by_month if row.month}
+    sales_map = {
+        row.month.date().replace(day=1): float(row.total_sales)
+        for row in sales_by_month
+        if row.month
+    }
+    revenues_map = {
+        row.month.date().replace(day=1): float(row.total_revenue)
+        for row in revenues_by_month
+        if row.month
+    }
+    costs_map = {
+        row.month.date().replace(day=1): float(row.total_costs)
+        for row in costs_by_month
+        if row.month
+    }
 
     monthly_trend = []
     # Build 6-month monthly trend list (oldest month first)
@@ -129,24 +167,41 @@ def get_financial_chart_data(db: Session = Depends(get_db)) -> OverviewChartsRea
         )
 
     # 2. Branch comparison aggregates (total history)
-    sales_by_branch = db.query(
-        Sale.branch_id,
-        func.sum(Sale.sale_amount).label('total_sales')
-    ).group_by(Sale.branch_id).all()
+    sales_by_branch = (
+        db.query(Sale.branch_id, func.sum(Sale.sale_amount).label("total_sales"))
+        .group_by(Sale.branch_id)
+        .all()
+    )
 
-    revenues_by_branch = db.query(
-        RevenueEntry.branch_id,
-        func.sum(RevenueEntry.amount).label('total_revenue')
-    ).group_by(RevenueEntry.branch_id).all()
+    revenues_by_branch = (
+        db.query(
+            RevenueEntry.branch_id, func.sum(RevenueEntry.amount).label("total_revenue")
+        )
+        .group_by(RevenueEntry.branch_id)
+        .all()
+    )
 
-    costs_by_branch = db.query(
-        CostEntry.branch_id,
-        func.sum(CostEntry.amount).label('total_costs')
-    ).group_by(CostEntry.branch_id).all()
+    costs_by_branch = (
+        db.query(CostEntry.branch_id, func.sum(CostEntry.amount).label("total_costs"))
+        .group_by(CostEntry.branch_id)
+        .all()
+    )
 
-    sales_branch_map = {row.branch_id: float(row.total_sales) for row in sales_by_branch if row.branch_id}
-    revenues_branch_map = {row.branch_id: float(row.total_revenue) for row in revenues_by_branch if row.branch_id}
-    costs_branch_map = {row.branch_id: float(row.total_costs) for row in costs_by_branch if row.branch_id}
+    sales_branch_map = {
+        row.branch_id: float(row.total_sales)
+        for row in sales_by_branch
+        if row.branch_id
+    }
+    revenues_branch_map = {
+        row.branch_id: float(row.total_revenue)
+        for row in revenues_by_branch
+        if row.branch_id
+    }
+    costs_branch_map = {
+        row.branch_id: float(row.total_costs)
+        for row in costs_by_branch
+        if row.branch_id
+    }
 
     branch_comparison = []
     db_branches = db.query(Branch).filter(Branch.is_active == True).all()
@@ -169,43 +224,47 @@ def get_financial_chart_data(db: Session = Depends(get_db)) -> OverviewChartsRea
         )
 
     return OverviewChartsRead(
-        monthly_trend=monthly_trend,
-        branch_comparison=branch_comparison
+        monthly_trend=monthly_trend, branch_comparison=branch_comparison
     )
 
 
 @router.get("/daily-chart", response_model=DailyChartsRead)
 def get_daily_chart_data(
-    branch_id: Optional[str] = None,
-    db: Session = Depends(get_db)
+    branch_id: Optional[str] = None, db: Session = Depends(get_db)
 ) -> DailyChartsRead:
     """
     Returns day-by-day aggregates for the past 30 days in O(1) database roundtrips.
     """
     base_date = datetime.now()
-    start_date = (base_date - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = (base_date - timedelta(days=29)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
     # 1. Fetch sales grouped by day
     sales_q = db.query(
-        func.date_trunc('day', Sale.created_at).label('day'),
-        func.sum(Sale.sale_amount).label('total_sales')
+        func.date_trunc("day", Sale.created_at).label("day"),
+        func.sum(Sale.sale_amount).label("total_sales"),
     ).filter(Sale.created_at >= start_date)
     if branch_id:
         sales_q = sales_q.filter(Sale.branch_id == branch_id)
-    sales_by_day = sales_q.group_by('day').all()
+    sales_by_day = sales_q.group_by("day").all()
 
     # 2. Fetch costs grouped by day
     costs_q = db.query(
-        func.date_trunc('day', CostEntry.created_at).label('day'),
-        func.sum(CostEntry.amount).label('total_costs')
+        func.date_trunc("day", CostEntry.created_at).label("day"),
+        func.sum(CostEntry.amount).label("total_costs"),
     ).filter(CostEntry.created_at >= start_date)
     if branch_id:
         costs_q = costs_q.filter(CostEntry.branch_id == branch_id)
-    costs_by_day = costs_q.group_by('day').all()
+    costs_by_day = costs_q.group_by("day").all()
 
     # Create lookups mapping Date -> Float
-    sales_map = {row.day.date(): float(row.total_sales) for row in sales_by_day if row.day}
-    costs_map = {row.day.date(): float(row.total_costs) for row in costs_by_day if row.day}
+    sales_map = {
+        row.day.date(): float(row.total_sales) for row in sales_by_day if row.day
+    }
+    costs_map = {
+        row.day.date(): float(row.total_costs) for row in costs_by_day if row.day
+    }
 
     daily_trend = []
     total_sales = 0.0
@@ -234,14 +293,16 @@ def get_daily_chart_data(
         )
 
     avg_daily_sales = total_sales / 30.0
-    profit_margin = ((total_sales - total_costs) / total_sales * 100.0) if total_sales > 0 else 0.0
+    profit_margin = (
+        ((total_sales - total_costs) / total_sales * 100.0) if total_sales > 0 else 0.0
+    )
 
     return DailyChartsRead(
         daily_trend=daily_trend,
         average_daily_sales=avg_daily_sales,
         total_sales=total_sales,
         total_costs=total_costs,
-        profit_margin=profit_margin
+        profit_margin=profit_margin,
     )
 
 
@@ -253,12 +314,13 @@ def get_active_dates(db: Session = Depends(get_db)):
     """
     sales_dates = db.query(func.date(Sale.created_at)).distinct().all()
     costs_dates = db.query(func.date(CostEntry.created_at)).distinct().all()
-    
+
     unique_dates = set()
     for (d,) in sales_dates:
-        if d: unique_dates.add(str(d))
+        if d:
+            unique_dates.add(str(d))
     for (d,) in costs_dates:
-        if d: unique_dates.add(str(d))
-        
-    return sorted(list(unique_dates))
+        if d:
+            unique_dates.add(str(d))
 
+    return sorted(list(unique_dates))

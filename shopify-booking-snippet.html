@@ -1,18 +1,19 @@
 <!-- 
-  Shopify Booking Popup Snippet 
+  Shopify Booking Popup Snippet (Bulletproof Edition)
   Instructions:
   1. In your Shopify Admin, go to Products and add the tag "Service" to all your service products.
   2. Go to Shopify Theme Editor -> Default Product Template
-  3. Add a "Custom Liquid" block at the bottom of your Product Information section.
+  3. Add a "Custom Liquid" block right below the "Buy buttons" block.
   4. Paste this entire code block into the Custom Liquid block.
-  Note: This code automatically hides the normal "Add to Cart" button and shows the "Book Appointment" button ONLY if the product has the "Service" tag!
 -->
-{% if product.tags contains 'Service' or product.tags contains 'service' %}
+
 <style>
-  /* Automatically hide the standard Add to Cart and Quantity selectors for Services */
-  .product-form__buttons, .product-form__submit, button[name="add"] { display: none !important; }
-  .quantity__input, .quantity__button, .product-form__quantity { display: none !important; }
-  shopify-payment-terms { display: none !important; }
+  /* Base CSS hiding */
+  .product-form__buttons, .product-form__submit, button[name="add"], .shopify-payment-button, .product-form__quantity, .quantity__input, quantity-input { 
+    display: none !important; 
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
 
   /* Perfectly matches your "Buy it now" button */
   .custom-book-btn { 
@@ -34,7 +35,7 @@
   .booking-modal-overlay { 
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-    z-index: 999999; justify-content: center; align-items: flex-end; /* Slides from bottom on mobile */
+    z-index: 999999; justify-content: center; align-items: flex-end; 
   }
   
   .booking-modal-content { 
@@ -57,24 +58,65 @@
     width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1;
   }
   
-  /* Required for smooth scrolling on iOS */
   .iframe-wrapper {
     flex: 1; width: 100%; -webkit-overflow-scrolling: touch; overflow-y: scroll; border-radius: inherit;
   }
 </style>
-
-<!-- The Button -->
-<button class="custom-book-btn" onclick="document.getElementById('bookingModal').style.display='flex'">Book Appointment</button>
 
 <!-- The Hidden Popup Modal -->
 <div id="bookingModal" class="booking-modal-overlay">
   <div class="booking-modal-content">
     <button class="booking-modal-close" onclick="document.getElementById('bookingModal').style.display='none'">&times;</button>
     <div class="iframe-wrapper">
-      <!-- Make sure this URL matches your final deployed booking URL! -->
-      <iframe src="https://biw.salon/book?service={{ product.title | url_encode }}" width="100%" height="100%" style="border: none; margin-top: 55px; min-height: 800px;"></iframe>
+      <iframe src="https://crm.biw.salon/book?service={{ product.title | url_encode }}" width="100%" height="100%" style="border: none; margin-top: 55px; min-height: 800px;"></iframe>
     </div>
   </div>
 </div>
 
-{% endif %}
+<!-- A safe container for our button in case the theme wipes everything else -->
+<div id="biw-widget-container"></div>
+
+<!-- The Ultimate DOM-Regenerating Script -->
+<script>
+  (function() {
+    function enforceBookingLogic() {
+      // 1. Force hide the standard Add to Cart & Quantity buttons
+      const standardButtons = document.querySelectorAll('.product-form__buttons, .product-form__submit, button[name="add"], .shopify-payment-button, .product-form__quantity, quantity-input');
+      standardButtons.forEach(btn => {
+        btn.style.setProperty('display', 'none', 'important');
+      });
+
+      // 2. Check if our Book Appointment button was deleted by the theme's JS
+      let bookBtn = document.getElementById('biw-book-btn');
+      if (!bookBtn) {
+        // Re-create the button from scratch
+        bookBtn = document.createElement('button');
+        bookBtn.id = 'biw-book-btn';
+        bookBtn.type = 'button'; // CRITICAL: prevents it from acting as a Submit button for the Shopify form
+        bookBtn.className = 'custom-book-btn';
+        bookBtn.innerText = 'Book Appointment';
+        bookBtn.onclick = function(e) {
+          e.preventDefault(); // Stop any form submission
+          document.getElementById('bookingModal').style.display = 'flex';
+        };
+        
+        // 3. Inject it back into the page. 
+        // Try to place it exactly where the standard Add to Cart button is.
+        const atcBtn = document.querySelector('button[name="add"], .product-form__submit');
+        if (atcBtn && atcBtn.parentNode) {
+           atcBtn.parentNode.insertBefore(bookBtn, atcBtn);
+        } else {
+           // Fallback: put it in our safe container
+           const container = document.getElementById('biw-widget-container');
+           if (container) container.appendChild(bookBtn);
+        }
+      }
+    }
+    
+    // Run immediately
+    enforceBookingLogic();
+    // Run constantly to overpower any AJAX re-renders from the theme
+    setInterval(enforceBookingLogic, 300);
+  })();
+</script>
+

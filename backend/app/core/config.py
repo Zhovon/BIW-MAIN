@@ -7,17 +7,23 @@ class Settings(BaseSettings):
     project_name: str = "Beauty Intelligent Wellness API"
     api_v1_prefix: str = "/api/v1"
     environment: str = "development"
-    cors_origins: str = "http://localhost:3000,https://biw-main-one.vercel.app,https://crm.biw.salon"
+    cors_origins: str = (
+        "http://localhost:3000,https://biw-main-one.vercel.app,https://crm.biw.salon"
+    )
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
     database_url: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     @property
     def cors_origins_list(self) -> list[str]:
-        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        origins = [
+            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+        ]
         # Force the production domain to always be allowed, even if Vercel ENV overrides cors_origins
         if "https://crm.biw.salon" not in origins:
             origins.append("https://crm.biw.salon")

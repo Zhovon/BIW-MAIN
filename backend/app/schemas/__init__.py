@@ -1,20 +1,9 @@
-from app.schemas.clinic import (
-    BranchCreate,
-    BranchRead,
-    BranchUpdate,
-    CostEntryRead,
-    CustomerCreate,
-    CustomerRead,
-    EmployeeRead,
-    OverviewRead,
-    PayrollRunRead,
-    RevenueEntryRead,
-    SaleEmployeeRead,
-    SaleRead,
-    ServiceRead,
-    ServiceAssignmentRead,
-    ServiceUpdate,
-)
+from app.schemas.clinic import (BranchCreate, BranchRead, BranchUpdate,
+                                CostEntryRead, CustomerCreate, CustomerRead,
+                                EmployeeRead, OverviewRead, PayrollRunRead,
+                                RevenueEntryRead, SaleEmployeeRead, SaleRead,
+                                ServiceAssignmentRead, ServiceRead,
+                                ServiceUpdate)
 
 __all__ = [
     "BranchCreate",

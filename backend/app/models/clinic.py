@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, func, text
+from sqlalchemy import (Boolean, DateTime, ForeignKey, Numeric, String, Text,
+                        func, text)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -12,14 +14,18 @@ from app.db.session import Base
 class Branch(Base):
     __tablename__ = "branches"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     city: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[Optional[str]] = mapped_column(Text)
     phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     opening_hours: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     employees: Mapped[list["Employee"]] = relationship(back_populates="branch")
     services: Mapped[list["Service"]] = relationship(back_populates="branch")
@@ -28,21 +34,33 @@ class Branch(Base):
 class Employee(Base):
     __tablename__ = "employees"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL")
+    )
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, nullable=False)
     salary: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     bonus_rate: Mapped[float] = mapped_column(Numeric(6, 2), default=0, nullable=False)
-    commission_rate: Mapped[float] = mapped_column(Numeric(6, 2), default=0, nullable=False)
-    treatment_commission_amount: Mapped[float] = mapped_column(Numeric(10, 2), default=0.0, nullable=False)
-    shift_start_time: Mapped[str] = mapped_column(String, default="10:00", nullable=False)
+    commission_rate: Mapped[float] = mapped_column(
+        Numeric(6, 2), default=0, nullable=False
+    )
+    treatment_commission_amount: Mapped[float] = mapped_column(
+        Numeric(10, 2), default=0.0, nullable=False
+    )
+    shift_start_time: Mapped[str] = mapped_column(
+        String, default="10:00", nullable=False
+    )
     shift_end_time: Mapped[str] = mapped_column(String, default="19:00", nullable=False)
     off_days: Mapped[str] = mapped_column(String, default="Sunday", nullable=False)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     user_id: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     branch: Mapped[Optional["Branch"]] = relationship(back_populates="employees")
 
@@ -50,26 +68,44 @@ class Employee(Base):
 class Service(Base):
     __tablename__ = "services"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     cost: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     branch: Mapped[Optional["Branch"]] = relationship(back_populates="services")
-    assignments: Mapped[list["ServiceAssignment"]] = relationship(back_populates="service")
+    assignments: Mapped[list["ServiceAssignment"]] = relationship(
+        back_populates="service"
+    )
 
 
 class ServiceAssignment(Base):
     __tablename__ = "service_assignments"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    service_id: Mapped[str] = mapped_column(ForeignKey("services.id", ondelete="CASCADE"))
-    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    bonus_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=20.0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    service_id: Mapped[str] = mapped_column(
+        ForeignKey("services.id", ondelete="CASCADE")
+    )
+    employee_id: Mapped[str] = mapped_column(
+        ForeignKey("employees.id", ondelete="CASCADE")
+    )
+    bonus_amount: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=20.0, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     service: Mapped["Service"] = relationship(back_populates="assignments")
 
@@ -78,12 +114,16 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    uid: Mapped[int] = mapped_column(server_default=text("nextval('customers_uid_seq')"))
+    uid: Mapped[int] = mapped_column(
+        server_default=text("nextval('customers_uid_seq')")
+    )
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     phone: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     sales: Mapped[list["Sale"]] = relationship(back_populates="customer")
 
@@ -91,29 +131,54 @@ class Customer(Base):
 class Sale(Base):
     __tablename__ = "sales"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
-    service_id: Mapped[Optional[str]] = mapped_column(ForeignKey("services.id", ondelete="SET NULL"))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL"), index=True
+    )
+    service_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("services.id", ondelete="SET NULL")
+    )
     # Legacy single-employee field — kept for backward compatibility
-    employee_id: Mapped[Optional[str]] = mapped_column(ForeignKey("employees.id", ondelete="SET NULL"))
-    customer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("customers.id", ondelete="SET NULL"))
+    employee_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL")
+    )
+    customer_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("customers.id", ondelete="SET NULL")
+    )
     sale_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    discount_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    payment_method: Mapped[str] = mapped_column(String, server_default="Cash", nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    discount_amount: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False
+    )
+    payment_method: Mapped[str] = mapped_column(
+        String, server_default="Cash", nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     customer: Mapped[Optional["Customer"]] = relationship(back_populates="sales")
-    assigned_employees: Mapped[list["SaleEmployee"]] = relationship(back_populates="sale", cascade="all, delete-orphan")
+    assigned_employees: Mapped[list["SaleEmployee"]] = relationship(
+        back_populates="sale", cascade="all, delete-orphan"
+    )
 
 
 class SaleEmployee(Base):
     """Junction table: multiple employees can be assigned to a single sale/treatment."""
+
     __tablename__ = "sale_employees"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
     sale_id: Mapped[str] = mapped_column(ForeignKey("sales.id", ondelete="CASCADE"))
-    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    employee_id: Mapped[str] = mapped_column(
+        ForeignKey("employees.id", ondelete="CASCADE")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     sale: Mapped["Sale"] = relationship(back_populates="assigned_employees")
 
@@ -121,44 +186,76 @@ class SaleEmployee(Base):
 class RevenueEntry(Base):
     __tablename__ = "revenue_entries"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL"), index=True
+    )
     source: Mapped[str] = mapped_column(String, nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
 
 class CostEntry(Base):
     __tablename__ = "cost_entries"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL"), index=True
+    )
     cost_type: Mapped[str] = mapped_column(String, nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     note: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
 
 class PayrollRun(Base):
     __tablename__ = "payroll_runs"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"), index=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL"), index=True
+    )
     month: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    salary_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    bonus_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    commission_total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    salary_total: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False
+    )
+    bonus_total: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False
+    )
+    commission_total: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
 
 class BranchTarget(Base):
     __tablename__ = "branch_targets"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
-    month: Mapped[str] = mapped_column(String, index=True, nullable=False)  # Format YYYY-MM
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[str] = mapped_column(
+        ForeignKey("branches.id", ondelete="CASCADE"), index=True
+    )
+    month: Mapped[str] = mapped_column(
+        String, index=True, nullable=False
+    )  # Format YYYY-MM
     target_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     branch: Mapped["Branch"] = relationship()
 
@@ -166,15 +263,27 @@ class BranchTarget(Base):
 class AttendanceRecord(Base):
     __tablename__ = "attendance_records"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
-    date: Mapped[str] = mapped_column(String, index=True, nullable=False)  # Format YYYY-MM-DD
-    status: Mapped[str] = mapped_column(String, nullable=False)  # 'Late', 'Leave', 'Present'
-    deduction_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    employee_id: Mapped[str] = mapped_column(
+        ForeignKey("employees.id", ondelete="CASCADE")
+    )
+    date: Mapped[str] = mapped_column(
+        String, index=True, nullable=False
+    )  # Format YYYY-MM-DD
+    status: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # 'Late', 'Leave', 'Present'
+    deduction_amount: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False
+    )
     clock_in_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     clock_out_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     overtime_minutes: Mapped[int] = mapped_column(default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, server_default=func.now()
+    )
 
     employee: Mapped["Employee"] = relationship()
 
@@ -182,44 +291,78 @@ class AttendanceRecord(Base):
 class CustomerReview(Base):
     __tablename__ = "customer_reviews"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    branch_id: Mapped[Optional[str]] = mapped_column(ForeignKey("branches.id", ondelete="SET NULL"))
-    customer_id: Mapped[Optional[str]] = mapped_column(ForeignKey("customers.id", ondelete="SET NULL"))
-    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"))
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    branch_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("branches.id", ondelete="SET NULL")
+    )
+    customer_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("customers.id", ondelete="SET NULL")
+    )
+    employee_id: Mapped[str] = mapped_column(
+        ForeignKey("employees.id", ondelete="CASCADE")
+    )
     rating: Mapped[int] = mapped_column(nullable=False)
     review_text: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     employee: Mapped["Employee"] = relationship()
     customer: Mapped[Optional["Customer"]] = relationship()
     branch: Mapped[Optional["Branch"]] = relationship()
 
+
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.id", ondelete="CASCADE"), index=True)
-    employee_id: Mapped[str] = mapped_column(ForeignKey("employees.id", ondelete="CASCADE"), index=True)
-    service_id: Mapped[str] = mapped_column(ForeignKey("services.id", ondelete="CASCADE"), index=True)
-    branch_id: Mapped[str] = mapped_column(ForeignKey("branches.id", ondelete="CASCADE"), index=True)
-    appointment_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
-    status: Mapped[str] = mapped_column(String, default="Pending", nullable=False) # Pending, Confirmed, Completed, Cancelled
-    payment_status: Mapped[str] = mapped_column(String, default="Unpaid", nullable=False) # Unpaid, Paid_SSLCommerz
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    customer_id: Mapped[str] = mapped_column(
+        ForeignKey("customers.id", ondelete="CASCADE"), index=True
+    )
+    employee_id: Mapped[str] = mapped_column(
+        ForeignKey("employees.id", ondelete="CASCADE"), index=True
+    )
+    service_id: Mapped[str] = mapped_column(
+        ForeignKey("services.id", ondelete="CASCADE"), index=True
+    )
+    branch_id: Mapped[str] = mapped_column(
+        ForeignKey("branches.id", ondelete="CASCADE"), index=True
+    )
+    appointment_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String, default="Pending", nullable=False
+    )  # Pending, Confirmed, Completed, Cancelled
+    payment_status: Mapped[str] = mapped_column(
+        String, default="Unpaid", nullable=False
+    )  # Unpaid, Paid_SSLCommerz
     notes: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     customer: Mapped["Customer"] = relationship()
     employee: Mapped["Employee"] = relationship()
     service: Mapped["Service"] = relationship()
     branch: Mapped["Branch"] = relationship()
 
+
 class DailyAdSpend(Base):
     __tablename__ = "daily_ad_spend"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
-    date: Mapped[str] = mapped_column(String, index=True, nullable=False) # YYYY-MM-DD
-    platform: Mapped[str] = mapped_column(String, nullable=False) # Facebook, Google
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid4())
+    )
+    date: Mapped[str] = mapped_column(String, index=True, nullable=False)  # YYYY-MM-DD
+    platform: Mapped[str] = mapped_column(String, nullable=False)  # Facebook, Google
     amount_spent: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     impressions: Mapped[int] = mapped_column(default=0, nullable=False)
     clicks: Mapped[int] = mapped_column(default=0, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

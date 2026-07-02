@@ -13,7 +13,10 @@ router = APIRouter(prefix="/employees", tags=["employees"])
 supabase_client = None
 if settings.supabase_url and settings.supabase_service_role_key:
     from supabase import create_client
-    supabase_client = create_client(settings.supabase_url, settings.supabase_service_role_key)
+
+    supabase_client = create_client(
+        settings.supabase_url, settings.supabase_service_role_key
+    )
 
 
 @router.get("", response_model=list[EmployeeRead])
@@ -36,7 +39,7 @@ def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db)) -> E
             # Check if user already exists
             try:
                 users_resp = supabase_client.auth.admin.list_users()
-                users = users_resp.users if hasattr(users_resp, 'users') else users_resp
+                users = users_resp.users if hasattr(users_resp, "users") else users_resp
                 for u in users:
                     if u.email == payload.email:
                         raise HTTPException(

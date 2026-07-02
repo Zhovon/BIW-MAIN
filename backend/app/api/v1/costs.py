@@ -11,8 +11,14 @@ router = APIRouter(prefix="/costs", tags=["costs"])
 
 from typing import Optional
 
+
 @router.get("", response_model=list[CostEntryRead])
-def get_costs(limit: int = 50, date: Optional[str] = None, month: Optional[str] = None, db: Session = Depends(get_db)):
+def get_costs(
+    limit: int = 50,
+    date: Optional[str] = None,
+    month: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
     return list_cost_entries(db, limit=limit, date_str=date, month_str=month)
 
 
