@@ -60,8 +60,38 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
                 detail="This therapist is on leave or absent on the selected date.",
             )
 
+    # 2. Find or create customer if customer_id not provided
+    customer_id = payload.customer_id
+    if not customer_id and payload.customer_phone and payload.customer_name:
+        customer = db.query(Customer).filter(Customer.phone == payload.customer_phone).first()
+        if customer:
+            customer_id = customer.id
+            if payload.customer_email and not customer.email:
+                customer.email = payload.customer_email
+        else:
+            # Generate sequential 5-digit ID (e.g. 00001) for new customer
+            current_ids = db.query(Customer.id).all()
+            max_numeric_id = max([int(row.id) for row in current_ids if row.id and row.id.isdigit()], default=0)
+            new_id_str = f"{(max_numeric_id + 1):05d}"
+            
+            customer = Customer(
+                id=new_id_str,
+                full_name=payload.customer_name,
+                phone=payload.customer_phone,
+                email=payload.customer_email,
+            )
+            db.add(customer)
+            db.flush()
+            customer_id = new_id_str
+
+    if not customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Customer ID or details (name and phone) must be provided.",
+        )
+
     appt = Appointment(
-        customer_id=payload.customer_id,
+        customer_id=customer_id,
         employee_id=payload.employee_id,
         service_id=payload.service_id,
         branch_id=payload.branch_id,
@@ -76,7 +106,7 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
 
     # 3. Send Confirmation Email if customer has an email and resend is configured
     if settings.resend_api_key:
-        customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
         if customer and customer.email:
             service = db.query(Service).filter(Service.id == payload.service_id).first()
             service_name = service.name if service else "Treatment"

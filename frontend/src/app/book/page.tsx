@@ -88,25 +88,7 @@ function BookingWidgetContent() {
     try {
       const base = getApiBaseUrl();
 
-      // 1. Find or Create Customer
-      let customerId = "";
-      const searchRes = await fetch(`${base}/api/v1/customers/search?q=${encodeURIComponent(phone)}`);
-      const searchData = await searchRes.json();
-      
-      if (searchData && searchData.length > 0) {
-        customerId = searchData[0].id;
-      } else {
-        const createCustRes = await fetch(`${base}/api/v1/customers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full_name: name, phone: phone, email: email || null })
-        });
-        if (!createCustRes.ok) throw new Error("Failed to create customer record");
-        const newCust = await createCustRes.json();
-        customerId = newCust.id;
-      }
-
-      // 2. Parse time format (e.g. "10:00 AM" into 24-hour)
+      // 1. Parse time format (e.g. "10:00 AM" into 24-hour)
       const timeStr = selectedTime;
       const [time, modifier] = timeStr.split(" ");
       const timeParts = time.split(":");
@@ -120,9 +102,11 @@ function BookingWidgetContent() {
       }
       const appointmentTime = `${selectedDate}T${hours.padStart(2, '0')}:${minutes}:00Z`;
 
-      // 3. Create Appointment
+      // 2. Create Appointment
       const apptPayload = {
-        customer_id: customerId,
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: email || null,
         service_id: selectedService.id,
         branch_id: branchId,
         appointment_time: appointmentTime,

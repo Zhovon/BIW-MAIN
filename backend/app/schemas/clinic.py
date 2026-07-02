@@ -342,7 +342,10 @@ class AppointmentRead(BaseModel):
 
 
 class AppointmentCreate(BaseModel):
-    customer_id: str
+    customer_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
     employee_id: Optional[str] = None
     service_id: str
     branch_id: str
