@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -11,7 +11,8 @@ router = APIRouter(prefix="/services", tags=["services"])
 
 
 @router.get("", response_model=list[ServiceRead])
-def get_services(db: Session = Depends(get_db)):
+def get_services(response: Response, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "public, max-age=600"
     return list_services(db)
 
 

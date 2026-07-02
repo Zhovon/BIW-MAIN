@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 
 from app.crud.clinic import list_branches
@@ -11,7 +11,8 @@ router = APIRouter(prefix="/branches", tags=["branches"])
 
 
 @router.get("", response_model=list[BranchRead])
-def get_branches(db: Session = Depends(get_db)):
+def get_branches(response: Response, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "public, max-age=600"
     return list_branches(db)
 
 
