@@ -575,10 +575,10 @@ export default function OwnerDashboardPage() {
 
   if (loading) {
     return (
-      <main className="page-shell">
+      <main className="relative w-[min(100%-20px,1200px)] sm:w-[min(1200px,calc(100%-32px))] mx-auto pt-7 pb-20">
         <section className="content-grid">
           <div>
-            <p className="section-label">Owner Consolidation</p>
+            <p className="m-0 mb-2.5 uppercase tracking-[0.16em] text-[0.7rem] text-[#C9A84C] font-medium">Owner Consolidation</p>
             <h1>Initializing financial console...</h1>
           </div>
         </section>
@@ -588,12 +588,12 @@ export default function OwnerDashboardPage() {
 
   if (error) {
     return (
-      <main className="page-shell">
+      <main className="relative w-[min(100%-20px,1200px)] sm:w-[min(1200px,calc(100%-32px))] mx-auto pt-7 pb-20">
         <section className="content-grid">
-          <div className="glass-card auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
-            <p className="section-label" style={{ color: "#ff6464" }}>Error</p>
+          <div className="bg-white border border-[#111] rounded-none auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
+            <p className="m-0 mb-2.5 uppercase tracking-[0.16em] text-[0.7rem] text-[#C9A84C] font-medium" style={{ color: "#ff6464" }}>Error</p>
             <h1>Dashboard Unavailable</h1>
-            <p className="dashboard-lead">{error}</p>
+            <p className="mt-3 mb-0 max-w-[680px] text-[#555] leading-[1.75]">{error}</p>
           </div>
         </section>
       </main>
@@ -608,22 +608,22 @@ export default function OwnerDashboardPage() {
   };
 
   return (
-    <main className="page-shell">
+    <main className="relative w-[min(100%-20px,1200px)] sm:w-[min(1200px,calc(100%-32px))] mx-auto pt-7 pb-20">
       <section className="content-grid">
         
         {/* Header */}
         <div style={{ marginBottom: "28px" }}>
-          <p className="section-label">Owner Console</p>
+          <p className="m-0 mb-2.5 uppercase tracking-[0.16em] text-[0.7rem] text-[#C9A84C] font-medium">Owner Console</p>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
             Beauty Intelligent Wellness Rollups
           </h1>
-          <p className="dashboard-lead" style={{ marginTop: "8px" }}>
+          <p className="mt-3 mb-0 max-w-[680px] text-[#555] leading-[1.75]" style={{ marginTop: "8px" }}>
             Check consolidated revenues, cost, profit margins, and perform monthly payroll runs.
           </p>
         </div>
 
         {/* Tabs Bar */}
-        <div className="mobile-scroll" style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
+        <div className="max-md:overflow-x-auto max-md:whitespace-nowrap max-md:pb-2" style={{ display: "flex", gap: "16px", borderBottom: "1px solid var(--line)", marginBottom: "32px", paddingBottom: "2px" }}>
           <button
             onClick={() => setActiveTab("risk")}
             style={{
@@ -743,39 +743,39 @@ export default function OwnerDashboardPage() {
         </div>
 
         {/* Financial Stat Cards */}
-        <div className="stat-grid" style={{ margin: "0 0 32px" }}>
-          <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
-            <span className="stat-card__label">Period Revenue</span>
-            <strong className="stat-card__value">{formatTaka(periodRevenue)}</strong>
-            <p className="stat-card__detail">{periodLabel} · treatment sales.</p>
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 my-3 mb-10" style={{ margin: "0 0 32px" }}>
+          <article className="bg-white border border-[#111] rounded-none relative overflow-hidden p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-gradient-to-r before:from-[#A07830] before:via-[#C9A84C] before:to-[#E8C96A] before:opacity-60" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
+            <span className="text-[#555] text-[0.82rem] uppercase tracking-[0.08em]">Period Revenue</span>
+            <strong className="block mt-1.5 text-[1.2rem] font-semibold text-[#111]">{formatTaka(periodRevenue)}</strong>
+            <p className="mt-2 text-[#555] leading-[1.5] text-[0.82rem]">{periodLabel} · treatment sales.</p>
           </article>
 
-          <article className="stat-card" style={{ "--accent": "#A07830" } as React.CSSProperties}>
-            <span className="stat-card__label">Period Cost</span>
-            <strong className="stat-card__value">{formatTaka(periodCost)}</strong>
-            <p className="stat-card__detail">{periodLabel} · operational expenses.</p>
+          <article className="bg-white border border-[#111] rounded-none relative overflow-hidden p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-gradient-to-r before:from-[#A07830] before:via-[#C9A84C] before:to-[#E8C96A] before:opacity-60" style={{ "--accent": "#A07830" } as React.CSSProperties}>
+            <span className="text-[#555] text-[0.82rem] uppercase tracking-[0.08em]">Period Cost</span>
+            <strong className="block mt-1.5 text-[1.2rem] font-semibold text-[#111]">{formatTaka(periodCost)}</strong>
+            <p className="mt-2 text-[#555] leading-[1.5] text-[0.82rem]">{periodLabel} · operational expenses.</p>
           </article>
 
-          <article className="stat-card" style={{ "--accent": "#E8C96A" } as React.CSSProperties}>
-            <span className="stat-card__label">Period Profit</span>
-            <strong className="stat-card__value" style={{ color: periodProfit >= 0 ? "var(--accent-3)" : "#ff7c7c" }}>
+          <article className="bg-white border border-[#111] rounded-none relative overflow-hidden p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-gradient-to-r before:from-[#A07830] before:via-[#C9A84C] before:to-[#E8C96A] before:opacity-60" style={{ "--accent": "#E8C96A" } as React.CSSProperties}>
+            <span className="text-[#555] text-[0.82rem] uppercase tracking-[0.08em]">Period Profit</span>
+            <strong className="block mt-1.5 text-[1.2rem] font-semibold text-[#111]" style={{ color: periodProfit >= 0 ? "var(--accent-3)" : "#ff7c7c" }}>
               {formatTaka(periodProfit)}
             </strong>
-            <p className="stat-card__detail">Net margin: {periodMargin.toFixed(1)}%</p>
+            <p className="mt-2 text-[#555] leading-[1.5] text-[0.82rem]">Net margin: {periodMargin.toFixed(1)}%</p>
           </article>
 
-          <article className="stat-card" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
-            <span className="stat-card__label">Active Branches</span>
-            <strong className="stat-card__value">{branches.length}</strong>
-            <p className="stat-card__detail">{ownerBranch === "all" ? "All branches combined" : getBranchName(ownerBranch)}</p>
+          <article className="bg-white border border-[#111] rounded-none relative overflow-hidden p-5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-gradient-to-r before:from-[#A07830] before:via-[#C9A84C] before:to-[#E8C96A] before:opacity-60" style={{ "--accent": "#C9A84C" } as React.CSSProperties}>
+            <span className="text-[#555] text-[0.82rem] uppercase tracking-[0.08em]">Active Branches</span>
+            <strong className="block mt-1.5 text-[1.2rem] font-semibold text-[#111]">{branches.length}</strong>
+            <p className="mt-2 text-[#555] leading-[1.5] text-[0.82rem]">{ownerBranch === "all" ? "All branches combined" : getBranchName(ownerBranch)}</p>
           </article>
         </div>
 
 
 
         {/* Branch Operational Margins (period-filtered) */}
-        <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+        <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px", marginBottom: "32px" }}>
+          <div className="max-md:flex-col max-md:items-stretch" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Branch Operational Margins</h2>
             <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{periodLabel} · {ownerBranch === "all" ? "All Branches" : getBranchName(ownerBranch)}</span>
           </div>
@@ -818,8 +818,8 @@ export default function OwnerDashboardPage() {
         </article>
 
         {/* Daily Audit Log */}
-        <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+        <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px", marginBottom: "32px" }}>
+          <div className="max-md:flex-col max-md:items-stretch" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Audit Log</h2>
             <span style={{ fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--accent)" }}>
               {filteredLogs.length} Entries
@@ -974,8 +974,8 @@ export default function OwnerDashboardPage() {
         </article>
 
         {/* Daily Roster Card */}
-        <article className="glass-card" style={{ padding: "28px", marginBottom: "32px" }}>
-          <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+        <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px", marginBottom: "32px" }}>
+          <div className="max-md:flex-col max-md:items-stretch" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Daily Attendance Roster</h2>
               <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>Monitor staff attendance, clock times, and overtime across branches.</p>
@@ -1028,7 +1028,7 @@ export default function OwnerDashboardPage() {
           
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Target Management View */}
-            <article className="glass-card" style={{ padding: "28px" }}>
+            <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px" }}>
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 8px", color: "var(--accent)" }}>Branch Targets</h2>
               <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 20px" }}>
                 Set monthly minimum revenue targets for branches. Managers only earn commission if this target is exceeded.
@@ -1037,7 +1037,7 @@ export default function OwnerDashboardPage() {
               {targetError && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 100, 100, 0.1)", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>{targetError}</div>}
               {targetSuccess && <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(142, 240, 178, 0.1)", color: "#92fb9c", fontSize: "0.86rem", marginBottom: "16px" }}>Monthly branch target saved successfully!</div>}
 
-              <form onSubmit={handleSetTarget} className="mobile-stack" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
+              <form onSubmit={handleSetTarget} className="max-md:flex-col max-md:items-stretch" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
                 <label style={{ display: "grid", gap: "6px", flex: 1 }}>
                   <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Branch</span>
                   <select
@@ -1081,14 +1081,14 @@ export default function OwnerDashboardPage() {
             </article>
 
             {/* Payroll Calc View */}
-          <article className="glass-card" style={{ padding: "28px" }}>
+          <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 8px", color: "var(--accent)" }}>Payroll Console</h2>
             <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 20px" }}>
               Compute monthly salaries, therapy bonuses, and sales commissions for clinic staff.
             </p>
 
             {/* Selector controls */}
-            <div className="mobile-stack" style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div className="max-md:flex-col max-md:items-stretch" style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap", alignItems: "flex-end" }}>
               <label style={{ display: "grid", gap: "6px", flex: 1 }}>
                 <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Select Branch</span>
                 <select
@@ -1137,7 +1137,7 @@ export default function OwnerDashboardPage() {
 
             {calculatedPayroll && (
               <div style={{ display: "grid", gap: "20px" }}>
-                <div className="mobile-stack" style={{ padding: "16px", borderRadius: "16px", background: "rgba(110, 231, 255, 0.04)", border: "1px solid rgba(110, 231, 255, 0.15)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+                <div className="max-md:flex-col max-md:items-stretch" style={{ padding: "16px", borderRadius: "16px", background: "rgba(110, 231, 255, 0.04)", border: "1px solid rgba(110, 231, 255, 0.15)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
                   <div>
                     <strong style={{ fontSize: "1.1rem", color: "var(--text)" }}>Consolidation Summary</strong>
                     <div style={{ fontSize: "0.84rem", color: "var(--muted)", marginTop: "4px" }}>
@@ -1203,7 +1203,7 @@ export default function OwnerDashboardPage() {
           </div>
 
           {/* Payroll History */}
-          <article className="glass-card" style={{ padding: "28px", display: "flex", flexDirection: "column" }}>
+          <article className="bg-white border border-[#111] rounded-none" style={{ padding: "28px", display: "flex", flexDirection: "column" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: "0 0 16px", color: "var(--accent-2)" }}>Payroll Run History</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", overflowY: "auto", flex: 1 }}>
               {payrollHistory.length === 0 ? (
