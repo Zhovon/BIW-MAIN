@@ -3,7 +3,7 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { CrmPortal } from "@/components/crm-portal";
 import { AppointmentsView } from "@/components/appointments-view";
-import { MarketingView } from "@/components/marketing-view";
+
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { getApiBaseUrl, authFetch } from "@/lib/api";
@@ -679,18 +679,15 @@ export default function OwnerDashboardPage() {
         </div>
 
         {activeTab === "risk" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            <RiskCodedDashboard
-              period="month"
-              branchId=""
-              customDate=""
-              staffName="all"
-              paymentMethod="all"
-              ticketBand="all"
-              staffList={employees}
-            />
-            <MarketingView />
-          </div>
+          <RiskCodedDashboard
+            period="month"
+            branchId=""
+            customDate=""
+            staffName="all"
+            paymentMethod="all"
+            ticketBand="all"
+            staffList={employees}
+          />
         )}
 
         {activeTab === "dashboard" && (
