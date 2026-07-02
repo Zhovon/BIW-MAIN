@@ -30,6 +30,7 @@ function BookingWidgetContent() {
 
   // Customer Info
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
   const timeSlots = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"];
@@ -98,7 +99,7 @@ function BookingWidgetContent() {
         const createCustRes = await fetch(`${base}/api/v1/customers`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full_name: name, phone: phone })
+          body: JSON.stringify({ full_name: name, phone: phone, email: email || null })
         });
         if (!createCustRes.ok) throw new Error("Failed to create customer record");
         const newCust = await createCustRes.json();
@@ -288,6 +289,16 @@ function BookingWidgetContent() {
                   onChange={(e) => setName(e.target.value)}
                   className="w-full p-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-black transition-all"
                   placeholder="Jane Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                  placeholder="jane@example.com"
                 />
               </div>
               <div>
