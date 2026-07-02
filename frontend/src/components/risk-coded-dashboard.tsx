@@ -237,7 +237,7 @@ export function RiskCodedDashboard({
   const deltaColor = delta >= 5 ? "#0a7d28" : delta <= -5 ? "#c84c2c" : "#d4b923";
 
   return (
-    <div style={{ background: "#fff", color: "#000", fontFamily: "'Times New Roman', Times, serif" }}>
+    <div className="bg-white text-black font-serif w-full max-w-full overflow-hidden">
       {/* Legend */}
       <div style={{ border: "1px solid #000", padding: "8px 14px", marginBottom: 16, fontSize: 12, display: "flex", gap: 16, flexWrap: "wrap" }}>
         <span style={{ fontWeight: "bold" }}>Color Scale:</span>
@@ -253,29 +253,26 @@ export function RiskCodedDashboard({
       {loading && <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 10 }}>Updating charts...</div>}
 
       {/* Header Filters & Context */}
-      <div className="mobile-grid-1" style={{ 
-        border: "1px solid #000", padding: "12px 16px", marginBottom: 16, 
-        display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr 1fr", gap: "16px", alignItems: "center" 
-      }}>
-        <div style={{ borderRight: "1px solid #000", paddingRight: "16px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_1fr_1fr_1fr] gap-4 items-center border border-black p-3 md:p-4 mb-4">
+        <div className="min-w-0" style={{ borderRight: "1px solid #000", paddingRight: "16px" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.1em" }}>Today&apos;s Snapshot</div>
           <div style={{ fontSize: 16, fontStyle: "italic", marginTop: 2 }}>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em" }}>Revenue Today</div>
           <div style={{ fontSize: 22, fontWeight: "bold", marginTop: 2 }}>{formatTaka(snap.today_rev)}</div>
           <div style={{ fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{snap.today_count} transactions</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em" }}>Yesterday</div>
           <div style={{ fontSize: 22, fontWeight: "bold", marginTop: 2 }}>{formatTaka(snap.yesterday_rev)}</div>
           <div style={{ fontSize: 11, marginTop: 2, fontStyle: "italic" }}>{snap.yesterday_count} transactions</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em" }}>Same day last week</div>
           <div style={{ fontSize: 22, fontWeight: "bold", marginTop: 2 }}>{formatTaka(snap.last_week_rev)}</div>
         </div>
-        <div>
+        <div className="min-w-0">
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em" }}>Trailing 4-week avg</div>
           <div style={{ fontSize: 22, fontWeight: "bold", marginTop: 2 }}>{formatTaka(snap.trailing_avg)}</div>
           <div style={{ fontSize: 11, marginTop: 2, fontStyle: "italic" }}>
@@ -285,23 +282,23 @@ export function RiskCodedDashboard({
       </div>
 
       {/* Top Level KPIs */}
-      <div className="mobile-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", border: "1px solid #000", marginBottom: 18 }}>
-        <div style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-black mb-[18px]">
+        <div className="min-w-0" style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Total Revenue</div>
           <div style={{ fontSize: 26, fontWeight: "bold", lineHeight: 1 }}>{formatTaka(data.revenue)}</div>
           <div style={{ fontSize: 11, marginTop: 6 }}><span style={{ background: "#0a7d28", color: "var(--text)", padding: "1px 5px", fontWeight: "bold" }}>▲ Good</span></div>
         </div>
-        <div style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
+        <div className="min-w-0" style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Avg Ticket</div>
           <div style={{ fontSize: 26, fontWeight: "bold", lineHeight: 1 }}>{formatTaka(data.avgTicket)}</div>
           <div style={{ fontSize: 11, marginTop: 6 }}><span style={{ background: "#4ba344", color: "var(--text)", padding: "1px 5px", fontWeight: "bold" }}>▲ Stable</span></div>
         </div>
-        <div style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
+        <div className="min-w-0" style={{ padding: "14px 16px", borderRight: "1px solid #000" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Footfall</div>
           <div style={{ fontSize: 26, fontWeight: "bold", lineHeight: 1 }}>{data.count} txns</div>
           <div style={{ fontSize: 11, marginTop: 6 }}>Period Volume</div>
         </div>
-        <div style={{ padding: "14px 16px" }}>
+        <div className="min-w-0" style={{ padding: "14px 16px" }}>
           <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Target Run-Rate</div>
           <div style={{ fontSize: 26, fontWeight: "bold", lineHeight: 1 }}>
             {data?.target_amount ? `${Math.round(data.target_run_rate || 0)}%` : "N/A"}
@@ -321,12 +318,12 @@ export function RiskCodedDashboard({
       {/* Section 01 */}
       <section style={{ marginBottom: 22 }}>
         <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>01 · Mid Level - Performance Breakdowns</div>
-        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[14px] min-w-0">
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Daily Revenue (Current Period)</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 4 }}>Green bars = above-average days · Red bars = below-average days</div>
             <div style={{ fontSize: 11, color: "#555", marginBottom: 12, fontWeight: "bold" }}>{currentPeriodLabel}</div>
-            <div style={{ height: 260 }}>
+            <div className="relative w-full h-[260px] min-w-0">
               <Bar 
                 data={{
                   labels: dailyLabels.map((l) => l.substring(5)),
@@ -342,11 +339,11 @@ export function RiskCodedDashboard({
               />
             </div>
           </div>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>vs Previous Period</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 4 }}>Same length, immediately before current period</div>
             <div style={{ fontSize: 11, color: "#555", marginBottom: 12, fontWeight: "bold" }}>{prevPeriodLabel}</div>
-            <div style={{ height: 260 }}>
+            <div className="relative w-full h-[260px] min-w-0">
               <Bar 
                 data={{
                   labels: prevDailyLabels.map((l) => l.substring(5)),
@@ -368,11 +365,11 @@ export function RiskCodedDashboard({
       {/* Section 02 */}
       <section style={{ marginBottom: 22 }}>
         <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>02 · Distribution Section</div>
-        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-[14px] min-w-0">
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Visit Frequency</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Single visits = retention risk (red)</div>
-            <div style={{ height: 220 }}>
+            <div className="relative w-full h-[220px] min-w-0">
               <Doughnut 
                 data={{
                   labels: visitFreqLabels,
@@ -387,7 +384,7 @@ export function RiskCodedDashboard({
               />
             </div>
           </div>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Ticket Size Bands</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>High-ticket = green, low-ticket walk-ins = red</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -407,10 +404,10 @@ export function RiskCodedDashboard({
               })}
             </div>
           </div>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Payment Mix</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Cash = red (no digital trail for retargeting)</div>
-            <div style={{ height: 220 }}>
+            <div className="relative w-full h-[220px] min-w-0">
               <Doughnut 
                 data={{
                   labels: paymentLabels,
@@ -431,11 +428,11 @@ export function RiskCodedDashboard({
       {/* Section 03 */}
       <section style={{ marginBottom: 22 }}>
         <div style={{ fontSize: 13, fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", paddingBottom: 4, borderBottom: "2px solid #000", marginBottom: 10 }}>03 · Heatmap & Time Metrics</div>
-        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[14px] min-w-0">
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Hourly Demand</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Peak hours = green · Dead hours = red</div>
-            <div style={{ height: 220 }}>
+            <div className="relative w-full h-[220px] min-w-0">
               <Bar 
                 data={{
                   labels: hourlyLabels.map((h) => `${h}:00`),
@@ -457,10 +454,10 @@ export function RiskCodedDashboard({
               />
             </div>
           </div>
-          <div style={{ border: "1px solid #000", padding: "14px 16px" }}>
+          <div className="min-w-0" style={{ border: "1px solid #000", padding: "14px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: "bold" }}>Weekday Pattern</div>
             <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>Top revenue days = green · Weakest days = red</div>
-            <div style={{ height: 220 }}>
+            <div className="relative w-full h-[220px] min-w-0">
               <Bar 
                 data={{
                   labels: weekdayLabels,
@@ -495,7 +492,7 @@ export function RiskCodedDashboard({
               Revenue split evenly when multiple staff serve one client · click row to filter · color = quartile of performance
             </div>
           </div>
-          <div className="mobile-scroll">
+          <div className="overflow-x-auto whitespace-nowrap pb-2">
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
@@ -618,7 +615,7 @@ export function RiskCodedDashboard({
           <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 12 }}>
             Weekday-hour slots where multiple staff are consistently free. Each row is an opportunity for an automated promotional trigger.
           </div>
-          <div className="mobile-scroll">
+          <div className="overflow-x-auto whitespace-nowrap pb-2">
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
@@ -671,7 +668,7 @@ export function RiskCodedDashboard({
               Elite/Premium = green priority · One-time high-spenders = red (re-engage urgently)
             </div>
           </div>
-          <div className="mobile-scroll">
+          <div className="overflow-x-auto whitespace-nowrap pb-2">
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
             <thead>
               <tr style={{ background: "#f5f5f5", color: "#000", borderBottom: "2px solid #000" }}>
