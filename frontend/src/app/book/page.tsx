@@ -242,16 +242,9 @@ function BookingWidgetContent() {
               <button 
                 onClick={() => handleBooking("Pay at Salon")}
                 disabled={submitting || !name || !phone}
-                className="w-full bg-white border border-gray-300 text-black p-4 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-black text-white p-4 rounded-xl font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md"
               >
-                {submitting ? "Processing..." : "Pay at Salon"}
-              </button>
-              <button 
-                onClick={() => handleBooking("Instant Payment")}
-                disabled={submitting || !name || !phone}
-                className="w-full bg-[#E3106D] text-white p-4 rounded-xl font-medium hover:bg-[#c40b5c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-pink-200"
-              >
-                {submitting ? "Processing..." : "Pay Instantly (bKash/Card)"}
+                {submitting ? "Processing..." : "Confirm Booking (Pay at Salon)"}
               </button>
             </div>
           </MotionDiv>
