@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.clinic import list_branches
 from app.db.session import get_db
+from app.core.auth import get_current_user
 from app.models.clinic import Branch
 from app.schemas.clinic import BranchCreate, BranchRead, BranchUpdate
 
@@ -14,7 +15,7 @@ def get_branches(db: Session = Depends(get_db)):
     return list_branches(db)
 
 
-@router.post("", response_model=BranchRead, status_code=201)
+@router.post("", response_model=BranchRead, status_code=201, dependencies=[Depends(get_current_user)])
 def create_branch(payload: BranchCreate, db: Session = Depends(get_db)) -> Branch:
     branch = Branch(
         name=payload.name,
@@ -29,7 +30,7 @@ def create_branch(payload: BranchCreate, db: Session = Depends(get_db)) -> Branc
     return branch
 
 
-@router.put("/{branch_id}", response_model=BranchRead)
+@router.put("/{branch_id}", response_model=BranchRead, dependencies=[Depends(get_current_user)])
 def update_branch(
     branch_id: str, payload: BranchUpdate, db: Session = Depends(get_db)
 ) -> Branch:

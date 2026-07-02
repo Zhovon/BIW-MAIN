@@ -30,7 +30,7 @@ api_router.include_router(health_seed_router)
 api_router.include_router(appointments_router)  # Public (some endpoints)
 api_router.include_router(webhooks_router)  # Public for Shopify/Make
 
-api_router.include_router(branches_router, dependencies=_auth)
+api_router.include_router(branches_router) # GET is public
 api_router.include_router(overview_router, dependencies=_auth)
 api_router.include_router(analytics_router, dependencies=_auth)
 api_router.include_router(
