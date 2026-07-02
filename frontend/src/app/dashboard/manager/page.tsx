@@ -872,7 +872,7 @@ export default function ManagerDashboardPage() {
                 ? (currentRevenue - targetAmount) * (commissionRate / 100)
                 : 0;
               return (
-                <article className="glass-card" style={{ padding: "20px 24px", marginBottom: "24px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", alignItems: "center", borderColor: "rgba(201,168,76,0.2)" }}>
+                <article className="glass-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center mb-6" style={{ padding: "20px 24px", borderColor: "rgba(201,168,76,0.2)" }}>
                   <div>
                     <span style={{ fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "4px" }}>Base Salary</span>
                     <strong style={{ fontSize: "1.15rem", color: "var(--text)", fontFamily: "monospace" }}>৳{baseSalary.toLocaleString()}</strong>
@@ -937,7 +937,7 @@ export default function ManagerDashboardPage() {
             </article>
 
             {/* Two Column Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
               {/* Left Column: Recording Actions */}
               <div style={{ display: "grid", gap: "24px", alignContent: "start" }}>
@@ -1138,7 +1138,7 @@ export default function ManagerDashboardPage() {
                     {showNewCustomer && !selectedCustomer && (
                       <div style={{ padding: "16px", borderRadius: "14px", background: "rgba(142,240,178,0.04)", border: "1px solid rgba(142,240,178,0.15)", display: "grid", gap: "10px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--accent-3)", fontWeight: 600 }}>Create New Customer</span>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <input placeholder="Full Name *" value={newCustName} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustName(e.target.value)} style={inputStyle} />
                           <input placeholder="Phone *" value={newCustPhone} onChange={(e: ChangeEvent<HTMLInputElement>) => setNewCustPhone(e.target.value)} style={inputStyle} />
                         </div>
@@ -1154,7 +1154,7 @@ export default function ManagerDashboardPage() {
                     )}
 
                     {/* Payment & Discount */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Payment Method *</span>
                         <select
@@ -1213,7 +1213,7 @@ export default function ManagerDashboardPage() {
                   )}
 
                   <form onSubmit={handleLogExpense} style={{ display: "grid", gap: "14px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "14px" }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Expense Category *</span>
                         <select
@@ -1276,7 +1276,7 @@ export default function ManagerDashboardPage() {
                   )}
 
                   <form onSubmit={handleLogAttendance} style={{ display: "grid", gap: "14px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "14px" }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
                       <label style={{ display: "grid", gap: "6px" }}>
                         <span style={{ fontSize: "0.84rem", color: "var(--muted)" }}>Employee *</span>
                         <select

@@ -827,7 +827,7 @@ export default function OwnerDashboardPage() {
           </div>
 
           {/* Two-column: Calendar + Filters + Summary */}
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "24px", marginBottom: "24px", alignItems: "start" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-6 mb-6 items-start">
 
             {/* Left: Calendar */}
             <CalendarPicker value={auditDate} onChange={setAuditDate} activeDates={auditActiveDates} />
@@ -1024,7 +1024,7 @@ export default function OwnerDashboardPage() {
         </article>
 
         {/* Target Management and Payroll Consolidation Portal */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
           
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Target Management View */}

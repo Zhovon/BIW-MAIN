@@ -304,7 +304,7 @@ export default function EmployeeDashboardPage() {
         </div>
 
         {/* Main Content split */}
-        <div className="mobile-grid-1" style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6">
           
           {/* Left Panel: Completed Treatments Log */}
           <article className="glass-card" style={{ padding: "28px" }}>
