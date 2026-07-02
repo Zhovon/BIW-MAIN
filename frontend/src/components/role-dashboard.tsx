@@ -74,22 +74,22 @@ export function RoleDashboard({ role, dynamicMetrics }: RoleDashboardProps) {
       <section className="content-grid">
         <div>
           <p className="section-label">{content.label}</p>
-          <h1>{content.title}</h1>
+          <h1 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: "0 0 16px" }}>{content.title}</h1>
           <p className="dashboard-lead">{content.description}</p>
           <div className="hero__actions">
-            <Link className="button button--primary" href={content.primaryAction.href}>
+            <Link className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold", display: "inline-block", textAlign: "center" }} href={content.primaryAction.href}>
               {content.primaryAction.label}
             </Link>
-            <Link className="button button--secondary" href={content.secondaryAction.href}>
+            <Link className="" style={{ background: "#fff", color: "#000", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold", display: "inline-block", textAlign: "center" }} href={content.secondaryAction.href}>
               {content.secondaryAction.label}
             </Link>
           </div>
         </div>
-        <div className="stat-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border border-black mb-8">
           {metricsToRender.map((metric, index) => (
-            <article key={metric.label} className="stat-card" style={{ "--accent": ["#C9A84C", "#E8C96A", "#A07830", "#C9A84C"][index % 4] } as React.CSSProperties}>
-              <span className="stat-card__label">{metric.label}</span>
-              <strong className="stat-card__value">{metric.value}</strong>
+            <article key={metric.label} className="p-4 border-b md:border-b-0 md:border-r border-black last:border-r-0 bg-white" style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000", marginBottom: "6px" }}>{metric.label}</span>
+              <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }}>{metric.value}</strong>
             </article>
           ))}
         </div>
@@ -99,12 +99,12 @@ export function RoleDashboard({ role, dynamicMetrics }: RoleDashboardProps) {
       <section className="content-grid">
         <div>
           <p className="section-label">Role focus</p>
-          <h2>Built for the exact job this role needs to do.</h2>
+          <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "24px", margin: "0 0 8px", borderBottom: "2px solid #000", paddingBottom: "8px" }}>Built for the exact job this role needs to do.</h2>
         </div>
-        <div className="capability-grid">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black mt-6">
           {content.focus.map((item) => (
-            <article key={item} className="glass-card capability-card">
-              <h3>{item}</h3>
+            <article key={item} className="p-6 border-b md:border-b-0 md:border-r border-black last:border-r-0 bg-white">
+              <h3 style={{ fontSize: "16px", margin: 0, fontWeight: "bold", fontFamily: "Times New Roman, serif", color: "#000" }}>{item}</h3>
             </article>
           ))}
         </div>
