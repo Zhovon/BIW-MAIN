@@ -142,18 +142,18 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
   const getCust = (id: string) => customers.find(c => c.id === id);
 
   return (
-    <article className="glass-card" style={{ padding: "28px", minHeight: "500px" }}>
-      <div className="mobile-stack" style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px", gap: "16px" }}>
+    <article className="min-w-0" style={{ padding: "20px", minHeight: "500px", border: "1px solid #000", background: "#fff", color: "#000" }}>
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6 border-b-2 border-black pb-4">
         <div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.45rem", margin: 0 }}>Appointments</h2>
-          <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>Manage upcoming bookings</p>
+          <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>01 · Appointments</h2>
+          <p style={{ color: "#555", fontSize: "12px", fontStyle: "italic", marginTop: "4px", margin: 0 }}>Manage upcoming bookings</p>
         </div>
         <div>
           <input 
             type="date" 
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
-            style={{ padding: "8px 12px", border: "1px solid var(--line)", borderRadius: "8px", background: "var(--surface-2)", color: "var(--text)", outline: "none", colorScheme: "light" }}
+            style={{ padding: "8px 12px", border: "1px solid #000", borderRadius: "0", background: "#fff", color: "#000", outline: "none", fontFamily: "Times New Roman, serif" }}
           />
         </div>
       </div>
@@ -163,25 +163,25 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
       ) : appointments.length === 0 ? (
         <p className="text-gray-500 text-center py-10">No appointments found.</p>
       ) : (
-        <div style={{ display: "grid", gap: "12px" }}>
+        <div className="grid grid-cols-1 gap-0 border border-black">
           {appointments.map(appt => {
             const c = getCust(appt.customer_id);
             const dateObj = new Date(appt.appointment_time);
             return (
-              <div key={appt.id} className="mobile-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderRadius: "12px", border: "1px solid var(--line)", background: "rgba(0,0,0,0.02)", gap: "10px" }}>
+              <div key={appt.id}  className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border-b border-black last:border-b-0 bg-white gap-4">
                 <div>
-                  <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--text)" }}>{c?.full_name || "Unknown"} <span style={{ fontSize: "0.8rem", color: "var(--muted)", fontWeight: "normal" }}>({c?.phone || "No phone"})</span></div>
-                  <div style={{ color: "var(--accent)", fontSize: "0.9rem" }}>{getSrvName(appt.service_id)} with {getEmpName(appt.employee_id)}</div>
-                  <div style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "4px" }}>{dateObj.toLocaleString()}</div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#000" }}>{c?.full_name || "Unknown"} <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "normal" }}>({c?.phone || "No phone"})</span></div>
+                  <div style={{ color: "#000", fontWeight: "bold", fontFamily: "Times New Roman, serif", fontSize: "0.9rem" }}>{getSrvName(appt.service_id)} with {getEmpName(appt.employee_id)}</div>
+                  <div style={{ color: "#555", fontSize: "0.85rem", marginTop: "4px" }}>{dateObj.toLocaleString()}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ marginBottom: "8px" }}>
-                    <span style={{ fontSize: "0.75rem", padding: "4px 8px", borderRadius: "4px", background: "var(--surface-2)", border: "1px solid var(--line)" }}>{appt.payment_status}</span>
+                    <span style={{ fontSize: "0.75rem", padding: "4px 8px", borderRadius: "0", background: "#eee", border: "1px solid #000", textTransform: "uppercase", fontWeight: "bold", letterSpacing: "0.05em", color: "#000" }}>{appt.payment_status}</span>
                   </div>
                   <select 
                     value={appt.status}
                     onChange={(e) => updateStatus(appt.id, e.target.value)}
-                    style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--line)", background: appt.status === "Pending" ? "var(--surface-2)" : appt.status === "Confirmed" ? "rgba(142,240,178,0.2)" : "rgba(255,100,100,0.2)", outline: "none", fontSize: "0.85rem", fontWeight: "bold" }}
+                    style={{ padding: "6px 12px", borderRadius: "0", border: "1px solid #000", background: appt.status === "Pending" ? "#eee" : appt.status === "Confirmed" ? "#000" : "#fff", color: appt.status === "Confirmed" ? "#fff" : "#000", outline: "none", fontSize: "12px", fontWeight: "bold", textTransform: "uppercase", fontFamily: "Times New Roman, serif" }}
                   >
                     <option value="Pending">Pending</option>
                     <option value="Confirmed">Confirmed</option>
@@ -197,7 +197,7 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
                         setRescheduleTime(d.toISOString().split("T")[1].substring(0, 5));
                         setRescheduleEmp(appt.employee_id || "");
                       }}
-                      style={{ fontSize: "0.75rem", padding: "6px 10px", background: "var(--background)", border: "1px solid var(--line)", borderRadius: "6px", cursor: "pointer", color: "var(--text)" }}
+                      style={{ fontSize: "0.75rem", padding: "6px 10px", background: "var(--background)", border: "1px solid var(--line)", borderRadius: "6px", cursor: "pointer", color: "#000" }}
                     >
                       Reschedule
                     </button>
@@ -211,22 +211,22 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
 
       {rescheduleAppt && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card" style={{ padding: "24px", width: "100%", maxWidth: "400px", background: "white", border: "1px solid var(--line)", borderRadius: "16px" }}>
-            <h3 style={{ marginTop: 0, marginBottom: "16px", fontSize: "1.2rem" }}>Reschedule Appointment</h3>
+          <div className="min-w-0" style={{ padding: "24px", width: "100%", maxWidth: "400px", background: "#fff", border: "2px solid #000", borderRadius: "0", boxShadow: "8px 8px 0px rgba(0,0,0,1)", color: "#000" }}>
+            <h3 style={{ marginTop: 0, marginBottom: "16px", fontSize: "16px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid #000", paddingBottom: "8px" }}>Reschedule Appointment</h3>
             
             <div style={{ marginBottom: "12px" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>New Date</label>
-              <input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none" }} />
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "#555" }}>New Date</label>
+              <input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "0", border: "1px solid #000", outline: "none" }} />
             </div>
             
             <div style={{ marginBottom: "12px" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>New Time (UTC)</label>
-              <input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none" }} />
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "#555" }}>New Time (UTC)</label>
+              <input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "0", border: "1px solid #000", outline: "none" }} />
             </div>
 
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>Reassign Therapist</label>
-              <select value={rescheduleEmp} onChange={e => setRescheduleEmp(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none", background: "white" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "#555" }}>Reassign Therapist</label>
+              <select value={rescheduleEmp} onChange={e => setRescheduleEmp(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "0", border: "1px solid #000", outline: "none", background: "white" }}>
                 <option value="">Unassigned</option>
                 {employees.map(emp => (
                   <option key={emp.id} value={emp.id}>{emp.full_name}</option>
@@ -237,14 +237,14 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
               <button 
                 onClick={() => setRescheduleAppt(null)} 
-                style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--line)", background: "var(--surface-2)", cursor: "pointer", color: "var(--text)" }}
+                style={{ padding: "10px 16px", borderRadius: "0", border: "1px solid #000", background: "var(--surface-2)", cursor: "pointer", color: "#000" }}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleReschedule} 
                 disabled={isSubmitting}
-                style={{ padding: "10px 16px", borderRadius: "8px", border: "none", background: "var(--accent)", color: "var(--accent-fg)", cursor: "pointer", fontWeight: "bold" }}
+                style={{ padding: "10px 16px", borderRadius: "0", border: "1px solid #000", background: "#000", color: "#fff", cursor: "pointer", fontWeight: "bold", textTransform: "uppercase", fontFamily: "Times New Roman, serif", fontSize: "12px" }}
               >
                 {isSubmitting ? "Saving..." : "Confirm"}
               </button>
