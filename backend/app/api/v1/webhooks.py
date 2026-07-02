@@ -107,6 +107,47 @@ async def shopify_product_webhook(request: Request, db: Session = Depends(get_db
     return {"status": "success", "service_name": name, "price": price}
 
 
+@router.post("/shopify/customers")
+async def shopify_customer_webhook(request: Request, db: Session = Depends(get_db)):
+    """
+    Receives a customer/create or customer/update webhook from Shopify.
+    """
+    payload = await request.json()
+
+    email = payload.get("email")
+    phone = payload.get("phone", "0000000000")
+    first_name = payload.get("first_name", "")
+    last_name = payload.get("last_name", "")
+    full_name = f"{first_name} {last_name}".strip() or "Online Customer"
+
+    from app.models.clinic import Customer
+
+    # Match by phone or email
+    customer = None
+    if phone and phone != "0000000000":
+        customer = db.query(Customer).filter(Customer.phone == phone).first()
+    if not customer and email:
+        customer = db.query(Customer).filter(Customer.email == email).first()
+
+    if customer:
+        customer.full_name = full_name
+        customer.email = email
+        if phone and phone != "0000000000":
+            customer.phone = phone
+    else:
+        customer = Customer(
+            id=str(uuid.uuid4()),
+            full_name=full_name,
+            phone=phone,
+            email=email,
+            notes="Created automatically via Shopify Customer Webhook",
+        )
+        db.add(customer)
+
+    db.commit()
+    return {"status": "success", "customer_name": full_name}
+
+
 @router.post("/marketing/spend", status_code=201)
 def marketing_spend_webhook(payload: DailyAdSpendCreate, db: Session = Depends(get_db)):
     """
