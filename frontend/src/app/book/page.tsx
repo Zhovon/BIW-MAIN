@@ -47,10 +47,11 @@ function BookingWidgetContent() {
           fetch(`${getApiBaseUrl()}/api/v1/branches`)
         ]);
         
+        let branchesList: {id: string, name: string}[] = [];
         if (branchRes.ok) {
-          const branchesData = await branchRes.json();
-          setBranches(branchesData);
-          if (branchesData.length > 0) setBranchId(branchesData[0].id);
+          branchesList = await branchRes.json();
+          setBranches(branchesList);
+          if (branchesList.length > 0) setBranchId(branchesList[0].id);
         }
 
         if (res.ok) {
@@ -64,7 +65,7 @@ function BookingWidgetContent() {
             const match = data.find(s => s.name.toLowerCase().trim().replace(/\s+/g, " ") === target);
             if (match) {
               setSelectedService(match);
-              setStep(2); // Instantly jump to calendar!
+              setStep(branchesList.length > 1 ? 2 : 3); 
             }
           }
         }
@@ -127,7 +128,7 @@ function BookingWidgetContent() {
         throw new Error(err.detail || "Failed to book appointment.");
       }
 
-      setStep(5); // Success step
+      setStep(6); // Success step
     } catch (err) {
       console.error(err);
       alert(err instanceof Error ? err.message : "An error occurred.");
@@ -138,7 +139,7 @@ function BookingWidgetContent() {
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
-    setStep(3); // Jump to time/therapist selection
+    setStep(4); // Jump to time/therapist selection
   };
 
   const formatDisplayDate = (ymd: string) => {
@@ -167,23 +168,6 @@ function BookingWidgetContent() {
             exit={{ opacity: 0, x: -20 }}
             className="w-full"
           >
-            {branches.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Select Location</h2>
-                <div className="flex flex-wrap gap-2">
-                  {branches.map(b => (
-                    <button 
-                      key={b.id}
-                      onClick={() => setBranchId(b.id)}
-                      className={`px-5 py-2.5 rounded-full border text-sm font-medium transition-all shadow-sm ${branchId === b.id ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'}`}
-                    >
-                      {b.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <h2 className="text-xl font-semibold mb-6">Select a Service</h2>
             <div className="grid gap-3">
               {services.map(s => (
@@ -191,7 +175,7 @@ function BookingWidgetContent() {
                   key={s.id}
                   onClick={() => {
                     setSelectedService(s);
-                    setStep(2);
+                    setStep(branches.length > 1 ? 2 : 3);
                   }}
                   className="w-full p-4 border border-gray-200 rounded-xl text-left flex justify-between items-center hover:border-black hover:shadow-sm transition-all bg-white"
                 >
@@ -208,7 +192,7 @@ function BookingWidgetContent() {
 
         {step === 2 && (
           <MotionDiv 
-            key="step2"
+            key="step2_location"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -217,6 +201,40 @@ function BookingWidgetContent() {
             <div className="flex items-center mb-6">
               {!preselectedServiceName && (
                 <button onClick={() => setStep(1)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <ArrowLeft size={20} />
+                </button>
+              )}
+              <h2 className="text-xl font-semibold">Select Location</h2>
+            </div>
+            
+            <div className="grid gap-3">
+              {branches.map(b => (
+                <button 
+                  key={b.id}
+                  onClick={() => {
+                    setBranchId(b.id);
+                    setStep(3);
+                  }}
+                  className={`w-full p-4 border rounded-xl text-left font-medium transition-all ${branchId === b.id ? 'border-black bg-black text-white shadow-md' : 'border-gray-200 bg-white hover:border-black'}`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          </MotionDiv>
+        )}
+
+        {step === 3 && (
+          <MotionDiv 
+            key="step3_date"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full"
+          >
+            <div className="flex items-center mb-6">
+              {!preselectedServiceName && (
+                <button onClick={() => setStep(branches.length > 1 ? 2 : 1)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <ArrowLeft size={20} />
                 </button>
               )}
@@ -229,16 +247,16 @@ function BookingWidgetContent() {
           </MotionDiv>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <MotionDiv 
-            key="step3"
+            key="step4_time"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="w-full"
           >
             <div className="flex items-center mb-6">
-              <button onClick={() => setStep(2)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <button onClick={() => setStep(3)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
                 <ArrowLeft size={20} />
               </button>
               <h2 className="text-xl font-semibold">{formatDisplayDate(selectedDate)}</h2>
@@ -252,7 +270,7 @@ function BookingWidgetContent() {
                     key={time}
                     onClick={() => {
                       setSelectedTime(time);
-                      setStep(4);
+                      setStep(5);
                     }}
                     className={`p-3 rounded-xl border text-sm font-medium transition-all ${
                       selectedTime === time 
@@ -268,16 +286,16 @@ function BookingWidgetContent() {
           </MotionDiv>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <MotionDiv 
-            key="step4"
+            key="step5_details"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="w-full"
           >
             <div className="flex items-center mb-6">
-              <button onClick={() => setStep(3)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <button onClick={() => setStep(4)} className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
                 <ArrowLeft size={20} />
               </button>
               <h2 className="text-xl font-semibold">Your Details</h2>
@@ -328,9 +346,9 @@ function BookingWidgetContent() {
           </MotionDiv>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <MotionDiv 
-            key="step5"
+            key="step6_success"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full flex flex-col items-center justify-center text-center py-10"
