@@ -6,11 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MotionDiv = motion.div as any;
-import { Clock, User, Calendar as CalendarIcon, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Clock, Calendar as CalendarIcon, CheckCircle2, ArrowLeft } from "lucide-react";
 import { BookingCalendar } from "@/components/booking-calendar";
 
 type Service = { id: string; name: string; price: number };
-type Employee = { id: string; full_name: string; role: string };
 
 function BookingWidgetContent() {
   const searchParams = useSearchParams();
@@ -21,12 +20,12 @@ function BookingWidgetContent() {
   const [submitting, setSubmitting] = useState(false);
 
   const [services, setServices] = useState<Service[]>([]);
-  const [availableEmployees, setAvailableEmployees] = useState<Employee[]>([]);
+
 
   // Selections
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
   const [selectedTime, setSelectedTime] = useState<string>("");
 
   // Customer Info
@@ -64,27 +63,11 @@ function BookingWidgetContent() {
     fetchServices();
   }, [preselectedServiceName]);
 
-  // 2. Fetch Available Therapists when Date is selected
-  useEffect(() => {
-    if (selectedDate) {
-      const fetchTherapists = async () => {
-        try {
-          const res = await fetch(`${getApiBaseUrl()}/api/v1/appointments/available-employees?branch_id=all&date=${selectedDate}`);
-          if (res.ok) {
-            const data: Employee[] = await res.json();
-            setAvailableEmployees(data);
-          }
-        } catch (err) {
-          console.error("Failed to fetch employees", err);
-        }
-      };
-      fetchTherapists();
-    }
-  }, [selectedDate]);
+
 
   const handleBooking = async (paymentType: string) => {
     console.log("Processing payment via:", paymentType);
-    if (!name || !phone || !selectedService || !selectedEmployee || !selectedDate || !selectedTime) {
+    if (!name || !phone || !selectedService || !selectedDate || !selectedTime) {
       alert("Please fill in all details.");
       return;
     }
@@ -194,33 +177,7 @@ function BookingWidgetContent() {
             </div>
 
             <div className="mb-8">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">1. Select Therapist</h3>
-              {availableEmployees.length === 0 ? (
-                <div className="p-4 bg-gray-50 rounded-xl text-center text-gray-500 text-sm border border-gray-100">
-                  No therapists available on this date.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {availableEmployees.map(emp => (
-                    <button 
-                      key={emp.id}
-                      onClick={() => setSelectedEmployee(emp)}
-                      className={`p-3 rounded-xl border text-sm transition-all flex flex-col items-center justify-center gap-1 ${
-                        selectedEmployee?.id === emp.id 
-                        ? "border-black bg-black text-white shadow-md" 
-                        : "border-gray-200 bg-white hover:border-black text-gray-700"
-                      }`}
-                    >
-                      <User size={18} className={selectedEmployee?.id === emp.id ? "text-white" : "text-gray-400"} />
-                      <span className="font-medium text-center">{emp.full_name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className={`transition-opacity duration-300 ${!selectedEmployee ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">2. Select Time</h3>
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Select Time</h3>
               <div className="grid grid-cols-3 gap-3">
                 {timeSlots.map(time => (
                   <button 
@@ -379,12 +336,6 @@ function BookingWidgetContent() {
                         <div className="text-sm text-gray-500">{selectedTime}</div>
                       </div>
                     </div>
-                    {selectedEmployee && (
-                      <div className="flex items-center text-gray-600 gap-3">
-                        <User size={18} className="text-gray-400" />
-                        <span className="font-medium">with {selectedEmployee.full_name}</span>
-                      </div>
-                    )}
                   </MotionDiv>
                 )}
               </MotionDiv>
