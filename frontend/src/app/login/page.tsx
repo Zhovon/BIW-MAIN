@@ -91,6 +91,7 @@ function LoginContent() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="name@clinic.com"
+                autoComplete="email"
                 required
               />
             </label>
@@ -101,6 +102,7 @@ function LoginContent() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••••••"
+                autoComplete="current-password"
                 required
               />
             </label>
