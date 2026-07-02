@@ -6,7 +6,7 @@ import { getApiBaseUrl, authFetch } from "@/lib/api";
 type Appointment = {
   id: string;
   customer_id: string;
-  employee_id: string;
+  employee_id: string | null;
   service_id: string;
   branch_id: string;
   appointment_time: string;
@@ -84,7 +84,10 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
   };
 
   const getSrvName = (id: string) => services.find(s => s.id === id)?.name || id;
-  const getEmpName = (id: string) => employees.find(e => e.id === id)?.full_name || id;
+  const getEmpName = (id: string | null) => {
+    if (!id) return "Unassigned Therapist";
+    return employees.find(e => e.id === id)?.full_name || id;
+  };
   const getCust = (id: string) => customers.find(c => c.id === id);
 
   return (

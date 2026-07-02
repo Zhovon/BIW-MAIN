@@ -39,21 +39,22 @@ def get_appointments(
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)):
     # 1. Validate employee and attendance
     # If employee is absent today, reject
-    appt_date = payload.appointment_time.strftime("%Y-%m-%d")
-    attendance = (
-        db.query(AttendanceRecord)
-        .filter(
-            AttendanceRecord.employee_id == payload.employee_id,
-            AttendanceRecord.date == appt_date,
+    if payload.employee_id:
+        appt_date = payload.appointment_time.strftime("%Y-%m-%d")
+        attendance = (
+            db.query(AttendanceRecord)
+            .filter(
+                AttendanceRecord.employee_id == payload.employee_id,
+                AttendanceRecord.date == appt_date,
+            )
+            .first()
         )
-        .first()
-    )
 
-    if attendance and attendance.status in ["Leave", "Absent"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This therapist is on leave or absent on the selected date.",
-        )
+        if attendance and attendance.status in ["Leave", "Absent"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This therapist is on leave or absent on the selected date.",
+            )
 
     appt = Appointment(
         customer_id=payload.customer_id,

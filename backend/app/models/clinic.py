@@ -323,8 +323,8 @@ class Appointment(Base):
     customer_id: Mapped[str] = mapped_column(
         ForeignKey("customers.id", ondelete="CASCADE"), index=True
     )
-    employee_id: Mapped[str] = mapped_column(
-        ForeignKey("employees.id", ondelete="CASCADE"), index=True
+    employee_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL"), index=True, nullable=True
     )
     service_id: Mapped[str] = mapped_column(
         ForeignKey("services.id", ondelete="CASCADE"), index=True

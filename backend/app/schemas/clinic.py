@@ -343,7 +343,7 @@ class AppointmentRead(BaseModel):
 
 class AppointmentCreate(BaseModel):
     customer_id: str
-    employee_id: str
+    employee_id: Optional[str] = None
     service_id: str
     branch_id: str
     appointment_time: datetime

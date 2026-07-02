@@ -34,11 +34,22 @@ function BookingWidgetContent() {
 
   const timeSlots = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"];
 
-  // 1. Load Services on Mount & Auto-Select
+  const [branchId, setBranchId] = useState<string>("");
+
+  // 1. Load Services & Branches on Mount & Auto-Select
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/v1/services`);
+        const [res, branchRes] = await Promise.all([
+          fetch(`${getApiBaseUrl()}/api/v1/services`),
+          fetch(`${getApiBaseUrl()}/api/v1/branches`)
+        ]);
+        
+        if (branchRes.ok) {
+          const branches = await branchRes.json();
+          if (branches.length > 0) setBranchId(branches[0].id);
+        }
+
         if (res.ok) {
           const data: Service[] = await res.json();
           setServices(data);
@@ -55,12 +66,12 @@ function BookingWidgetContent() {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch services", err);
+        console.error("Failed to fetch initial data", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchServices();
+    fetchData();
   }, [preselectedServiceName]);
 
 
@@ -74,12 +85,65 @@ function BookingWidgetContent() {
 
     setSubmitting(true);
     try {
-      // Simulate booking delay
-      await new Promise(r => setTimeout(r, 1000));
+      const base = getApiBaseUrl();
+
+      // 1. Find or Create Customer
+      let customerId = "";
+      const searchRes = await fetch(`${base}/api/v1/customers/search?q=${encodeURIComponent(phone)}`);
+      const searchData = await searchRes.json();
+      
+      if (searchData && searchData.length > 0) {
+        customerId = searchData[0].id;
+      } else {
+        const createCustRes = await fetch(`${base}/api/v1/customers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full_name: name, phone: phone })
+        });
+        if (!createCustRes.ok) throw new Error("Failed to create customer record");
+        const newCust = await createCustRes.json();
+        customerId = newCust.id;
+      }
+
+      // 2. Parse time format (e.g. "10:00 AM" into 24-hour)
+      const timeStr = selectedTime;
+      const [time, modifier] = timeStr.split(" ");
+      const timeParts = time.split(":");
+      let hours = timeParts[0];
+      const minutes = timeParts[1];
+      if (hours === "12") {
+        hours = "00";
+      }
+      if (modifier === "PM") {
+        hours = parseInt(hours, 10) + 12 + "";
+      }
+      const appointmentTime = `${selectedDate}T${hours.padStart(2, '0')}:${minutes}:00Z`;
+
+      // 3. Create Appointment
+      const apptPayload = {
+        customer_id: customerId,
+        service_id: selectedService.id,
+        branch_id: branchId,
+        appointment_time: appointmentTime,
+        status: "Pending",
+        payment_status: "Unpaid"
+      };
+
+      const apptRes = await fetch(`${base}/api/v1/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apptPayload)
+      });
+
+      if (!apptRes.ok) {
+        const err = await apptRes.json();
+        throw new Error(err.detail || "Failed to book appointment.");
+      }
+
       setStep(5); // Success step
     } catch (err) {
       console.error(err);
-      alert("Failed to book appointment.");
+      alert(err instanceof Error ? err.message : "An error occurred.");
     } finally {
       setSubmitting(false);
     }

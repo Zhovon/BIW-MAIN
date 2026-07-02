@@ -1,122 +1,164 @@
-<!-- 
-  Shopify Booking Popup Snippet (Bulletproof Edition)
-  Instructions:
-  1. In your Shopify Admin, go to Products and add the tag "Service" to all your service products.
-  2. Go to Shopify Theme Editor -> Default Product Template
-  3. Add a "Custom Liquid" block right below the "Buy buttons" block.
-  4. Paste this entire code block into the Custom Liquid block.
--->
+<!-- BIW Booking Modal Snippet -->
+<!-- Paste this right before the closing </body> tag in theme.liquid -->
 
 <style>
-  /* Base CSS hiding */
-  .product-form__buttons, .product-form__submit, button[name="add"], .shopify-payment-button, .product-form__quantity, .quantity__input, quantity-input { 
-    display: none !important; 
-    visibility: hidden !important;
-    opacity: 0 !important;
+  /* The Cal.com style overlay */
+  #biw-booking-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  #biw-booking-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  /* Perfectly matches your "Buy it now" button */
-  .custom-book-btn { 
-    background: #2b2e2e; 
-    color: #ffffff; 
-    padding: 14px 24px; 
-    border: none; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    font-size: 16px; 
-    width: 100%; 
-    margin-top: 10px; 
-    font-family: inherit;
-    transition: background 0.2s ease;
-  }
-  .custom-book-btn:hover { background: #1a1c1c; }
-  
-  /* iOS & Android optimized overlay */
-  .booking-modal-overlay { 
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-    z-index: 999999; justify-content: center; align-items: flex-end; 
-  }
-  
-  .booking-modal-content { 
-    background: #ffffff; width: 100%; height: 90vh; max-width: 500px; 
-    border-radius: 20px 20px 0 0; position: relative; display: flex; flex-direction: column; 
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  @media (min-width: 768px) {
-    .booking-modal-overlay { align-items: center; }
-    .booking-modal-content { height: 85vh; border-radius: 12px; animation: fadeIn 0.2s ease; }
+  /* The Modal Container */
+  #biw-booking-modal {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    height: 90vh;
+    max-height: 800px;
+    background: transparent;
+    border-radius: 24px;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
   }
 
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+  #biw-booking-overlay.is-open #biw-booking-modal {
+    transform: scale(1) translateY(0);
+  }
 
-  .booking-modal-close { 
-    position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; 
-    background: #f0f0f0; border: none; z-index: 10; color: #333; 
-    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1;
+  /* The Iframe */
+  #biw-booking-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 24px;
+    background: transparent;
+  }
+
+  /* Close Button */
+  #biw-booking-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    background: rgba(0,0,0,0.05);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+  }
+  #biw-booking-close:hover {
+    background: rgba(0,0,0,0.1);
   }
   
-  .iframe-wrapper {
-    flex: 1; width: 100%; -webkit-overflow-scrolling: touch; overflow-y: scroll; border-radius: inherit;
+  @media (max-width: 768px) {
+    #biw-booking-modal {
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+    }
+    #biw-booking-iframe {
+      border-radius: 0;
+    }
+    #biw-booking-close {
+      top: 16px;
+      right: 16px;
+    }
   }
 </style>
 
-<!-- The Hidden Popup Modal -->
-<div id="bookingModal" class="booking-modal-overlay">
-  <div class="booking-modal-content">
-    <button class="booking-modal-close" onclick="document.getElementById('bookingModal').style.display='none'">&times;</button>
-    <div class="iframe-wrapper">
-      <iframe src="https://crm.biw.salon/book?service={{ product.title | url_encode }}" width="100%" height="100%" style="border: none; margin-top: 55px; min-height: 800px;"></iframe>
-    </div>
+<!-- Native Shopify Button -->
+<button class="button button--primary button--full-width biw-trigger-btn" style="width: 100%; margin-bottom: 1rem; border-radius: 0; min-height: 4.6rem; letter-spacing: 0.1rem; text-transform: uppercase;">
+  Book Appointment
+</button>
+
+<div id="biw-booking-overlay">
+  <div id="biw-booking-modal">
+    <button id="biw-booking-close">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 1L1 13M1 1L13 13" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <iframe id="biw-booking-iframe" src="about:blank"></iframe>
   </div>
 </div>
 
-<!-- A safe container for our button in case the theme wipes everything else -->
-<div id="biw-widget-container"></div>
-
-<!-- The Ultimate DOM-Regenerating Script -->
 <script>
-  (function() {
-    function enforceBookingLogic() {
-      // 1. Force hide the standard Add to Cart & Quantity buttons
-      const standardButtons = document.querySelectorAll('.product-form__buttons, .product-form__submit, button[name="add"], .shopify-payment-button, .product-form__quantity, quantity-input');
-      standardButtons.forEach(btn => {
-        btn.style.setProperty('display', 'none', 'important');
-      });
-
-      // 2. Check if our Book Appointment button was deleted by the theme's JS
-      let bookBtn = document.getElementById('biw-book-btn');
-      if (!bookBtn) {
-        // Re-create the button from scratch
-        bookBtn = document.createElement('button');
-        bookBtn.id = 'biw-book-btn';
-        bookBtn.type = 'button'; // CRITICAL: prevents it from acting as a Submit button for the Shopify form
-        bookBtn.className = 'custom-book-btn';
-        bookBtn.innerText = 'Book Appointment';
-        bookBtn.onclick = function(e) {
-          e.preventDefault(); // Stop any form submission
-          document.getElementById('bookingModal').style.display = 'flex';
-        };
-        
-        // 3. Inject it back into the page. 
-        // Try to place it exactly where the standard Add to Cart button is.
-        const atcBtn = document.querySelector('button[name="add"], .product-form__submit');
-        if (atcBtn && atcBtn.parentNode) {
-           atcBtn.parentNode.insertBefore(bookBtn, atcBtn);
-        } else {
-           // Fallback: put it in our safe container
-           const container = document.getElementById('biw-widget-container');
-           if (container) container.appendChild(bookBtn);
-        }
-      }
-    }
+  document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('biw-booking-overlay');
     
-    // Run immediately
-    enforceBookingLogic();
-    // Run constantly to overpower any AJAX re-renders from the theme
-    setInterval(enforceBookingLogic, 300);
-  })();
-</script>
+    // Move the overlay to the body to escape any Shopify theme CSS transform/contain contexts!
+    document.body.appendChild(overlay);
 
+    var closeBtn = document.getElementById('biw-booking-close');
+    var iframe = document.getElementById('biw-booking-iframe');
+
+    // Base URL of your Next.js app
+    var baseUrl = "https://crm.biw.salon/book";
+
+    // Function to open modal
+    function openBookingModal(serviceName) {
+      var url = baseUrl;
+      if (serviceName) {
+        url += "?service=" + encodeURIComponent(serviceName);
+      }
+      iframe.src = url;
+      overlay.classList.add('is-open');
+      document.body.style.overflow = 'hidden'; // prevent background scrolling
+    }
+
+    // Function to close modal
+    function closeBookingModal() {
+      overlay.classList.remove('is-open');
+      document.body.style.overflow = '';
+      setTimeout(function() {
+        iframe.src = ""; // Clear iframe to reset state
+      }, 300);
+    }
+
+    closeBtn.addEventListener('click', closeBookingModal);
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        closeBookingModal();
+      }
+    });
+
+    // Automatically bind to ANY button or link that has href="#book", data-action="book", or our native class
+    var bookButtons = document.querySelectorAll('a[href="#book"], button[data-action="book"], .biw-trigger-btn');
+    
+    bookButtons.forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // If on a product page in Shopify, we can grab the title dynamically
+        // or you can set a data-service attribute on the button!
+        var service = btn.getAttribute('data-service') || '{{ product.title | escape }}';
+        
+        openBookingModal(service);
+      });
+    });
+  });
+</script>
