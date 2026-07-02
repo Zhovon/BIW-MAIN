@@ -67,6 +67,8 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -77,6 +79,8 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 a {
@@ -773,7 +777,14 @@ dd {
   .mobile-grid-1 {
     grid-template-columns: 1fr !important;
   }
+  .mobile-grid-1 > * {
+    min-width: 0; /* Prevent blowout */
+  }
+  
   .mobile-grid-2 {
     grid-template-columns: 1fr 1fr !important;
+  }
+  .mobile-grid-2 > * {
+    min-width: 0; /* Prevent blowout */
   }
 }
