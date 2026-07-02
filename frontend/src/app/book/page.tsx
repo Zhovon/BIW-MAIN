@@ -329,8 +329,8 @@ function BookingWidgetContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex items-center justify-center p-4 sm:p-6 md:p-12 font-sans">
-      <div className="max-w-5xl w-full mx-auto bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+    <div className="min-h-screen bg-transparent flex items-center justify-center p-0 md:p-8 font-sans">
+      <div className="max-w-5xl w-full mx-auto bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col md:flex-row min-h-[600px] h-full md:h-auto">
         
         {/* Left Pane - Sticky Service Summary */}
         <div className="md:w-[40%] bg-gray-50 p-8 md:p-10 border-b md:border-b-0 md:border-r border-gray-100 flex flex-col relative overflow-hidden">
