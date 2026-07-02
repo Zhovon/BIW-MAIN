@@ -81,6 +81,7 @@ function BookingWidgetContent() {
   }, [selectedDate]);
 
   const handleBooking = async (paymentType: string) => {
+    console.log("Processing payment via:", paymentType);
     if (!name || !phone || !selectedService || !selectedEmployee || !selectedDate || !selectedTime) {
       alert("Please fill in all details.");
       return;
