@@ -65,6 +65,48 @@ async def shopify_order_webhook(request: Request, db: Session = Depends(get_db))
     return {"status": "success", "sale_id": sale.id}
 
 
+@router.post("/shopify/products")
+async def shopify_product_webhook(request: Request, db: Session = Depends(get_db)):
+    """
+    Receives a product/create or product/update webhook from Shopify.
+    Upserts the product into the Services table if it is tagged as a 'Service'.
+    """
+    payload = await request.json()
+
+    # Shopify sends the product JSON as the payload
+    tags_str = payload.get("tags", "")
+    tags = [tag.strip().lower() for tag in tags_str.split(",")]
+    
+    if "service" not in tags:
+        return {"status": "ignored", "reason": "Not a service"}
+
+    name = payload.get("title")
+    variants = payload.get("variants", [])
+    price = float(variants[0].get("price", 0)) if variants else 0.0
+    is_active = payload.get("status") == "active"
+
+    from app.models.clinic import Service
+    
+    # Match by exact name
+    service = db.query(Service).filter(Service.name == name).first()
+    
+    if service:
+        service.price = price
+        service.is_active = is_active
+    else:
+        service = Service(
+            name=name,
+            price=price,
+            cost=0.0,
+            is_active=is_active,
+            branch_id=None
+        )
+        db.add(service)
+        
+    db.commit()
+    return {"status": "success", "service_name": name, "price": price}
+
+
 @router.post("/marketing/spend", status_code=201)
 def marketing_spend_webhook(payload: DailyAdSpendCreate, db: Session = Depends(get_db)):
     """
