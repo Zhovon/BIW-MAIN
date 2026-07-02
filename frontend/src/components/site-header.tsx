@@ -104,6 +104,10 @@ export function SiteHeader() {
 
   const navItems = getNavItems();
 
+  if (pathname.startsWith("/book")) {
+    return null;
+  }
+
   return (
     <>
       <header className="site-header">

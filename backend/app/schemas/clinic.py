@@ -354,6 +354,10 @@ class AppointmentCreate(BaseModel):
     payment_status: str = "Unpaid"
     notes: Optional[str] = None
 
+class AppointmentUpdate(BaseModel):
+    appointment_time: Optional[datetime] = None
+    employee_id: Optional[str] = None
+
 
 class DailyAdSpendRead(BaseModel):
     id: str

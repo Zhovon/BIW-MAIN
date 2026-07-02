@@ -35,6 +35,13 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
   // Simple date filter
   const [selectedDate, setSelectedDate] = useState<string>("");
 
+  // Reschedule Modal State
+  const [rescheduleAppt, setRescheduleAppt] = useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [rescheduleEmp, setRescheduleEmp] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -80,6 +87,44 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
     } catch (err) {
       console.error(err);
       alert("Failed to update status");
+    }
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleAppt || !rescheduleDate || !rescheduleTime) {
+      alert("Please select a valid date and time.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      // Parse time
+      const [hours, minutes] = rescheduleTime.split(":");
+      const newDateTime = `${rescheduleDate}T${hours}:${minutes}:00Z`;
+
+      const payload = {
+        appointment_time: newDateTime,
+        employee_id: rescheduleEmp || null,
+      };
+
+      const res = await authFetch(`${getApiBaseUrl()}/api/v1/appointments/${rescheduleAppt.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setAppointments(prev => prev.map(a => a.id === rescheduleAppt.id ? updated : a));
+        setRescheduleAppt(null);
+      } else {
+        alert("Failed to reschedule appointment.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error rescheduling appointment.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -137,10 +182,68 @@ export function AppointmentsView({ branchId }: AppointmentsViewProps) {
                     <option value="Completed">Completed</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
+                  <div style={{ marginTop: "8px" }}>
+                    <button 
+                      onClick={() => {
+                        setRescheduleAppt(appt);
+                        const d = new Date(appt.appointment_time);
+                        setRescheduleDate(d.toISOString().split("T")[0]);
+                        setRescheduleTime(d.toISOString().split("T")[1].substring(0, 5));
+                        setRescheduleEmp(appt.employee_id || "");
+                      }}
+                      style={{ fontSize: "0.75rem", padding: "6px 10px", background: "var(--background)", border: "1px solid var(--line)", borderRadius: "6px", cursor: "pointer", color: "var(--text)" }}
+                    >
+                      Reschedule
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {rescheduleAppt && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card" style={{ padding: "24px", width: "100%", maxWidth: "400px", background: "white", border: "1px solid var(--line)", borderRadius: "16px" }}>
+            <h3 style={{ marginTop: 0, marginBottom: "16px", fontSize: "1.2rem" }}>Reschedule Appointment</h3>
+            
+            <div style={{ marginBottom: "12px" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>New Date</label>
+              <input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none" }} />
+            </div>
+            
+            <div style={{ marginBottom: "12px" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>New Time (UTC)</label>
+              <input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none" }} />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "4px", color: "var(--muted)" }}>Reassign Therapist</label>
+              <select value={rescheduleEmp} onChange={e => setRescheduleEmp(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--line)", outline: "none", background: "white" }}>
+                <option value="">Unassigned</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button 
+                onClick={() => setRescheduleAppt(null)} 
+                style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--line)", background: "var(--surface-2)", cursor: "pointer", color: "var(--text)" }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleReschedule} 
+                disabled={isSubmitting}
+                style={{ padding: "10px 16px", borderRadius: "8px", border: "none", background: "var(--accent)", color: "var(--accent-fg)", cursor: "pointer", fontWeight: "bold" }}
+              >
+                {isSubmitting ? "Saving..." : "Confirm"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </article>

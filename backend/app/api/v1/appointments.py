@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.clinic import (Appointment, AttendanceRecord, Employee, Customer, Service)
-from app.schemas.clinic import AppointmentCreate, AppointmentRead
+from app.schemas.clinic import AppointmentCreate, AppointmentRead, AppointmentUpdate
 from app.core.config import settings
+from app.core.auth import get_current_user
 
 import resend
 resend.api_key = settings.resend_api_key
@@ -20,6 +21,7 @@ def get_appointments(
     branch_id: Optional[str] = None,
     date: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     query = db.query(Appointment)
     if branch_id and branch_id != "all":
@@ -148,7 +150,7 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
 
 @router.patch("/{appointment_id}/status", response_model=AppointmentRead)
 def update_appointment_status(
-    appointment_id: str, status: str, db: Session = Depends(get_db)
+    appointment_id: str, status: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)
 ):
     appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
     if not appt:
@@ -159,9 +161,26 @@ def update_appointment_status(
     db.refresh(appt)
     return appt
 
+@router.patch("/{appointment_id}", response_model=AppointmentRead)
+def update_appointment(
+    appointment_id: str, payload: AppointmentUpdate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)
+):
+    appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    if payload.appointment_time is not None:
+        appt.appointment_time = payload.appointment_time
+    if payload.employee_id is not None:
+        appt.employee_id = payload.employee_id
+
+    db.commit()
+    db.refresh(appt)
+    return appt
+
 
 @router.get("/available-employees", response_model=List[dict])
-def get_available_employees(branch_id: str, date: str, db: Session = Depends(get_db)):
+def get_available_employees(branch_id: str, date: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """
     Returns employees for a specific branch who are NOT marked as Leave/Absent on the given date.
     """
