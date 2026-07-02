@@ -86,7 +86,7 @@ export function RoleDashboard({ role, dynamicMetrics }: RoleDashboardProps) {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border border-black mb-8">
-          {metricsToRender.map((metric, index) => (
+          {metricsToRender.map((metric) => (
             <article key={metric.label} className="p-4 border-b md:border-b-0 md:border-r border-black last:border-r-0 bg-white" style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000", marginBottom: "6px" }}>{metric.label}</span>
               <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }}>{metric.value}</strong>

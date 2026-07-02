@@ -758,7 +758,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "operations" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "operations" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -771,7 +771,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "crm" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "crm" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -784,7 +784,7 @@ export default function ManagerDashboardPage() {
             style={{
               background: "none", border: "none",
               color: activeTab === "appointments" ? "var(--accent)" : "var(--muted)",
-              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.1rem", fontWeight: "600",
+              fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "1.1rem", fontWeight: "600",
               padding: "8px 16px", cursor: "pointer",
               borderBottom: activeTab === "appointments" ? "2px solid var(--accent)" : "2px solid transparent",
               transition: "all 0.2s ease"
@@ -944,7 +944,7 @@ export default function ManagerDashboardPage() {
 
                 {/* Form 1: Sales / Treatment Logger */}
                 <article className=" border border-black bg-white" style={{ padding: "28px", border: "1px solid #000" }}>
-                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "1.45rem", margin: "0 0 18px", color: "#000", fontWeight: "bold" }}>Record Service Treatment</h2>
+                  <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em",  fontSize: "1.45rem", margin: "0 0 18px", color: "#000", fontWeight: "bold" }}>Record Service Treatment</h2>
 
                   {saleError && (
                     <div style={{ padding: "10px 14px", borderRadius: "0", background: "rgba(255, 100, 100, 0.1)", border: "2px solid #000", color: "#cc0000", fontSize: "0.86rem", marginBottom: "16px" }}>
@@ -1146,7 +1146,7 @@ export default function ManagerDashboardPage() {
                         <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
                           <button type="button" onClick={() => setShowNewCustomer(false)} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "0.85rem" }}>Cancel</button>
                           <button type="button" onClick={handleCreateCustomer} disabled={custCreating || !newCustName || !newCustPhone}
-                            className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold" }} style={{ padding: "6px 14px", fontSize: "0.84rem" }}>
+                            className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "6px 14px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold", fontSize: "0.84rem" }}>
                             {custCreating ? "Creating..." : "Save Customer"}
                           </button>
                         </div>
@@ -1189,8 +1189,7 @@ export default function ManagerDashboardPage() {
                     <button
                       type="submit"
                       disabled={saleSubmitting}
-                      className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "10px 16px", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold" }}
-                      style={{ width: "100%", marginTop: "8px", padding: "0.8rem" }}
+                      className="" style={{ background: "#000", color: "#fff", border: "1px solid #000", padding: "0.8rem", cursor: "pointer", fontFamily: "Times New Roman, serif", textTransform: "uppercase", fontWeight: "bold", width: "100%", marginTop: "8px" }}
                     >
                       {saleSubmitting ? "Saving..." : "Record Treatment"}
                     </button>

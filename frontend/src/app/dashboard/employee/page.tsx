@@ -223,7 +223,7 @@ export default function EmployeeDashboardPage() {
             <h1 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "clamp(2rem, 3.5vw, 3.5rem)", lineHeight: 1.1, margin: 0 }}>
               {earnings?.full_name}
             </h1>
-            <p style={{ color: "#000", fontWeight: "bold", margin: "4px 0 0", fontWeight: "600", fontSize: "1.05rem" }}>
+            <p style={{ color: "#000", margin: "4px 0 0", fontWeight: "600", fontSize: "1.05rem" }}>
               {earnings?.role}
             </p>
           </div>
@@ -284,7 +284,7 @@ export default function EmployeeDashboardPage() {
 
           <article className="p-4 border-b md:border-b-0 md:border-r border-black last:border-r-0 bg-white" style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000", marginBottom: "6px" }}>Total Estimated Monthly Payroll</span>
-            <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }} style={{ color: "#000" }}>
+            <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }}>
               ৳{earnings?.total_earned.toLocaleString()}
             </strong>
             <p style={{ fontSize: "12px", fontStyle: "italic", color: "#555", marginTop: "8px" }}>Subject to owner verification run.</p>
@@ -292,11 +292,11 @@ export default function EmployeeDashboardPage() {
 
           {earnings && earnings.total_deductions > 0 && (
             <article className="p-4 border-b md:border-b-0 md:border-r border-black last:border-r-0 bg-white" style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000", marginBottom: "6px" }} style={{ color: "#000" }}>Total Deductions Applied</span>
-              <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }} style={{ color: "#000" }}>
+              <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#000", marginBottom: "6px" }}>Total Deductions Applied</span>
+              <strong style={{ fontSize: "26px", fontWeight: "bold", color: "#000", lineHeight: 1 }}>
                 -৳{earnings.total_deductions.toLocaleString()}
               </strong>
-              <p style={{ fontSize: "12px", fontStyle: "italic", color: "#555", marginTop: "8px" }} style={{ color: "#555" }}>
+              <p style={{ fontSize: "12px", fontStyle: "italic", color: "#555", marginTop: "8px" }}>
                 From late penalties or leaves.
               </p>
             </article>
@@ -371,7 +371,7 @@ export default function EmployeeDashboardPage() {
 
           {/* Right Panel: Configured Bonus Linkages */}
           <article className=" border border-black bg-white" style={{ padding: "28px", display: "flex", flexDirection: "column" }}>
-            <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "bold", fontSize: "16px", margin: "0 0 12px", borderBottom: "2px solid #000", paddingBottom: "8px", color: "#000", fontWeight: "bold" }}>My Bonus Linkages</h2>
+            <h2 style={{ fontFamily: "Times New Roman, serif", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "16px", margin: "0 0 12px", borderBottom: "2px solid #000", paddingBottom: "8px", color: "#000", fontWeight: "bold" }}>My Bonus Linkages</h2>
             <p style={{ color: "#555", fontSize: "0.88rem", margin: "0 0 20px" }}>
               Treatments matching these assignments pay a flat bonus instead of standard commissions.
             </p>
