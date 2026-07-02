@@ -4,6 +4,8 @@ import React, { useState, useEffect, Suspense } from "react";
 import { getApiBaseUrl } from "@/lib/api";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MotionDiv = motion.div as any;
 import { Clock, User, Calendar as CalendarIcon, CheckCircle2, ArrowLeft } from "lucide-react";
 import { BookingCalendar } from "@/components/booking-calendar";
 
@@ -124,7 +126,7 @@ function BookingWidgetContent() {
     return (
       <AnimatePresence mode="wait">
         {step === 1 && (
-          <motion.div 
+          <MotionDiv 
             key="step1"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -150,11 +152,11 @@ function BookingWidgetContent() {
                 </button>
               ))}
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {step === 2 && (
-          <motion.div 
+          <MotionDiv 
             key="step2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -173,11 +175,11 @@ function BookingWidgetContent() {
             <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
               <BookingCalendar value={selectedDate} onChange={handleDateSelect} />
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {step === 3 && (
-          <motion.div 
+          <MotionDiv 
             key="step3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -238,11 +240,11 @@ function BookingWidgetContent() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {step === 4 && (
-          <motion.div 
+          <MotionDiv 
             key="step4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -295,11 +297,11 @@ function BookingWidgetContent() {
                 {submitting ? "Processing..." : "Pay Instantly (bKash/Card)"}
               </button>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {step === 5 && (
-          <motion.div 
+          <MotionDiv 
             key="step5"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -320,7 +322,7 @@ function BookingWidgetContent() {
               <div className="text-sm text-gray-500 mb-1">Service</div>
               <div className="font-medium text-gray-900">{selectedService?.name}</div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
     );
@@ -344,7 +346,7 @@ function BookingWidgetContent() {
             </h1>
 
             {selectedService ? (
-              <motion.div 
+              <MotionDiv 
                 initial={{ opacity: 0, y: 10 }} 
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6"
@@ -366,7 +368,7 @@ function BookingWidgetContent() {
                 </div>
 
                 {selectedDate && selectedTime && (
-                  <motion.div 
+                  <MotionDiv 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="pt-4 border-t border-gray-200 space-y-4"
                   >
@@ -383,9 +385,9 @@ function BookingWidgetContent() {
                         <span className="font-medium">with {selectedEmployee.full_name}</span>
                       </div>
                     )}
-                  </motion.div>
+                  </MotionDiv>
                 )}
-              </motion.div>
+              </MotionDiv>
             ) : (
               <div className="text-gray-400 font-medium">Please select a service to continue...</div>
             )}
