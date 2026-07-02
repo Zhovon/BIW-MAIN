@@ -588,7 +588,7 @@ export default function OwnerDashboardPage() {
 
   if (error) {
     return (
-      <main className="relative w-[min(100%-20px,1200px)] sm:w-[min(1200px,calc(100%-32px))] mx-auto pt-7 pb-20">
+      <main className="page-shell">
         <section className="content-grid">
           <div className="bg-white border border-[#111] rounded-none auth-card" style={{ border: "1px solid rgba(255, 100, 100, 0.2)" }}>
             <p className="m-0 mb-2.5 uppercase tracking-[0.16em] text-[0.7rem] text-[#C9A84C] font-medium" style={{ color: "#ff6464" }}>Error</p>
@@ -608,7 +608,7 @@ export default function OwnerDashboardPage() {
   };
 
   return (
-    <main className="relative w-[min(100%-20px,1200px)] sm:w-[min(1200px,calc(100%-32px))] mx-auto pt-7 pb-20">
+    <main className="page-shell">
       <section className="content-grid">
         
         {/* Header */}
