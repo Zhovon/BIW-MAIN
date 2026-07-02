@@ -668,12 +668,15 @@ dd {
 ============================================================ */
 @media (max-width: 1024px) {
   .hero,
-  .stat-grid,
   .branch-grid,
   .capability-grid,
   .login-grid,
   .role-route-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .topbar {
@@ -718,7 +721,7 @@ dd {
   }
 
   .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
