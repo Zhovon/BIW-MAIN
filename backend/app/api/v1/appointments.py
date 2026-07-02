@@ -105,7 +105,7 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
             
             try:
                 resend.Emails.send({
-                    "from": "Beauty Intelligent Wellness <bookings@biw.salon>",
+                    "from": "Beauty Intelligent Wellness <contact@biw.salon>",
                     "to": customer.email,
                     "subject": "Your Appointment is Confirmed! 📅",
                     "html": html_content
