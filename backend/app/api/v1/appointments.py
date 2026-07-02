@@ -5,8 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.clinic import (Appointment, AttendanceRecord, Employee)
+from app.models.clinic import (Appointment, AttendanceRecord, Employee, Customer, Service)
 from app.schemas.clinic import AppointmentCreate, AppointmentRead
+from app.core.config import settings
+
+import resend
+resend.api_key = settings.resend_api_key
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
@@ -69,6 +73,46 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
     db.add(appt)
     db.commit()
     db.refresh(appt)
+
+    # 3. Send Confirmation Email if customer has an email and resend is configured
+    if settings.resend_api_key:
+        customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
+        if customer and customer.email:
+            service = db.query(Service).filter(Service.id == payload.service_id).first()
+            service_name = service.name if service else "Treatment"
+            
+            formatted_time = appt.appointment_time.strftime("%A, %B %d, %Y at %I:%M %p")
+            
+            html_content = f"""
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <h2 style="color: #111827; margin: 0;">Booking Confirmed</h2>
+                </div>
+                <p style="color: #374151; font-size: 16px;">Hi {customer.full_name},</p>
+                <p style="color: #374151; font-size: 16px;">Thank you for booking with Beauty Intelligent Wellness. Your appointment has been confirmed!</p>
+                
+                <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 24px 0;">
+                    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Service</p>
+                    <p style="margin: 0 0 16px 0; color: #111827; font-size: 16px; font-weight: 600;">{service_name}</p>
+                    
+                    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Date & Time</p>
+                    <p style="margin: 0; color: #111827; font-size: 16px; font-weight: 600;">{formatted_time}</p>
+                </div>
+                
+                <p style="color: #6b7280; font-size: 14px; margin-top: 32px; text-align: center;">We look forward to seeing you soon.</p>
+            </div>
+            """
+            
+            try:
+                resend.Emails.send({
+                    "from": "Beauty Intelligent Wellness <bookings@biw.salon>",
+                    "to": customer.email,
+                    "subject": "Your Appointment is Confirmed! 📅",
+                    "html": html_content
+                })
+            except Exception as e:
+                print(f"Failed to send email: {e}")
+
     return appt
 
 
